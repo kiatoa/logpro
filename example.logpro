@@ -1,0 +1,25 @@
+;; (c) 2006,2007,2008,2009 Matthew Welland matt@kiatoa.com
+;;  
+;;   License GPL.
+
+;; first ensure your run at least started
+;;
+(trigger "Init"     #/This is a header/)
+(trigger "InitEnd"  #/^\s*$/)
+(section "Init" "Init" "InitEnd")
+
+(trigger "Body"     #/^.*$/) ;; anything starts the body
+;; (trigger "EndBody"  #/This had better never match/)
+
+(section "Body"     "Body" "EndBody")
+
+(trigger "Blah2"    #/^begin Blah2/)
+(trigger "Blah2End" #/^end Blah2/)
+(section "Blah2"    "Blah2" "Blah2End")
+
+(expect:required in "Init"  = 1 "Header"      #/This is a header/)
+
+(expect:ignore   in "Blah2" = 1 "FALSE ERROR" #/ERROR/)
+(expect:error    in "Body"  = 0 "ERROR BLAH"  (list #/ERROR/ #/error/)) ;; but disallow any other errors
+
+(expect in "Init"  < 1 "Junk"        #/This is bogus/)

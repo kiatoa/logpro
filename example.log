@@ -1,0 +1,16 @@
+// This is a header
+
+// The following is an error
+begin Blah1
+ERROR: This shouldn't happen
+end Blah1
+
+// The following is an expected error
+begin Blah2
+ERROR: This shouldn't happen
+end Blah2
+
+// This is nothing
+The End
+
+
