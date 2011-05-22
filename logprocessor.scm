@@ -16,7 +16,7 @@
       (begin
 	(print "Usage: logpro cmdfile [htmlfile] > annotated.log < inputfile.log")
 	(print "  Version " logpro-version)
-	(print "  License GPL, more info about logpro at http://www.kiatoa.com/fossils/opensrc")
+	(print "  License GPL, more info about logpro at http://www.kiatoa.com/fossils/logpro")
 	(exit 1))))
 
 ;; NOTES: 
