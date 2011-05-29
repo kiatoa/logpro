@@ -5,7 +5,7 @@
  (category unit-testing)
  (author "Matthew Welland")
  (doc-from-wiki)
- (license "GPL-3")
+ (license "GPL-2")
  (depends regex)
  (test-depends test)
  (files "logpro"))
