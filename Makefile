@@ -5,5 +5,5 @@ logpro.profiled : logprocessor.scm logpro.scm
 	csc -profile -X regex -X regex-literals logpro.scm -o logpro.profiled
 
 test :
-	csi -n -b test.scm 
+	csi -n -b tests/run.scm 
 

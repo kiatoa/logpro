@@ -1,0 +1,11 @@
+;;; logpro.meta -*- Hen -*-
+
+((egg "logpro.egg")
+ (synopsis "Tool for analyzing log files to extract PASS/FAIL status")
+ (category unit-testing)
+ (author "Matthew Welland")
+ (doc-from-wiki)
+ (license "GPL-3")
+ (depends regex)
+ (test-depends test)
+ (files "logpro"))

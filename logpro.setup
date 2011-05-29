@@ -1,0 +1,4 @@
+;; (compile -s -O3 -d1 md5.scm -j md5)
+;; (compile -s -O3 -d0 md5.import.scm)
+(compile  -X regex -X regex-literals logpro.scm -o logpro)
+(install-program 'logpro "logpro")
