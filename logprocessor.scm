@@ -15,6 +15,7 @@
   (if (< (length args) 2)
       (begin
 	(print "Usage: logpro cmdfile [htmlfile] > annotated.log < inputfile.log")
+	(print "  Exits with error code = 0 on success, 1 for errors found and 2 for Warnings only")
 	(print "  Version " logpro-version)
 	(print "  License GPL, more info about logpro at http://www.kiatoa.com/fossils/logpro")
 	(exit 1))))
@@ -215,7 +216,7 @@
   (cond 
    ((not (file-exists? cmdfname))
     (print "ERROR: command file " cmdfname " not found")
-    (exit 2))
+    (exit 1))
    (else
     (let* ((html-file (if (not (null? htmlfile))
 			  (car htmlfile)))
@@ -365,10 +366,12 @@
 	    (loop (read-line)(+ line-num 1)))))))
 
 (define (print-results)
-  (let ((status #t)
-        ;;        type where section OK/FAIL compsym value name count
-	(fmt     "Expect:  ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
-	(fmt-trg "Trigger: ~13a ~15@a, count=~a"))
+  (let ((status       #t)
+	(toterrcount  0)
+	(totwarncount 0)
+        ;;            type where section OK/FAIL compsym value name count
+	(fmt         "Expect:  ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
+	(fmt-trg     "Trigger: ~13a ~15@a, count=~a"))
     ;; first print any triggers that didn't get triggered - these are automatic failures
     (print      "==========================LOGPRO SUMMARY==========================")
     (html-print "==========================LOGPRO SUMMARY==========================")
@@ -392,6 +395,7 @@
 		(count    (expects:get-count expect))
 		(name     (expects:get-name expect))
 		(typeinfo (expect:get-type-info expect))
+		(etype    (expects:get-type expect))
 		(xstatus #t)
 		(compsym "=")
 		(lineout ""))
@@ -413,13 +417,23 @@
 	    (html-print lineout)
 	    (print lineout)
 	    (if (not xstatus)
-		(set! status #f))))
+		(begin
+		  (set! status #f)
+		  (cond
+		   ((eq? etype 'error)
+		    (set! toterrcount (+ toterrcount 1)))
+		   ((eq? etype 'warning)
+		    (set! totwarncount (+ totwarncount 1))))))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
+    ;; (print "Total errors: " toterrcount)
+    ;; (print "Total warnings: " totwarncount)
     (html-print "</pre></body></html>")
     (if status
 	(exit 0)
-	(exit 1))))
+	(if (> toterrcount 0)
+	    (exit 1)
+	    (exit 2)))))
 
 (define (setup-logpro)
   (use regex)
