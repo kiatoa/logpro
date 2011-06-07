@@ -2,7 +2,7 @@
 
 ((egg "logpro.egg")
  (synopsis "Tool for analyzing log files to extract PASS/FAIL status")
- (category unit-testing)
+ (category testing)
  (author "Matthew Welland")
  (doc-from-wiki)
  (license "GPL-2")
