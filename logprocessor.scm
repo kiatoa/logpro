@@ -179,8 +179,6 @@
 (define-inline (expect:expect-type-get-type  vec)(vector-ref vec 0))
 (define-inline (expect:expect-type-get-color vec)(vector-ref vec 1))
 
-
-
 ;;======================================================================
 ;; Main
 ;;======================================================================
@@ -397,9 +395,11 @@
 	      (set! xstatus (<= count value))))
 	    (set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name count))
 	    (html-print (conc "<font color=\"" 
-			      (expect:expect-type-get-color typeinfo)
-			      "\"><a name=\"" keyname "_" (hash-table-ref/default *expect-link-nums* keyname 0) "\"></a>"
-			      "<a href=\"#" keyname "_1\">Expect:</a>" 
+			      (if (> count 0)
+				  (expect:expect-type-get-color typeinfo)
+				  "black")
+			      "\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
+			      (if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
 			      lineout "</font>"))
 	    (print "Expect:" lineout)
 	    (if (not xstatus)
