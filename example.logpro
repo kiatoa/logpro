@@ -18,10 +18,12 @@
 (section "Blah2"    "Blah2" "Blah2End")
 
 (expect:required in "Init"  = 1 "Header"      #/This is a header/)
+(expect:value    in "LogFileBody" 1.9 0.1 "Output voltage" #/Measured voltage output:\s*([\d\.\+\-e]+)v/)
+(expect:value    in "LogFileBody" 0.5 0.1 "Output current" #/Measured output current:\s*([\d\.\+\-e]+)mA/)
 
 (expect:ignore   in "Blah2" < 99 "FALSE ERROR" #/ERROR/)
 (expect:ignore   in "Body"  < 99 "Ignore the word error in comments" #/^\/\/.*error/)
 (expect:warning  in "Body"  = 0 "Any warning" #/WARNING/)
 (expect:error    in "Body"  = 0 "ERROR BLAH"  (list #/ERROR/ #/error/)) ;; but disallow any other errors
 
-(expect in "Init"  < 1 "Junk"        #/This is bogus/)
+;(expect in "Init"  < 1 "Junk"        #/This is bogus/)

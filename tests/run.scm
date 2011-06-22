@@ -12,11 +12,12 @@
 
 (define *sections* '())
 
-(test "add trigger"      1 (begin (trigger "Trigger1" (regexp "Test patt1"))
+;; Have the builtin trigger for Log start to account for.
+(test "add trigger"      2 (begin (trigger "Trigger1" (regexp "Test patt1"))
 				  (length *triggers*)))
 
 (test "register a section" 1 (begin (section "Nada" "Start" "End")
-				  (length *sections*)))
+				    (length *sections*)))
 
 (test "add an expect" 1 (begin (expect in "Nada" < 1 "Error 1" (regexp "foo"))
 			       (length (hash-table-keys *expects*))))

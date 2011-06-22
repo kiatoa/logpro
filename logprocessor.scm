@@ -34,7 +34,7 @@
 		 (tal (cdr regexs)))
 	(let ((match (string-search hed line)))
 	  (if match
-	      (car match)
+	      match ;; (car match)
 	      (if (null? tal)
 		  #f
 		  (loop (car tal)(cdr tal))))))))
@@ -99,11 +99,12 @@
 (define-inline (expects:get-comparison-as-text vec)
   (let ((comp (expects:get-comparison vec)))
     (cond
-     ((eq? comp =) "=")
-     ((eq? comp >) ">")
-     ((eq? comp <) "<")
-     ((eq? comp >=) ">=")
-     ((eq? comp <=) "<=")
+     ((eq? comp =)    "=")
+     ((eq? comp >)    ">")
+     ((eq? comp <)    "<")
+     ((eq? comp >=)  ">=")
+     ((eq? comp <=)  "<=")
+     ((string? comp) comp)
      (else "unk"))))
 (define-inline (expects:get-value      vec)(vector-ref vec 3))
 (define-inline (expects:get-name       vec)(vector-ref vec 4))
@@ -114,6 +115,7 @@
 (define-inline (expects:get-expires    vec)(vector-ref vec 8))
 (define-inline (expects:get-type       vec)(vector-ref vec 9)) ;; 'expect 'ignore
 (define-inline (expects:get-keyname    vec)(vector-ref vec 10))
+(define-inline (expects:get-tol        vec)(vector-ref vec 11))
 
 ;; where is 'in, 'before or 'after but only 'in is supported now.
 ;; (expect in "Header" > 0 "Copywrite" #/Copywrite/)
@@ -124,8 +126,9 @@
 (define (expect where section comparison value name patts #!key (expires #f)(type 'expect))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
   (if (not (symbol? where))        (print "ERROR: where must be a symbol"))
-  (if (not (string? section))      (print "ERROR: section must be a string"))
-  (if (not (procedure? comparison))(print "ERROR: comparison must be one of > < or ="))
+  (if (not (or (string? section)
+	       (list? section)))   (print "ERROR: section must be a string or a list of strings"))
+  (if (not (procedure? comparison))(print "ERROR: comparison must be one of > < >= <= or ="))
   (if (not (number? value))        (print "ERROR: value must be a number"))
   (if (not (string? name))         (print "ERROR: name must be a string"))
   (if (and expires (not (string? expires)))
@@ -149,8 +152,8 @@
       (for-each
        (lambda (sect)
 	 (hash-table-set! *expects*
-			  sect ;;         0     1       2       3     4  5   6         7               8      9 10
-			  (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*))
+			  sect ;;         0     1       2       3     4  5   6         7               8      9 10                               tol
+			  (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f)
 				(hash-table-ref/default *expects* section '()))))
        (if (list? section) section (list section))))
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
@@ -167,6 +170,55 @@
 (define (expect:required where section comparison value name patts #!key (expires #f)(type 'required))
   (expect where section comparison value name patts expires: expires type: type))
 
+;;======================================================================
+;; TODO: Compress this in with the expect routine above
+;;======================================================================
+(define (expect:value where section value tol name patt #!key (expires #f)(type 'value))
+  ;; note: (hier-hash-set! value key1 key2 key3 ...)
+  (if (not (symbol? where))        (print "ERROR: where must be a symbol"))
+  (if (not (or (string? section)
+	       (list? section)))   (print "ERROR: section must be a string or list of strings"))
+  (if (not (number? value))        (print "ERROR: value must be a number"))
+  (if (not (number? tol))          (print "ERROR: tolerance must be a number"))
+  (if (not (string? name))         (print "ERROR: name must be a string"))
+  (if (and expires (not (string? expires)))
+      (print "ERROR: expires must be a date string MM/DD/YY, got " expires)
+      (set! expires #f))
+  (if (not (regexp? patt))
+      (print "ERROR: your regex is not valid: " rx))
+  (if expires
+      (if (string-match #/^\d+\/\d+\/\d+$/ expires)
+	  (let ((secs (local-time->seconds (string->time expires "%D"))))
+	    (set! expires secs))
+	  (begin
+	    (print "WARNING: Couldn't parse date: " expires ", date should be MM/DD/YY")
+	    (set! expires (- (current-seconds) 1000000)))))
+  (if (or (not expires)
+	  (not (and expires (> expires (current-seconds)))))
+      (for-each
+       (lambda (sect)
+	 (hash-table-set! *expects* ;; comparison is not used
+			  sect ;;         0     1       2       3     4  5               6         7               8      9 10                               11
+			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol)
+				(hash-table-ref/default *expects* section '()))))
+       (if (list? section) section (list section))))
+  (set! *curr-expect-num* (+ *curr-expect-num* 1)))
+
+;; extract out the value if possible.
+(define (expect:value-compare expect match)
+  ;;  (print "expect:value-compare :\n   " expect "\n   " match)
+  (let* ((match-str (if (> (length match) 1)(cadr match) #f))
+	 (match-num (if (string? match-str)(string->number match-str) #f))
+	 (value     (expects:get-value expect))
+	 (tol       (expects:get-tol   expect)))
+    (if match-num
+	(let ((result (and (<= match-num (+ value tol))
+			   (>= match-num (- value tol)))))
+	  (list result match-num "ok"))
+	(if match-str
+	    (list #f match-str "match is not a number")
+	    (list #f match     "regex matched but no captured value, use parens; (...)")))))
+;; 
 (define (expect:get-type-info expect)
   (case (expects:get-type expect)
     ((expect)   (vector "Expect"   "red"))
@@ -174,6 +226,7 @@
     ((error)    (vector "Error"    "red"))
     ((warning)  (vector "Warning"  "orange"))
     ((required) (vector "Required" "purple"))
+    ((value)    (vector "Value"    "blue"))
     (else       (vector "Error"    "red"))))
 
 (define-inline (expect:expect-type-get-type  vec)(vector-ref vec 0))
@@ -275,9 +328,10 @@
 		 (if expects
 		     (for-each 
 		      (lambda (expect)
-			(let ((patts (expects:get-compiled-patts expect)))
-			  (if (misc:line-match-regexs line patts)
-			      (set! found-expects (cons (list expect section) found-expects)))))
+			(let* ((patts   (expects:get-compiled-patts expect))
+			       (matches (misc:line-match-regexs line patts)))
+			  (if matches
+			      (set! found-expects (cons (list expect section matches) found-expects)))))
 		      expects))))
 	     (hash-table-keys active-sections))
 
@@ -312,9 +366,15 @@
 								     #f)))))))
 			 (expect    (car dat))
 			 (section   (cadr dat))
+			 (match     (if (> (length dat) 2)(caddr dat) #f))
 			 (type-info (expect:get-type-info expect))
 			 (keyname   (expects:get-keyname   expect))
-			 (errnum    (+ (hash-table-ref/default *expect-link-nums* keyname 0) 1)))
+			 (errnum    (+ (hash-table-ref/default *expect-link-nums* keyname 0) 1))
+			 (expect-type (expects:get-type expect))
+			 (is-value  (eq? expect-type 'value))
+			 (pass-fail (if is-value
+					(expect:value-compare expect match)
+					#f)))
 		    (hash-table-set! *expect-link-nums* keyname errnum)
 		    (if (eq? html-mode 'pre)
 			(begin
@@ -327,7 +387,13 @@
 		    (let ((msg (list
 				(expect:expect-type-get-type type-info) ": " 
 				(expects:get-name expect) " "
-				(expects:get-comparison-as-text expect) " " 
+				(if is-value
+				    (conc (expects:get-value expect) "+/-" 
+					  (expects:get-tol expect) 
+					  " got " (cadr pass-fail)
+					  " which is " (if (car pass-fail) "PASS" "FAIL"))
+				    (expects:get-comparison-as-text expect))
+				" " 
 				(expects:get-value expect)
 				" in section " section " on line " line-num)))
 		      (apply print (cons "LOGPRO " msg))
