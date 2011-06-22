@@ -487,7 +487,8 @@
 	     ((eq? comp <=)
 	      (set! xstatus (<= count value)))
 	     ((and is-value
-		   (if (eq? 0 (expects:get-val-fail-count expect))
+		   (if (and (eq? 0 (expects:get-val-fail-count expect))
+			    (>   0 (expects:get-val-pass-count expect)))
 		       (set! xstatus #t)
 		       (set! xstatus #f)))))
 	    (if is-value
