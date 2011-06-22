@@ -117,8 +117,18 @@
 (define-inline (expects:get-keyname    vec)(vector-ref vec 10))
 (define-inline (expects:get-tol        vec)(vector-ref vec 11))
 (define-inline (expects:get-measured   vec)(vector-ref vec 12))
-(define-inline (expects:get-val-pass/fail vec)(vector-ref vec 13))
-
+(define (expects:get-val-pass-count vec)
+  (let ((pfv (vector-ref vec 13)))
+    (vector-ref pfv 0)))
+(define (expects:get-val-fail-count vec)
+  (let ((pfv (vector-ref vec 13)))
+    (vector-ref pfv 1)))
+(define (expects:inc-val-pass-count vec)
+  (let ((pfv (vector-ref vec 13)))
+    (vector-set! pfv 0 (+ 1 (vector-ref pfv 0)))))
+(define (expects:inc-val-fail-count vec)
+  (let ((pfv (vector-ref vec 13)))
+    (vector-set! pfv 1 (+ 1 (vector-ref pfv 1)))))
 
 (define-inline (expects:set-measured   vec val)(vector-set! vec 12 (cons val (expects:get-measured vec))))
 (define-inline (expects:set-val-pass/fail vec val)(vector-set! vec 13 val))
@@ -159,7 +169,7 @@
        (lambda (sect)
 	 (hash-table-set! *expects*
 			  sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail 
-			  (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '()  #f)
+			  (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0))
 				(hash-table-ref/default *expects* section '()))))
        (if (list? section) section (list section))))
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
@@ -205,7 +215,7 @@
        (lambda (sect)
 	 (hash-table-set! *expects* ;; comparison is not used
 			  sect ;;         0     1       2       3  4   5       6         7               8      9   10                               11 12  value=pass/fail
-			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() #f)
+			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0))
 				(hash-table-ref/default *expects* section '()))))
        (if (list? section) section (list section))))
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
@@ -386,7 +396,11 @@
 					(expect:expect-type-get-color type-info))))
 		    (hash-table-set! *expect-link-nums* keyname errnum)
 		    (if is-value
-			(expects:set-measured expect (cadr pass-fail)))
+			(let ((extracted-value (cadr pass-fail)))
+			  (expects:set-measured expect extracted-value)
+			  (if (car pass-fail)
+			      (expects:inc-val-pass-count expect)
+			      (expects:inc-val-fail-count expect))))
 		    (if (eq? html-mode 'pre)
 			(begin
 			  (html-print"</pre>")
@@ -425,6 +439,7 @@
 	(toterrcount  0)
 	(totwarncount 0)
         ;;            type where section OK/FAIL compsym value name count
+	(valfmt      "  ~8a ~2@a ~12a ~4@a, expected ~a +/- ~a got ~a, ~a pass, ~a fail")
 	(fmt         "  ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
 	(fmt-trg     "Trigger: ~13a ~15@a, count=~a"))
     ;; first print any triggers that didn't get triggered - these are automatic failures
@@ -444,7 +459,7 @@
      (lambda (section)
        (for-each 
 	(lambda (expect)
-	  (let ((where   (expects:get-where expect)) ;; not used yet, "in" is only option
+	  (let* ((where   (expects:get-where expect)) ;; not used yet, "in" is only option
 		;; (section (expects:get-section expect))
 		(comp     (expects:get-comparison expect))
 		(value    (expects:get-value expect))
@@ -453,11 +468,10 @@
 		(typeinfo (expect:get-type-info expect))
 		(etype    (expects:get-type expect))
 		(keyname  (expects:get-keyname expect))
-		;; annoying, this logic is duplicated from the expect processing
-		
 		(xstatus #t)
 		(compsym "=")
-		(lineout ""))
+		(lineout "")
+		(is-value (eq? etype 'value)))
 	    (cond
 	     ((eq? comp =)
 	      (set! xstatus (eq? count value))
@@ -471,11 +485,28 @@
 	     ((eq? comp >=)
 	      (set! xstatus (>= count value)))
 	     ((eq? comp <=)
-	      (set! xstatus (<= count value))))
-	    (set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name count))
+	      (set! xstatus (<= count value)))
+	     ((and is-value
+		   (if (eq? 0 (expects:get-val-fail-count expect))
+		       (set! xstatus #t)
+		       (set! xstatus #f)))))
+	    (if is-value
+		(set! lineout (format #f valfmt 
+				      (expect:expect-type-get-type typeinfo) 
+				      where 
+				      section 
+				      (if xstatus "OK" "FAIL") 
+				      value 
+				      (expects:get-tol expect)
+				      (expects:get-measured expect) 
+				      (expects:get-val-pass-count expect) 
+				      (expects:get-val-fail-count expect)))
+		(set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name count)))
 	    (html-print (conc "<font color=\"" 
 			      (if (> count 0)
-				  (expect:expect-type-get-color typeinfo)
+				  (if is-value
+				      (if xstatus "green" "red")
+				      (expect:expect-type-get-color typeinfo))
 				  "black")
 			      "\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
 			      (if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
@@ -485,7 +516,7 @@
 		(begin
 		  (set! status #f)
 		  (cond
-		   ((eq? etype 'error)
+		   ((or (eq? etype 'error)(eq? etype 'value))
 		    (set! toterrcount (+ toterrcount 1)))
 		   ((eq? etype 'warning)
 		    (set! totwarncount (+ totwarncount 1))))))))
