@@ -116,6 +116,12 @@
 (define-inline (expects:get-type       vec)(vector-ref vec 9)) ;; 'expect 'ignore
 (define-inline (expects:get-keyname    vec)(vector-ref vec 10))
 (define-inline (expects:get-tol        vec)(vector-ref vec 11))
+(define-inline (expects:get-measured   vec)(vector-ref vec 12))
+(define-inline (expects:get-val-pass/fail vec)(vector-ref vec 13))
+
+
+(define-inline (expects:set-measured   vec val)(vector-set! vec 12 (cons val (expects:get-measured vec))))
+(define-inline (expects:set-val-pass/fail vec val)(vector-set! vec 13 val))
 
 ;; where is 'in, 'before or 'after but only 'in is supported now.
 ;; (expect in "Header" > 0 "Copywrite" #/Copywrite/)
@@ -152,8 +158,8 @@
       (for-each
        (lambda (sect)
 	 (hash-table-set! *expects*
-			  sect ;;         0     1       2       3     4  5   6         7               8      9 10                               tol
-			  (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f)
+			  sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail 
+			  (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '()  #f)
 				(hash-table-ref/default *expects* section '()))))
        (if (list? section) section (list section))))
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
@@ -198,8 +204,8 @@
       (for-each
        (lambda (sect)
 	 (hash-table-set! *expects* ;; comparison is not used
-			  sect ;;         0     1       2       3     4  5               6         7               8      9 10                               11
-			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol)
+			  sect ;;         0     1       2       3  4   5       6         7               8      9   10                               11 12  value=pass/fail
+			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() #f)
 				(hash-table-ref/default *expects* section '()))))
        (if (list? section) section (list section))))
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
@@ -374,14 +380,19 @@
 			 (is-value  (eq? expect-type 'value))
 			 (pass-fail (if is-value
 					(expect:value-compare expect match)
-					#f)))
+					#f))
+			 (color     (if is-value
+					(if (car pass-fail) "green" "red")
+					(expect:expect-type-get-color type-info))))
 		    (hash-table-set! *expect-link-nums* keyname errnum)
+		    (if is-value
+			(expects:set-measured expect (cadr pass-fail)))
 		    (if (eq? html-mode 'pre)
 			(begin
 			  (html-print"</pre>")
 			  (set! html-mode 'non-pre))
 			(html-print "<br>"))
-		    (html-print (conc "<font color=\"" (expect:expect-type-get-color type-info) "\">"
+		    (html-print (conc "<font color=\"" color  "\">"
 				      "<a name=\"" keyname "_" errnum "\"></a>"))
 		    (html-print (conc "<a href=\"#" keyname "_" (+ 1 errnum) "\">LOGPRO </a>"))
 		    (let ((msg (list
@@ -442,6 +453,8 @@
 		(typeinfo (expect:get-type-info expect))
 		(etype    (expects:get-type expect))
 		(keyname  (expects:get-keyname expect))
+		;; annoying, this logic is duplicated from the expect processing
+		
 		(xstatus #t)
 		(compsym "=")
 		(lineout ""))
