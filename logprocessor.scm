@@ -271,8 +271,10 @@
        (begin
 	 (print "\nERROR: Syntax error in your command file!\n")
 	 (print " =>  " ((condition-property-accessor 'exn 'message) exn))
+         (print-call-chain)
          (html-print "\nERROR: Syntax error in your command file!\n")
          (html-print " =>  " ((condition-property-accessor 'exn 'message) exn))
+         (print-call-chain *htmlport*)
 	 (close-output-port *htmlport*)
 	 (exit 1))
        (load cmdfname))
