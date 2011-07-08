@@ -305,7 +305,8 @@
 (define (analyze-logfile)
   (let ((active-sections  (make-hash-table))
 	(found-expects    '())
-	(html-mode        'pre))
+	(html-mode        'pre)
+	(html-hightlight-flag #f))
     ;; (curr-seconds     (current-seconds)))
     (html-print "<html><header>LOGPRO RESULTS</header><body>")
     (html-print "<p><a href=\"#summary\">Summary</a><pre>")  ;; <a name="summary"></a>
@@ -323,15 +324,16 @@
 			  (misc:line-match-regexs line patts))
 		     (begin
 		       (trigger:set-remaining-hits! trigger (- remhits 1))
-		       (if (eq? html-mode 'pre)
-			   (begin
-			     (html-print "</pre>")
-			     (set! html-mode 'non-pre))
-			   (html-print "<br>"))
-		       (html-print "<font color=\"blue\">")
+		       (set! html-highlight-flag (vector "blue" #f #f (trigger:get-name trigger)))
+		       ; (if (eq? html-mode 'pre)
+		       ;     (begin
+		       ;       (html-print "</pre>")
+		       ;       (set! html-mode 'non-pre))
+		       ;     (html-print "<br>"))
+		       ; (html-print "<font color=\"blue\">")
 		       (print      "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)
-		       (html-print "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)
-		       (html-print "</b></font>")
+		       ; (html-print "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)
+		       ; (html-print "</b></font>")
 		       ;; add another flag to triggers and change this ....
 		       (trigger:inc-total-hits trigger)
 		       (adj-active-sections trigger active-sections)))))
@@ -403,14 +405,18 @@
 			  (if (car pass-fail)
 			      (expects:inc-val-pass-count expect)
 			      (expects:inc-val-fail-count expect))))
-		    (if (eq? html-mode 'pre)
-			(begin
-			  (html-print"</pre>")
-			  (set! html-mode 'non-pre))
-			(html-print "<br>"))
-		    (html-print (conc "<font color=\"" color  "\">"
-				      "<a name=\"" keyname "_" errnum "\"></a>"))
-		    (html-print (conc "<a href=\"#" keyname "_" (+ 1 errnum) "\">LOGPRO </a>"))
+		    ; (if (eq? html-mode 'pre)
+		    ;     (begin
+		    ;       (html-print"</pre>")
+		    ;       (set! html-mode 'non-pre))
+		    ;     (html-print "<br>"))
+		    ; (html-print (conc "<font color=\"" color  "\">"
+		    ;     	      "<a name=\"" keyname "_" errnum "\"></a>"))
+		    ; (html-print (conc "<a href=\"#" keyname "_" (+ 1 errnum) "\">LOGPRO </a>"))
+		    (set! html-highlight-flag (vector color 
+						       (conc keyname "_" (+ 1 errnum))
+						       (conc "#" keyname "_" errnum)
+						       #f))
 		    (let ((msg (list
 				(expect:expect-type-get-type type-info) ": " 
 				(expects:get-name expect) " "
@@ -424,16 +430,37 @@
 				(expects:get-value expect)
 				" in section " section " on line " line-num)))
 		      (apply print (cons "LOGPRO " msg))
-		      (apply html-print msg))
-		    (html-print "</font>")
+		      ; (apply html-print msg)
+		      )
+		    ;(html-print "</font>")
 		    (expects:inc-count expect)
 		    (set! found-expects '()))))
 	    (print line)
-	    (if (not (eq? html-mode 'pre))
+	    ;(if (and (not (eq? html-mode 'pre))
+	    ;         (not html-highlight-flag))
+	    ;    (begin
+	    ;      (html-print "<br><pre>")
+	    ;      (set! html-mode 'pre)))
+					; <a href="http://www.sitepoint.com/books/" 
+					; style="background-color: white; color: orange;">your link text here</a>
+	    (if html-highlight-flag
+		(let ((color (vector-ref html-highlight-flag 0))
+		      (label (vector-ref html-highlight-flag 1))
+		      (link  (vector-ref html-highlight-flag 2))
+		      (mesg  (vector-ref html-highlight-flag 3)))
+		  (begin
+		    (if (eq? html-mode 'pre)
+			(html-print "</pre>"))
+		    (html-print "<a name=\"" label "\"></a>"
+				"<a href=\"" link "\" style=\"background-colr: white; color: " color ";\">"
+				line
+				"</a>")
+		    (set! html-mode 'html)))
 		(begin
-		  (html-print "<br><pre>")
-		  (set! html-mode 'pre)))
-	    (html-print line)
+		  (if (not (eq? html-mode 'pre))
+		      (html-print "<pre>"))
+		  (html-print line)))
+	    (if html-highlight-flag (set! html-highlight-flag #f))
 	    (loop (read-line)(+ line-num 1)))))))
 
 (define (print-results)
