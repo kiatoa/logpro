@@ -325,16 +325,7 @@
 		     (begin
 		       (trigger:set-remaining-hits! trigger (- remhits 1))
 		       (set! html-highlight-flag (vector "blue" #f #f (trigger:get-name trigger)))
-		       ; (if (eq? html-mode 'pre)
-		       ;     (begin
-		       ;       (html-print "</pre>")
-		       ;       (set! html-mode 'non-pre))
-		       ;     (html-print "<br>"))
-		       ; (html-print "<font color=\"blue\">")
 		       (print      "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)
-		       ; (html-print "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)
-		       ; (html-print "</b></font>")
-		       ;; add another flag to triggers and change this ....
 		       (trigger:inc-total-hits trigger)
 		       (adj-active-sections trigger active-sections)))))
 	     *triggers*)
@@ -405,14 +396,6 @@
 			  (if (car pass-fail)
 			      (expects:inc-val-pass-count expect)
 			      (expects:inc-val-fail-count expect))))
-		    ; (if (eq? html-mode 'pre)
-		    ;     (begin
-		    ;       (html-print"</pre>")
-		    ;       (set! html-mode 'non-pre))
-		    ;     (html-print "<br>"))
-		    ; (html-print (conc "<font color=\"" color  "\">"
-		    ;     	      "<a name=\"" keyname "_" errnum "\"></a>"))
-		    ; (html-print (conc "<a href=\"#" keyname "_" (+ 1 errnum) "\">LOGPRO </a>"))
 		    (set! html-highlight-flag (vector color 
 						       (conc keyname "_" (+ 1 errnum))
 						       (conc "#" keyname "_" errnum)
@@ -430,19 +413,10 @@
 				(expects:get-value expect)
 				" in section " section " on line " line-num)))
 		      (apply print (cons "LOGPRO " msg))
-		      ; (apply html-print msg)
 		      )
-		    ;(html-print "</font>")
 		    (expects:inc-count expect)
 		    (set! found-expects '()))))
 	    (print line)
-	    ;(if (and (not (eq? html-mode 'pre))
-	    ;         (not html-highlight-flag))
-	    ;    (begin
-	    ;      (html-print "<br><pre>")
-	    ;      (set! html-mode 'pre)))
-					; <a href="http://www.sitepoint.com/books/" 
-					; style="background-color: white; color: orange;">your link text here</a>
 	    (if html-highlight-flag
 		(let ((color (vector-ref html-highlight-flag 0))
 		      (label (vector-ref html-highlight-flag 1))
@@ -450,7 +424,8 @@
 		      (mesg  (vector-ref html-highlight-flag 3)))
 		  (begin
 		    (if (eq? html-mode 'pre)
-			(html-print "</pre>"))
+			(html-print "</pre>")
+			(html-print "<br>"))
 		    (html-print "<a name=\"" label "\"></a>"
 				"<a href=\"" link "\" style=\"background-colr: white; color: " color ";\">"
 				line
@@ -497,7 +472,7 @@
 		(typeinfo (expect:get-type-info expect))
 		(etype    (expects:get-type expect))
 		(keyname  (expects:get-keyname expect))
-		(xstatus #t)
+		(xstatus #f) ;; Jul 08, 2011 - changed to #f - seems safer
 		(compsym "=")
 		(lineout "")
 		(is-value (eq? etype 'value)))
@@ -515,11 +490,11 @@
 	      (set! xstatus (>= count value)))
 	     ((eq? comp <=)
 	      (set! xstatus (<= count value)))
-	     ((and is-value
-		   (if (and (eq? 0 (expects:get-val-fail-count expect))
-			    (>   0 (expects:get-val-pass-count expect)))
-		       (set! xstatus #t)
-		       (set! xstatus #f)))))
+	     (is-value
+	      (if (and (< (expects:get-val-fail-count expect) 1)
+		       (> 0 (expects:get-val-pass-count expect)))
+		  (set! xstatus #t)
+		  (set! xstatus #f))))
 	    (if is-value
 		(set! lineout (format #f valfmt 
 				      (expect:expect-type-get-type typeinfo) 
