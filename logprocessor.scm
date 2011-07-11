@@ -309,7 +309,9 @@
 	(html-hightlight-flag #f))
     ;; (curr-seconds     (current-seconds)))
     (html-print "<html><header>LOGPRO RESULTS</header><body>")
-    (html-print "<p><a href=\"#summary\">Summary</a><pre>")  ;; <a name="summary"></a>
+    (html-print "Summary is <a href=\"#summary\">here</a>")
+    (html-print "<br>(processed by logpro version " logpro-version ", tool details at: <a href=\"http://www.kiatoa.com/fossils/logpro\">logpro</a>)")
+    (html-print "<hr><pre>")
     (let loop ((line (read-line))
 	       (line-num  0))
       (if (not (eof-object? line))
@@ -424,9 +426,9 @@
 		      (link  (vector-ref html-highlight-flag 2))
 		      (mesg  (vector-ref html-highlight-flag 3)))
 		  (begin
-		    (if (eq? html-mode 'pre)
-			(html-print "</pre>")
-			(html-print "<br>"))
+		    ;(if (eq? html-mode 'pre)
+		    ;    (html-print "</pre>")
+		    ;    (html-print "<br>"))
 		    (html-print "<a name=\"" label "\"></a>"
 				"<a href=\"" link "\" style=\"background-color: white; color: " color ";\">"
 				line
@@ -435,7 +437,7 @@
 		(begin
 		  (if (not (eq? html-mode 'pre))
 		      (begin
-			(html-print "<pre>")
+			(html-print "") ; <pre>")
 			(set! html-mode 'pre)))
 		  (html-print line)))
 	    (if html-highlight-flag (set! html-highlight-flag #f))
@@ -451,7 +453,7 @@
 	(fmt-trg     "Trigger: ~13a ~15@a, count=~a"))
     ;; first print any triggers that didn't get triggered - these are automatic failures
     (print      "==========================LOGPRO SUMMARY==========================")
-    (html-print "</pre><a name=\"summary\"></a><pre>")
+    (html-print "<a name=\"summary\"></a>")
     (html-print "==========================LOGPRO SUMMARY==========================")
     (for-each
      (lambda (trigger)
@@ -518,7 +520,9 @@
 				  (if is-value
 				      (if xstatus "green" "red")
 				      (expect:expect-type-get-color typeinfo))
-				  "black")
+				  (if (eq? etype 'required)
+				      (if xstatus (expect:expect-type-get-color typeinfo) "red")
+				      "black"))
 			      "\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
 			      (if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
 			      lineout "</font>"))
