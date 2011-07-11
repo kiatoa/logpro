@@ -397,9 +397,10 @@
 			      (expects:inc-val-pass-count expect)
 			      (expects:inc-val-fail-count expect))))
 		    (set! html-highlight-flag (vector color 
-						       (conc keyname "_" (+ 1 errnum))
-						       (conc "#" keyname "_" errnum)
-						       #f))
+						       (conc keyname "_" errnum)
+						       (conc "#" keyname "_" (+ 1 errnum))
+						       #f
+						       errnum))
 		    (let ((msg (list
 				(expect:expect-type-get-type type-info) ": " 
 				(expects:get-name expect) " "
@@ -427,13 +428,15 @@
 			(html-print "</pre>")
 			(html-print "<br>"))
 		    (html-print "<a name=\"" label "\"></a>"
-				"<a href=\"" link "\" style=\"background-colr: white; color: " color ";\">"
+				"<a href=\"" link "\" style=\"background-color: white; color: " color ";\">"
 				line
 				"</a>")
 		    (set! html-mode 'html)))
 		(begin
 		  (if (not (eq? html-mode 'pre))
-		      (html-print "<pre>"))
+		      (begin
+			(html-print "<pre>")
+			(set! html-mode 'pre)))
 		  (html-print line)))
 	    (if html-highlight-flag (set! html-highlight-flag #f))
 	    (loop (read-line)(+ line-num 1)))))))
@@ -476,6 +479,7 @@
 		(compsym "=")
 		(lineout "")
 		(is-value (eq? etype 'value)))
+	    ;(print "is-value: " is-value)
 	    (cond
 	     ((eq? comp =)
 	      (set! xstatus (eq? count value))
@@ -492,9 +496,11 @@
 	      (set! xstatus (<= count value)))
 	     (is-value
 	      (if (and (< (expects:get-val-fail-count expect) 1)
-		       (> 0 (expects:get-val-pass-count expect)))
+		       (> (expects:get-val-pass-count expect) 0))
 		  (set! xstatus #t)
-		  (set! xstatus #f))))
+		  (set! xstatus #f))
+	      ;(print "xstatus: " xstatus " fail-count: " (expects:get-val-fail-count expect) " pass-count: " (expects:get-val-pass-count expect))
+	      ))
 	    (if is-value
 		(set! lineout (format #f valfmt 
 				      (expect:expect-type-get-type typeinfo) 
