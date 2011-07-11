@@ -22,6 +22,7 @@
 (test "add an expect" 1 (begin (expect in "Nada" < 1 "Error 1" (regexp "foo"))
 			       (length (hash-table-keys *expects*))))
 
+(define logpro-version -1) ;; need to fake it out
 (test "load a command file" #t (begin (load "example.logpro") #t))
 
 ;; (use trace)

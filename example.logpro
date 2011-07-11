@@ -18,6 +18,7 @@
 (section "Blah2"    "Blah2" "Blah2End")
 
 (expect:required in "Init"  = 1 "Header"      #/This is a header/)
+(expect:required in "LogFileBody" > 0 "Something required but not found" #/This is required but not found/)
 (expect:value    in "LogFileBody" 1.9 0.1 "Output voltage" #/Measured voltage output:\s*([\d\.\+\-e]+)v/)
 (expect:value    in "LogFileBody" 0.5 0.1 "Output current" #/Measured output current:\s*([\d\.\+\-e]+)mA/)
 

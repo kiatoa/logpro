@@ -305,10 +305,13 @@
 (define (analyze-logfile)
   (let ((active-sections  (make-hash-table))
 	(found-expects    '())
-	(html-mode        'pre))
+	(html-mode        'pre)
+	(html-hightlight-flag #f))
     ;; (curr-seconds     (current-seconds)))
     (html-print "<html><header>LOGPRO RESULTS</header><body>")
-    (html-print "<p><a href=\"#summary\">Summary</a><pre>")  ;; <a name="summary"></a>
+    (html-print "Summary is <a href=\"#summary\">here</a>")
+    (html-print "<br>(processed by logpro version " logpro-version ", tool details at: <a href=\"http://www.kiatoa.com/fossils/logpro\">logpro</a>)")
+    (html-print "<hr><pre>")
     (let loop ((line (read-line))
 	       (line-num  0))
       (if (not (eof-object? line))
@@ -323,16 +326,8 @@
 			  (misc:line-match-regexs line patts))
 		     (begin
 		       (trigger:set-remaining-hits! trigger (- remhits 1))
-		       (if (eq? html-mode 'pre)
-			   (begin
-			     (html-print "</pre>")
-			     (set! html-mode 'non-pre))
-			   (html-print "<br>"))
-		       (html-print "<font color=\"blue\">")
+		       (set! html-highlight-flag (vector "blue" #f #f (trigger:get-name trigger)))
 		       (print      "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)
-		       (html-print "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)
-		       (html-print "</b></font>")
-		       ;; add another flag to triggers and change this ....
 		       (trigger:inc-total-hits trigger)
 		       (adj-active-sections trigger active-sections)))))
 	     *triggers*)
@@ -403,14 +398,11 @@
 			  (if (car pass-fail)
 			      (expects:inc-val-pass-count expect)
 			      (expects:inc-val-fail-count expect))))
-		    (if (eq? html-mode 'pre)
-			(begin
-			  (html-print"</pre>")
-			  (set! html-mode 'non-pre))
-			(html-print "<br>"))
-		    (html-print (conc "<font color=\"" color  "\">"
-				      "<a name=\"" keyname "_" errnum "\"></a>"))
-		    (html-print (conc "<a href=\"#" keyname "_" (+ 1 errnum) "\">LOGPRO </a>"))
+		    (set! html-highlight-flag (vector color 
+						       (conc keyname "_" errnum)
+						       (conc "#" keyname "_" (+ 1 errnum))
+						       #f
+						       errnum))
 		    (let ((msg (list
 				(expect:expect-type-get-type type-info) ": " 
 				(expects:get-name expect) " "
@@ -424,16 +416,31 @@
 				(expects:get-value expect)
 				" in section " section " on line " line-num)))
 		      (apply print (cons "LOGPRO " msg))
-		      (apply html-print msg))
-		    (html-print "</font>")
+		      )
 		    (expects:inc-count expect)
 		    (set! found-expects '()))))
 	    (print line)
-	    (if (not (eq? html-mode 'pre))
+	    (if html-highlight-flag
+		(let ((color (vector-ref html-highlight-flag 0))
+		      (label (vector-ref html-highlight-flag 1))
+		      (link  (vector-ref html-highlight-flag 2))
+		      (mesg  (vector-ref html-highlight-flag 3)))
+		  (begin
+		    ;(if (eq? html-mode 'pre)
+		    ;    (html-print "</pre>")
+		    ;    (html-print "<br>"))
+		    (html-print "<a name=\"" label "\"></a>"
+				"<a href=\"" link "\" style=\"background-color: white; color: " color ";\">"
+				line
+				"</a>")
+		    (set! html-mode 'html)))
 		(begin
-		  (html-print "<br><pre>")
-		  (set! html-mode 'pre)))
-	    (html-print line)
+		  (if (not (eq? html-mode 'pre))
+		      (begin
+			(html-print "") ; <pre>")
+			(set! html-mode 'pre)))
+		  (html-print line)))
+	    (if html-highlight-flag (set! html-highlight-flag #f))
 	    (loop (read-line)(+ line-num 1)))))))
 
 (define (print-results)
@@ -446,7 +453,7 @@
 	(fmt-trg     "Trigger: ~13a ~15@a, count=~a"))
     ;; first print any triggers that didn't get triggered - these are automatic failures
     (print      "==========================LOGPRO SUMMARY==========================")
-    (html-print "</pre><a name=\"summary\"></a><pre>")
+    (html-print "<a name=\"summary\"></a>")
     (html-print "==========================LOGPRO SUMMARY==========================")
     (for-each
      (lambda (trigger)
@@ -470,10 +477,11 @@
 		(typeinfo (expect:get-type-info expect))
 		(etype    (expects:get-type expect))
 		(keyname  (expects:get-keyname expect))
-		(xstatus #t)
+		(xstatus #f) ;; Jul 08, 2011 - changed to #f - seems safer
 		(compsym "=")
 		(lineout "")
 		(is-value (eq? etype 'value)))
+	    ;(print "is-value: " is-value)
 	    (cond
 	     ((eq? comp =)
 	      (set! xstatus (eq? count value))
@@ -488,11 +496,13 @@
 	      (set! xstatus (>= count value)))
 	     ((eq? comp <=)
 	      (set! xstatus (<= count value)))
-	     ((and is-value
-		   (if (and (eq? 0 (expects:get-val-fail-count expect))
-			    (>   0 (expects:get-val-pass-count expect)))
-		       (set! xstatus #t)
-		       (set! xstatus #f)))))
+	     (is-value
+	      (if (and (< (expects:get-val-fail-count expect) 1)
+		       (> (expects:get-val-pass-count expect) 0))
+		  (set! xstatus #t)
+		  (set! xstatus #f))
+	      ;(print "xstatus: " xstatus " fail-count: " (expects:get-val-fail-count expect) " pass-count: " (expects:get-val-pass-count expect))
+	      ))
 	    (if is-value
 		(set! lineout (format #f valfmt 
 				      (expect:expect-type-get-type typeinfo) 
@@ -510,7 +520,9 @@
 				  (if is-value
 				      (if xstatus "green" "red")
 				      (expect:expect-type-get-color typeinfo))
-				  "black")
+				  (if (eq? etype 'required)
+				      (if xstatus (expect:expect-type-get-color typeinfo) "red")
+				      "black"))
 			      "\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
 			      (if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
 			      lineout "</font>"))

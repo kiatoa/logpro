@@ -10,6 +10,10 @@ begin Blah2
 ERROR: This shouldn't happen
 end Blah2
 
+miscellaneous output which doesn't match any expects
+more miscellaneous output
+still more miscellaneous output.
+
 // This one is expected to be 1.9 +/- 0.1
 Measured voltage output: 1.8v
 
