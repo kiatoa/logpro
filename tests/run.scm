@@ -8,7 +8,7 @@
 
 (define regexs (list (regexp "^hello$")(regexp "\\s+goodbye\\s+")))
 
-(test "misc:line-match-regexs" "hello" (misc:line-match-regexs "hello" regexs))
+(test "misc:line-match-regexs" '("hello") (misc:line-match-regexs "hello" regexs))
 
 (define *sections* '())
 
@@ -34,4 +34,6 @@
 (test "analyze loaded logfile" #t (with-input-from-file "example.log"
 				    (lambda ()
 				      (analyze-logfile) #t)))
-				    
+				   
+(test-exit)
+ 
