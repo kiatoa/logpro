@@ -21,8 +21,7 @@
 	(exit 1))))
 
 ;; NOTES: 
-;;   - need ability to apply a regex and pull out a value
-;;     e.g. Number of matching nets found == 120
+
 
 ;;======================================================================
 ;; Misc
@@ -38,6 +37,24 @@
 	      (if (null? tal)
 		  #f
 		  (loop (car tal)(cdr tal))))))))
+
+;;======================================================================
+;; Hooks
+;;======================================================================
+
+(define *hooks* (make-hash-table))
+
+(define (hook:first-error command)
+  (hash-table-set! *hooks* 'first-error command))
+
+(define (hook:first-warning command)
+  (hash-table-set! *hooks* 'first-warning command))
+
+(define (hook:value command)
+  (hash-table-set! *hooks* 'value command))
+
+(define (hook:subst-var hookstr var val)
+  (string-substitute (regexp (conc "#\\{" var "\\}")) (conc val) hookstr))
 
 ;;======================================================================
 ;; Triggers
@@ -416,7 +433,14 @@
 				(expects:get-value expect)
 				" in section " section " on line " line-num)))
 		      (apply print (cons "LOGPRO " msg))
-		      )
+		      (if (and (not pass-fail)
+			       (eq? expect-type 'error))
+			  (let ((cmd (hash-table-ref/default *hooks* 'first-error #f)))
+			    (if cmd
+				(let ((errhook (hook:subst-var cmd "errmsg" line)))
+				  (system errhook)
+				  (hash-table-delete! *hooks* 'first-error) ;; delete it so only first time gets called
+				  )))))
 		    (expects:inc-count expect)
 		    (set! found-expects '()))))
 	    (print line)
@@ -504,28 +528,39 @@
 	      ;(print "xstatus: " xstatus " fail-count: " (expects:get-val-fail-count expect) " pass-count: " (expects:get-val-pass-count expect))
 	      ))
 	    (if is-value
-		(set! lineout (format #f valfmt 
-				      (expect:expect-type-get-type typeinfo) 
-				      where 
-				      section 
-				      (if xstatus "OK" "FAIL") 
-				      value 
-				      (expects:get-tol expect)
-				      (expects:get-measured expect) 
-				      (expects:get-val-pass-count expect) 
-				      (expects:get-val-fail-count expect)))
-		(set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name count)))
-	    (html-print (conc "<font color=\"" 
-			      (if (> count 0)
-				  (if is-value
-				      (if xstatus "green" "red")
-				      (expect:expect-type-get-color typeinfo))
-				  (if (eq? etype 'required)
-				      (if xstatus (expect:expect-type-get-color typeinfo) "red")
-				      "black"))
-			      "\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
-			      (if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
-			      lineout "</font>"))
+		(let ((cmd       (hash-table-ref/default *hooks* 'value #f))
+		      (tolerance (expects:get-tol expect))
+		      (measured  (expects:get-measured expect)))
+		  (set! lineout (format #f valfmt 
+					(expect:expect-type-get-type typeinfo) 
+					where 
+					section 
+					(if xstatus "OK" "FAIL") 
+					value 
+					tolerance
+					measured
+					(expects:get-val-pass-count expect) 
+					(expects:get-val-fail-count expect)))
+		  (print "tolerance: " tolerance ", measured: " measured)
+		  (if cmd ;; have a hook to process for "value" items
+		      (let ((valuehook (hook:subst-var
+					(hook:subst-var 
+					 cmd ;; (hook:subst-var cmd "measured" measured)
+					 "expected" value)
+					"tolerance" tolerance)))
+			(system valuehook)))
+		  (set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name count))
+		  (html-print (conc "<font color=\"" 
+				    (if (> count 0)
+					(if is-value
+					    (if xstatus "green" "red")
+					    (expect:expect-type-get-color typeinfo))
+					(if (eq? etype 'required)
+					    (if xstatus (expect:expect-type-get-color typeinfo) "red")
+					    "black"))
+				    "\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
+				    (if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
+				    lineout "</font>"))))
 	    (print "Expect:" lineout)
 	    (if (not xstatus)
 		(begin

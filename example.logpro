@@ -2,6 +2,11 @@
 ;;  
 ;;   License GPL.
 
+;; define your hooks
+(hook:first-error   "echo \"Error hook activated: #{errmsg}\"")
+(hook:first-warning "echo \"Got warning: #{warnmsg}\"")
+(hook:value "echo Value hook activated: expected=#{expected}, measured=#{measured}, tolerance=#{tolerance}")
+
 ;; first ensure your run at least started
 ;;
 (trigger "Init"     #/This is a header/)
@@ -21,6 +26,8 @@
 (expect:required in "LogFileBody" > 0 "Something required but not found" #/This is required but not found/)
 (expect:value    in "LogFileBody" 1.9 0.1 "Output voltage" #/Measured voltage output:\s*([\d\.\+\-e]+)v/)
 (expect:value    in "LogFileBody" 0.5 0.1 "Output current" #/Measured output current:\s*([\d\.\+\-e]+)mA/)
+(expect:value    in "LogFileBody" 110e9 2e9 "A big number" #/Freq:\s*([\d\.\+\-e]+)\s*Hz/)
+(expect:value    in "LogFileBody" 110e9 1e9 "A big number" #/Freq:\s*([\d\.\+\-e]+)\s*Hz/)
 
 (expect:ignore   in "Blah2" < 99 "FALSE ERROR" #/ERROR/)
 (expect:ignore   in "Body"  < 99 "Ignore the word error in comments" #/^\/\/.*error/)
