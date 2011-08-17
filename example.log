@@ -23,7 +23,7 @@ Measured output current: 0.39mA
 // This one is expected to be 110GHz +/- 2GHz
 Freq: 1.12e11 Hz
 
-Freq: 1.1197e+10 Hz
+Freq: 1.1197e+10Hz
 
 // This is nothing
 The End

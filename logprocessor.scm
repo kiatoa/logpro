@@ -471,8 +471,9 @@
   (let ((status       #t)
 	(toterrcount  0)
 	(totwarncount 0)
-        ;;            type where section OK/FAIL compsym value name count
+	;;           type where section OK/FAIL compsym value name count
 	(valfmt      "  ~8a ~2@a ~12a ~4@a, expected ~a +/- ~a got ~a, ~a pass, ~a fail")
+        ;;            type where section OK/FAIL compsym value name count
 	(fmt         "  ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
 	(fmt-trg     "Trigger: ~13a ~15@a, count=~a"))
     ;; first print any triggers that didn't get triggered - these are automatic failures
@@ -530,7 +531,7 @@
 	    (if is-value
 		(let ((cmd       (hash-table-ref/default *hooks* 'value #f))
 		      (tolerance (expects:get-tol expect))
-		      (measured  (expects:get-measured expect)))
+		      (measured  (if (null? (expects:get-measured expect)) "-" (car (expects:get-measured expect)))))
 		  (set! lineout (format #f valfmt 
 					(expect:expect-type-get-type typeinfo) 
 					where 
@@ -541,15 +542,17 @@
 					measured
 					(expects:get-val-pass-count expect) 
 					(expects:get-val-fail-count expect)))
-		  (print "tolerance: " tolerance ", measured: " measured)
-		  (if cmd ;; have a hook to process for "value" items
+		  ;; have a hook to process for "value" items, do not call if nothing found
+		  (if (and cmd (number? measured))
 		      (let ((valuehook (hook:subst-var
 					(hook:subst-var 
-					 cmd ;; (hook:subst-var cmd "measured" measured)
+					 (hook:subst-var 
+					  (hook:subst-var cmd "measured" measured)
+					  "message" name)
 					 "expected" value)
 					"tolerance" tolerance)))
 			(system valuehook)))
-		  (set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name count))
+		  (set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name measured))
 		  (html-print (conc "<font color=\"" 
 				    (if (> count 0)
 					(if is-value
@@ -561,7 +564,7 @@
 				    "\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
 				    (if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
 				    lineout "</font>"))))
-	    (print "Expect:" lineout)
+	    (if (> (string-length lineout) 0)(print "Expect:" lineout))
 	    (if (not xstatus)
 		(begin
 		  (set! status #f)
