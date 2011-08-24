@@ -53,8 +53,20 @@
 (define (hook:value command)
   (hash-table-set! *hooks* 'value command))
 
+;; escape single quotes and surround with single quotes
+(define (hook:command-param-escape val)
+  (conc "'"
+	(string-substitute (regexp "(\'{1})") "\\\'" 
+			   val)
+	"'"))
+;; (string-substitute (regexp "(\"{1})") "\\\"" val #t) #t))
+
 (define (hook:subst-var hookstr var val)
-  (string-substitute (regexp (conc "#\\{" var "\\}")) (conc val) hookstr))
+  (string-substitute 
+   (regexp (conc "#\\{escaped " var "\\}")) 
+   (hook:command-param-escape val)
+   (string-substitute (regexp (conc "#\\{" var "\\}")) (conc val)
+		      hookstr #t) #t))
 
 ;;======================================================================
 ;; Triggers
@@ -438,6 +450,7 @@
 			  (let ((cmd (hash-table-ref/default *hooks* 'first-error #f)))
 			    (if cmd
 				(let ((errhook (hook:subst-var cmd "errmsg" line)))
+				  (print "ERRMSG HOOK CALLED: " errhook)
 				  (system errhook)
 				  (hash-table-delete! *hooks* 'first-error) ;; delete it so only first time gets called
 				  )))))
@@ -547,10 +560,11 @@
 		      (let ((valuehook (hook:subst-var
 					(hook:subst-var 
 					 (hook:subst-var 
-					  (hook:subst-var cmd "measured" measured)
+					  (hook:subst-var cmd "measured" (conc measured))
 					  "message" name)
-					 "expected" value)
-					"tolerance" tolerance)))
+					 "expected" (conc value))
+					"tolerance" (conc tolerance))))
+			(print "VALUE HOOK CALLED: " valuehook)
 			(system valuehook)))
 		  (set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name measured))
 		  (html-print (conc "<font color=\"" 

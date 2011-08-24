@@ -3,8 +3,8 @@
 ;;   License GPL.
 
 ;; define your hooks
-(hook:first-error   "echo \"Error hook activated: #{errmsg}\"")
-(hook:first-warning "echo \"Got warning: #{warnmsg}\"")
+(hook:first-error   "echo \"Error hook activated: #{escaped errmsg}\"")
+(hook:first-warning "echo \"Got warning: #{escaped warnmsg}\"")
 (hook:value "echo \"Value hook activated: expected=#{expected}, measured=#{measured}, tolerance=#{tolerance}, message=#{message}\"")
 
 ;; first ensure your run at least started
