@@ -565,19 +565,19 @@
 					 "expected" (conc value))
 					"tolerance" (conc tolerance))))
 			(print "VALUE HOOK CALLED: " valuehook)
-			(system valuehook)))
-		  (set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name measured))
-		  (html-print (conc "<font color=\"" 
-				    (if (> count 0)
-					(if is-value
-					    (if xstatus "green" "red")
-					    (expect:expect-type-get-color typeinfo))
-					(if (eq? etype 'required)
-					    (if xstatus (expect:expect-type-get-color typeinfo) "red")
-					    "black"))
-				    "\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
-				    (if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
-				    lineout "</font>"))))
+			(system valuehook))))
+		(set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name count)))
+	    (html-print (conc "<font color=\"" 
+			      (if (> count 0)
+				  (if is-value
+				      (if xstatus "green" "red")
+				      (expect:expect-type-get-color typeinfo))
+				  (if (eq? etype 'required)
+				      (if xstatus (expect:expect-type-get-color typeinfo) "red")
+				      "black"))
+			      "\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
+			      (if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
+			      lineout "</font>"))
 	    (if (> (string-length lineout) 0)(print "Expect:" lineout))
 	    (if (not xstatus)
 		(begin
