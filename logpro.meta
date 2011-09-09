@@ -6,6 +6,6 @@
  (author "Matthew Welland")
  (doc-from-wiki)
  (license "GPL-2")
- (depends regex regex-literals)
+ (depends format srfi-69 srfi-1 regex regex-literals)
  (test-depends test)
  (files "logpro"))
