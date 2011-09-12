@@ -2,17 +2,25 @@
 
 // The following is an error
 begin Blah1
-ERROR: This shouldn't happen
+ERROR: This is a real error. It should be red.
 end Blah1
 
 // The following is an expected error
 begin Blah2
-ERROR: This shouldn't happen
+ERROR: This error is expected, it will be green.
 end Blah2
+
+// The following is an error that is Waived (i.e. permitted for the moment).
+begin Blah3
+ERROR: Bad, but allowed for now, should be flagged in brown
+end Blah3
 
 miscellaneous output which doesn't match any expects
 more miscellaneous output
 still more miscellaneous output.
+
+// A warning
+WARNING: This had better be flagged in orange!
 
 // This one is expected to be 1.9 +/- 0.1
 Measured voltage output: 1.8v
