@@ -80,15 +80,20 @@
 (define-inline (trigger:set-remaining-hits! vec val)(vector-set! vec 2 val))
 (define-inline (trigger:inc-total-hits vec)(vector-set! vec 3 (+ (vector-ref vec 3) 1)))
 (define-inline (trigger:get-total-hits vec)(vector-ref vec 3))
+(define-inline (trigger:get-required-flag vec)(vector-ref vec 4))
 
 ;; Triggers default to one hit 
 (define (trigger name . patts)
-  (set! *triggers* (cons (vector name patts 1 0) *triggers*)))
+  (set! *triggers* (cons (vector name patts 1 0 #t) *triggers*)))
 
 ;; Do we want lifetime control? 0 forever, or N for number of times it may be invoked
 ;; or a list ( skipnum numtriggers)
 (define (trigger-with-limit name numhits . patts)
-  (set!  *triggers* (cons (vector name patts numhits 0) *triggers*)))
+  (set!  *triggers* (cons (vector name patts numhits 0 #t) *triggers*)))
+
+(define (trigger:non-required name . patts)
+   (set! *triggers* (cons (vector name patts 1 0 #f) *triggers*)))
+ 
 
 ;;======================================================================
 ;; Sections
@@ -209,6 +214,9 @@
 (define (expect:ignore where section comparison value name patts #!key (expires #f)(type 'ignore))
   (expect where section comparison value name patts expires: expires type: type))
 
+(define (expect:waive where section comparison value name patts #!key (expires #f)(type 'waive))
+  (expect where section comparison value name patts expires: expires type: type))
+
 (define (expect:error where section comparison value name patts #!key (expires #f)(type 'error))
   (expect where section comparison value name patts expires: expires type: type))
 
@@ -268,6 +276,7 @@
   (case (expects:get-type expect)
     ((expect)   (vector "Expect"   "red"))
     ((ignore)   (vector "Ignore"   "green"))
+    ((waive)    (vector "Waive"    "brown"))
     ((error)    (vector "Error"    "red"))
     ((warning)  (vector "Warning"  "orange"))
     ((required) (vector "Required" "purple"))
@@ -488,7 +497,7 @@
 	(valfmt      "  ~8a ~2@a ~12a ~4@a, expected ~a +/- ~a got ~a, ~a pass, ~a fail")
         ;;            type where section OK/FAIL compsym value name count
 	(fmt         "  ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
-	(fmt-trg     "Trigger: ~13a ~15@a, count=~a"))
+	(fmt-trg     "Trigger: ~25a ~15@a, count=~a"))
     ;; first print any triggers that didn't get triggered - these are automatic failures
     (print      "==========================LOGPRO SUMMARY==========================")
     (html-print "<a name=\"summary\"></a>")
@@ -496,8 +505,16 @@
     (for-each
      (lambda (trigger)
        (let ((count (trigger:get-total-hits trigger)))
-	 (if (< count 1)(set! status #f))
-	 (let ((lineout (format #f fmt-trg (trigger:get-name trigger) (if (> count 0) "OK" "FAIL") count)))
+	 ;; Triggers are forcibly required unless you use the "trigger:not-required"
+	 (if (and (< count 1)
+		  (trigger:get-required-flag trigger))
+	     (set! status #f))
+	 (let* ((trigger-status (if (> count 0)
+				    "OK"
+				    (if (trigger:get-required-flag trigger)
+					"FAIL"
+					"OPTIONAL")))
+		(lineout (format #f fmt-trg (trigger:get-name trigger) trigger-status count)))
 	   (html-print lineout)
 	   (print lineout))))
      *triggers*)
