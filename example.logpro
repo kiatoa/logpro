@@ -30,6 +30,12 @@
 (expect:value    in "LogFileBody" 110e9 1e9 "A big number (second), hook not called" #/Freq:\s*([\d\.\+\-e]+)Hz/)
 (expect:value    in "LogFileBody" 110e9 1e9 "A big number (never activated)" #/Freq:\s*([\d\.\+\-e]+)zH/)
 
+;; Using match number
+(expect:value    in "LogFileBody" 1.9 0.1 "Time Voltage" #/out: (\d+)\s+(\d+)/ match: 2)
+
+;; Comparison instead of tolerance
+(expect:value    in "LogFileBody" 1.9 >   "Time voltage" #/out: (\d+)\s+(\d+)/ match: 2)
+
 (expect:ignore   in "Blah2" < 99 "FALSE ERROR" #/ERROR/)
 (expect:ignore   in "Body"  < 99 "Ignore the word error in comments" #/^\/\/.*error/)
 (expect:warning  in "Body"  = 0 "Any warning" #/WARNING/)
