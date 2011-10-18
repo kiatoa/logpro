@@ -12,6 +12,6 @@ test : logpro
 examples :
 	(./logpro example.logpro example.html < example.log > /dev/null; echo "expect error code = 1, got $$?")
 	(./logpro example.logpro example-warn.html < example-warn.log > /dev/null; echo "expect warning code = 2, got $$?")
-	
+
 install : logpro
 	cp logpro /usr/local/bin 

@@ -44,6 +44,12 @@
 
 (define *hooks* (make-hash-table))
 
+(define (hook:errors command)
+  (hash-table-set! *hook* 'errors command))
+
+(define (hook:warnings command)
+  (hash-table-set! *hook* 'warnings command))
+
 (define (hook:first-error command)
   (hash-table-set! *hooks* 'first-error command))
 
@@ -173,6 +179,13 @@
 ;; NOTE: patts and section can be lists
 ;; (list rexp1 rexp2 ...)
 ;; '("section1" "section2" ....)
+
+(define *got-an-error* #f)
+
+(define (print:error msg . remmesg)
+  (set! *got-an-error* #t)
+  (apply print msg remmesg))
+
 (define (expect where section comparison value name patts #!key (expires #f)(type 'expect))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
   (if (not (symbol? where))        (print "ERROR: where must be a symbol"))
@@ -260,7 +273,10 @@
 ;; extract out the value if possible.
 (define (expect:value-compare expect match)
   ;;  (print "expect:value-compare :\n   " expect "\n   " match)
-  (let* ((match-str (if (> (length match) 1)(cadr match) #f))
+  (let* ((which-match (if (> (length (expects:get-compiled-patts expect)) 1) 
+			  (cadr (expects:get-compiled-patts expect))
+			  1)) ;; input is (patt) or (patt n) where n is the patt number to take as the value
+	 (match-str (if (> (length match) which-match)(list-ref match which-match) #f))
 	 (match-num (if (string? match-str)(string->number match-str) #f))
 	 (value     (expects:get-value expect))
 	 (tol       (expects:get-tol   expect)))
@@ -456,15 +472,19 @@
 		      (apply print (cons "LOGPRO " msg))
 		      (if (and (not pass-fail)
 			       (eq? expect-type 'error))
-			  (let ((cmd (hash-table-ref/default *hooks* 'first-error #f)))
+			  (let ((cmd    (hash-table-ref/default *hooks* 'first-error #f))
+				(errcmd (hash-table-ref/default *hooks* 'errors #f)))
 			    (if cmd
 				(let ((errhook (hook:subst-var cmd "errmsg" line)))
 				  (print "ERRMSG HOOK CALLED: " errhook)
 				  (system errhook)
 				  (hash-table-delete! *hooks* 'first-error) ;; delete it so only first time gets called
-				  )))))
+				  ))
+			    (if errcmd
+				(let ((errhook (hook:subst-var cmd "errmsg" line)))
+				  (system errhook)))))
 		    (expects:inc-count expect)
-		    (set! found-expects '()))))
+		    (set! found-expects '())))))
 	    (print line)
 	    (if html-highlight-flag
 		(let ((color (vector-ref html-highlight-flag 0))
@@ -497,7 +517,7 @@
 	(valfmt      "  ~8a ~2@a ~12a ~4@a, expected ~a +/- ~a got ~a, ~a pass, ~a fail")
         ;;            type where section OK/FAIL compsym value name count
 	(fmt         "  ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
-	(fmt-trg     "Trigger: ~25a ~15@a, count=~a"))
+	(fmt-trg     "Trigger: ~13a ~15@a, count=~a"))
     ;; first print any triggers that didn't get triggered - these are automatic failures
     (print      "==========================LOGPRO SUMMARY==========================")
     (html-print "<a name=\"summary\"></a>")
@@ -609,9 +629,9 @@
     ;; (print "Total errors: " toterrcount)
     ;; (print "Total warnings: " totwarncount)
     (html-print "</pre></body></html>")
-    (if status
+    (if (and (not *got-an-error*) status)
 	(exit 0)
-	(if (> toterrcount 0)
+	(if (and *got-an-error* (> toterrcount 0))
 	    (exit 1)
 	    (exit 2)))))
 
