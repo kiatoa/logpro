@@ -44,20 +44,13 @@
 
 (define *hooks* (make-hash-table))
 
-(define (hook:errors command)
-  (hash-table-set! *hook* 'errors command))
-
-(define (hook:warnings command)
-  (hash-table-set! *hook* 'warnings command))
-
-(define (hook:first-error command)
-  (hash-table-set! *hooks* 'first-error command))
-
-(define (hook:first-warning command)
-  (hash-table-set! *hooks* 'first-warning command))
-
-(define (hook:value command)
-  (hash-table-set! *hooks* 'value command))
+;; if command is a string it is executed by system after substituting matches
+;;    m1, m2, m3, m4 in #{m5} type string targets.
+;;
+;; if command is a proc it is called with the list of match results
+;;
+(define (hook:add name command #!key (one-time #f))
+  (hash-table-set! *hooks* name (vector command one-time)))
 
 ;; escape single quotes and surround with single quotes
 (define (hook:command-param-escape val)
@@ -157,21 +150,36 @@
 (define-inline (expects:get-keyname    vec)(vector-ref vec 10))
 (define-inline (expects:get-tol        vec)(vector-ref vec 11))
 (define-inline (expects:get-measured   vec)(vector-ref vec 12))
-(define (expects:get-val-pass-count vec)
+(define-inline (expects:get-val-pass-count vec)
   (let ((pfv (vector-ref vec 13)))
     (vector-ref pfv 0)))
-(define (expects:get-val-fail-count vec)
+(define-inline (expects:get-val-fail-count vec)
   (let ((pfv (vector-ref vec 13)))
     (vector-ref pfv 1)))
-(define (expects:inc-val-pass-count vec)
+(define-inline (expects:inc-val-pass-count vec)
   (let ((pfv (vector-ref vec 13)))
     (vector-set! pfv 0 (+ 1 (vector-ref pfv 0)))))
-(define (expects:inc-val-fail-count vec)
+(define-inline (expects:inc-val-fail-count vec)
   (let ((pfv (vector-ref vec 13)))
     (vector-set! pfv 1 (+ 1 (vector-ref pfv 1)))))
 
 (define-inline (expects:set-measured   vec val)(vector-set! vec 12 (cons val (expects:get-measured vec))))
 (define-inline (expects:set-val-pass/fail vec val)(vector-set! vec 13 val))
+
+(define-inline (expects:get-hook-ptr   vec)(vector-ref vec 14))
+(define-inline (expects:get-hook vec)
+  (vector-ref 
+     (hash-table-ref/default *hooks* (expects:get-hook-ptr vec)(vector #f #f))
+     0))
+;; returns #t if it is a one-time hook
+(define-inline (expects:get-hook-type vec)
+  (vector-ref 
+     (hash-table-ref/default *hooks* (expects:get-hook-ptr vec)(vector #f #f))
+     1))
+(define-inline (expects:delete-if-one-time vec)
+  (if (expects:get-hook-type vec)
+      (hash-table-delete *hooks* (expects:get-hook-ptr vec))))
+(define-inline (expects:get-matchnum vec)(vector-ref vec 15))
 
 ;; where is 'in, 'before or 'after but only 'in is supported now.
 ;; (expect in "Header" > 0 "Copywrite" #/Copywrite/)
@@ -186,22 +194,22 @@
   (set! *got-an-error* #t)
   (apply print msg remmesg))
 
-(define (expect where section comparison value name patts #!key (expires #f)(type 'expect))
+(define (expect where section comparison value name patts #!key (expires #f)(type 'expect)(hook #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
-  (if (not (symbol? where))        (print "ERROR: where must be a symbol"))
+  (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
-	       (list? section)))   (print "ERROR: section must be a string or a list of strings"))
-  (if (not (procedure? comparison))(print "ERROR: comparison must be one of > < >= <= or ="))
-  (if (not (number? value))        (print "ERROR: value must be a number"))
-  (if (not (string? name))         (print "ERROR: name must be a string"))
+	       (list? section)))   (print:error "ERROR: section must be a string or a list of strings"))
+  (if (not (procedure? comparison))(print:error "ERROR: comparison must be one of > < >= <= or ="))
+  (if (not (number? value))        (print:error "ERROR: value must be a number"))
+  (if (not (string? name))         (print:error "ERROR: name must be a string"))
   (if (and expires (not (string? expires)))
-      (print "ERROR: expires must be a date string MM/DD/YY, got " expires)
+      (print:error "ERROR: expires must be a date string MM/DD/YY, got " expires)
       (set! expires #f))
   (if (not (list? patts))
       (set! patts (list patts)))
   (for-each (lambda (rx)
 	      (if (not (regexp? rx))
-		  (print "ERROR: your regex is not valid: " rx)))
+		  (print:error "ERROR: your regex is not valid: " rx)))
 	    patts)
   (if expires
       (if (string-match #/^\d+\/\d+\/\d+$/ expires)
@@ -216,42 +224,42 @@
        (lambda (sect)
 	 (hash-table-set! *expects*
 			  sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail 
-			  (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0))
+			  (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f)
 				(hash-table-ref/default *expects* section '()))))
        (if (list? section) section (list section))))
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
 
-(define (expect:warning where section comparison value name patts #!key (expires #f)(type 'warning))
-  (expect where section comparison value name patts expires: expires type: type))
+(define (expect:warning where section comparison value name patts #!key (expires #f)(type 'warning)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
 
-(define (expect:ignore where section comparison value name patts #!key (expires #f)(type 'ignore))
-  (expect where section comparison value name patts expires: expires type: type))
+(define (expect:ignore where section comparison value name patts #!key (expires #f)(type 'ignore)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
 
-(define (expect:waive where section comparison value name patts #!key (expires #f)(type 'waive))
-  (expect where section comparison value name patts expires: expires type: type))
+(define (expect:waive where section comparison value name patts #!key (expires #f)(type 'waive)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
 
-(define (expect:error where section comparison value name patts #!key (expires #f)(type 'error))
-  (expect where section comparison value name patts expires: expires type: type))
+(define (expect:error where section comparison value name patts #!key (expires #f)(type 'error)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
 
-(define (expect:required where section comparison value name patts #!key (expires #f)(type 'required))
-  (expect where section comparison value name patts expires: expires type: type))
+(define (expect:required where section comparison value name patts #!key (expires #f)(type 'required)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
 
 ;;======================================================================
 ;; TODO: Compress this in with the expect routine above
 ;;======================================================================
-(define (expect:value where section value tol name patt #!key (expires #f)(type 'value))
+(define (expect:value where section value tol name patt #!key (expires #f)(type 'value)(matchnum 1)(hook #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
-  (if (not (symbol? where))        (print "ERROR: where must be a symbol"))
+  (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
-	       (list? section)))   (print "ERROR: section must be a string or list of strings"))
-  (if (not (number? value))        (print "ERROR: value must be a number"))
-  (if (not (number? tol))          (print "ERROR: tolerance must be a number"))
-  (if (not (string? name))         (print "ERROR: name must be a string"))
+	       (list? section)))   (print:error "ERROR: section must be a string or list of strings"))
+  (if (not (number? value))        (print:error "ERROR: value must be a number"))
+  (if (not (number? tol))          (print:error "ERROR: tolerance must be a number"))
+  (if (not (string? name))         (print:error "ERROR: name must be a string"))
   (if (and expires (not (string? expires)))
-      (print "ERROR: expires must be a date string MM/DD/YY, got " expires)
+      (print:error "ERROR: expires must be a date string MM/DD/YY, got " expires)
       (set! expires #f))
   (if (not (regexp? patt))
-      (print "ERROR: your regex is not valid: " rx))
+      (print:error "ERROR: your regex is not valid: " rx))
   (if expires
       (if (string-match #/^\d+\/\d+\/\d+$/ expires)
 	  (let ((secs (local-time->seconds (string->time expires "%D"))))
@@ -263,9 +271,9 @@
 	  (not (and expires (> expires (current-seconds)))))
       (for-each
        (lambda (sect)
-	 (hash-table-set! *expects* ;; comparison is not used
-			  sect ;;         0     1       2       3  4   5       6         7               8      9   10                               11 12  value=pass/fail
-			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0))
+	 (hash-table-set! *expects* ;; comparison is not used                 matchnum used to pick the match from the regex
+			  sect ;;         0     1       2       3  4   5       6                   7               8      9   10                               11 12  value=pass/fail
+			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0) hook matchnum)
 				(hash-table-ref/default *expects* section '()))))
        (if (list? section) section (list section))))
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
@@ -273,8 +281,8 @@
 ;; extract out the value if possible.
 (define (expect:value-compare expect match)
   ;;  (print "expect:value-compare :\n   " expect "\n   " match)
-  (let* ((which-match (if (> (length (expects:get-compiled-patts expect)) 1) 
-			  (cadr (expects:get-compiled-patts expect))
+  (let* ((which-match (if (expects:get-matchnum expect)
+			  (expects:get-matchnum expect);; expects:get-compiled-patts returns a list (patt matchnum)
 			  1)) ;; input is (patt) or (patt n) where n is the patt number to take as the value
 	 (match-str (if (> (length match) which-match)(list-ref match which-match) #f))
 	 (match-num (if (string? match-str)(string->number match-str) #f))
@@ -311,7 +319,7 @@
 (define (process-log-file cmdfname . htmlfile)
   (cond 
    ((not (file-exists? cmdfname))
-    (print "ERROR: command file " cmdfname " not found")
+    (print:error "ERROR: command file " cmdfname " not found")
     (exit 1))
    (else
     (let* ((html-file (if (not (null? htmlfile))
@@ -472,19 +480,14 @@
 		      (apply print (cons "LOGPRO " msg))
 		      (if (and (not pass-fail)
 			       (eq? expect-type 'error))
-			  (let ((cmd    (hash-table-ref/default *hooks* 'first-error #f))
-				(errcmd (hash-table-ref/default *hooks* 'errors #f)))
+			  (let ((cmd    (expects:get-hook expect)))
 			    (if cmd
-				(let ((errhook (hook:subst-var cmd "errmsg" line)))
+				(let ((errhook (hook:subst-var cmd "msg" line)))
 				  (print "ERRMSG HOOK CALLED: " errhook)
 				  (system errhook)
-				  (hash-table-delete! *hooks* 'first-error) ;; delete it so only first time gets called
-				  ))
-			    (if errcmd
-				(let ((errhook (hook:subst-var cmd "errmsg" line)))
-				  (system errhook)))))
+				  (expects:delete-if-one-time expect))))))
 		    (expects:inc-count expect)
-		    (set! found-expects '())))))
+		    (set! found-expects '()))))
 	    (print line)
 	    (if html-highlight-flag
 		(let ((color (vector-ref html-highlight-flag 0))
@@ -579,7 +582,7 @@
 	      ;(print "xstatus: " xstatus " fail-count: " (expects:get-val-fail-count expect) " pass-count: " (expects:get-val-pass-count expect))
 	      ))
 	    (if is-value
-		(let ((cmd       (hash-table-ref/default *hooks* 'value #f))
+		(let ((cmd       (expects:get-hook expect))
 		      (tolerance (expects:get-tol expect))
 		      (measured  (if (null? (expects:get-measured expect)) "-" (car (expects:get-measured expect)))))
 		  (set! lineout (format #f valfmt 
