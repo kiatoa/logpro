@@ -67,6 +67,27 @@
    (string-substitute (regexp (conc "#\\{" var "\\}")) (conc val)
 		      hookstr #t) #t))
 
+;; Variables to be substituted:
+;;
+;; line: the entire line matched
+;; msg:  the expect message (usually the 5th parameter)
+;; m1, m2 .... mN the regex matches
+;;
+(define (hook:process-line hookstr msg matches)
+  ;; (print "HOOK:PROCESS-LINE hookstr: " hookstr "\nmsg: " msg "\nmatches: " matches)
+  (let ((line  (car matches))
+	(subm  (cdr matches))
+	(res   ""))
+    (set! res (hook:subst-var hookstr "msg" msg))
+    (set! res (hook:subst-var res "line" line))
+    (if (null? subm) res 
+	(let loop ((hed (car subm))
+		   (tal (cdr subm))
+		   (cur 1))
+	  (set! res (hook:subst-var res (conc "m" cur) hed))
+	  (if (null? tal) res
+	      (loop (car tal)(cdr tal)(+ cur 1)))))))
+
 ;;======================================================================
 ;; Triggers
 ;;======================================================================
@@ -419,9 +440,10 @@
 		 (if expects
 		     (for-each 
 		      (lambda (expect)
-			(let ((patts (expects:get-compiled-patts expect)))
-			  (if (misc:line-match-regexs line patts)
-			      (set! found-expects (cons (list expect section) found-expects)))))
+			(let* ((patts   (expects:get-compiled-patts expect))
+			       (matches (misc:line-match-regexs line patts)))
+			  (if matches
+			      (set! found-expects (cons (list expect section match) found-expects)))))
 		      expects))))
 	     (filter (lambda (x)(not (member x (hash-table-keys active-sections))))
 		     (map section:get-name *sections*)))
@@ -480,11 +502,18 @@
 		      (apply print (cons "LOGPRO " msg))
 		      (if (and (not pass-fail)
 			       (eq? expect-type 'error))
+			  ;; failed error case
 			  (let ((cmd    (expects:get-hook expect)))
 			    (if cmd
-				(let ((errhook (hook:subst-var cmd "msg" line)))
+				(let ((errhook (hook:process-line cmd line match)))
 				  (print "ERRMSG HOOK CALLED: " errhook)
 				  (system errhook)
+				  (expects:delete-if-one-time expect))))
+			  (let ((cmd    (expects:get-hook expect)))
+			    (if cmd
+				(let ((hookcmd (hook:process-line cmd line match)))
+				  (print "NONERR HOOK CALLED: " hookcmd)
+				  (system hookcmd)
 				  (expects:delete-if-one-time expect))))))
 		    (expects:inc-count expect)
 		    (set! found-expects '()))))
