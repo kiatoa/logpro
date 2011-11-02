@@ -49,6 +49,6 @@
 (expect:error    in "Body"  = 0 "ERROR BLAH"  (list #/ERROR/ #/error/) hook: "logerr") ;; but disallow any other errors
 
 ;; Use expect:required to extract some values
-(expect:required in "LogfileBody" = 1 "Quad values" #/First: ([0-9]+)/) ;; \s+Second:\s+(\d+)/) ;; \s+Third:\s+(\d+)\s+Fourth:\s+(\d+)/ hook: "quad")
+(expect:required   in "LogFileBody" = 1 "Quad values" #/First:\s+(\d+)\s+Second:\s+(\d+)\s+Third:\s+(\d+)\s+Fourth:\s+(\d+)/ hook: "quadval")
 
 ;(expect in "Init"  < 1 "Junk"        #/This is bogus/)
