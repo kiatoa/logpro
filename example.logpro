@@ -8,6 +8,8 @@
 (hook:add "test"    "echo \"m1=#{m1}, m2=#{m2}, m3=#{m3}, m4=#{m4}\"")
 (hook:add "freq"    "echo \"Value hook activated: expected=#{expected}, measured=#{measured}, tolerance=#{tolerance}, message=#{message}\"")
 (hook:add "logerr"  "echo \"\n\nLog an error: #{line}\n\nmsg: #{msg}\n\"")
+;; Capture four values and call four commands
+(hook:add "quadval" "echo \"Value1: #{m1}\";echo \"Value2: #{m2}\";echo \"Value3: #{m3}\";echo \"Value4: #{m4}\"") 
 
 ;; first ensure your run at least started
 ;;
@@ -45,5 +47,8 @@
 (expect:ignore   in "Body"  < 99 "Ignore the word error in comments" #/^\/\/.*error/)
 (expect:warning  in "Body"  = 0 "Any warning" #/WARNING/)
 (expect:error    in "Body"  = 0 "ERROR BLAH"  (list #/ERROR/ #/error/) hook: "logerr") ;; but disallow any other errors
+
+;; Use expect:required to extract some values
+(expect:required in "LogfileBody" = 1 "Quad values" #/First: ([0-9]+)/) ;; \s+Second:\s+(\d+)/) ;; \s+Third:\s+(\d+)\s+Fourth:\s+(\d+)/ hook: "quad")
 
 ;(expect in "Init"  < 1 "Junk"        #/This is bogus/)

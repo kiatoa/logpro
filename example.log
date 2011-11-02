@@ -34,6 +34,12 @@ Freq: 1.12e11 Hz
 Freq: 1.1197e+10Hz
 
 // This is nothing
+
+// A case where we are capturing multiple values on a single line and exectuting 
+// multiple calls to load them
+
+First: 1 Second: 2 Third: 3 Fourth: 4
+
 The End
 
 
