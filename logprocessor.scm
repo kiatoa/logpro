@@ -652,7 +652,7 @@
 		(begin
 		  (set! status #f)
 		  (cond
-		   ((or (eq? etype 'error)(eq? etype 'value))
+		   ((or (eq? etype 'error)(eq? etype 'value)(eq? etype 'required))
 		    (set! toterrcount (+ toterrcount 1)))
 		   ((eq? etype 'warning)
 		    (set! totwarncount (+ totwarncount 1))))))))
