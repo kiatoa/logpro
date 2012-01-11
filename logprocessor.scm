@@ -215,7 +215,7 @@
   (set! *got-an-error* #t)
   (apply print msg remmesg))
 
-(define (expect where section comparison value name patts #!key (expires #f)(type 'expect)(hook #f))
+(define (expect where section comparison value name patts #!key (expires #f)(type 'error)(hook #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
   (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
@@ -652,7 +652,7 @@
 		(begin
 		  (set! status #f)
 		  (cond
-		   ((or (eq? etype 'error)(eq? etype 'value)(eq? etype 'required))
+		   ((or (eq? etype 'error)(eq? etype 'required)(eq? etype 'value))
 		    (set! toterrcount (+ toterrcount 1)))
 		   ((eq? etype 'warning)
 		    (set! totwarncount (+ totwarncount 1))))))))
