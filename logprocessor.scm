@@ -147,19 +147,30 @@
 (define before 'before)
 (define after  'after)
 
+(define-inline (comp->text comp)
+  (case comp
+   ((=)    "=")
+   ((>)    ">")
+   ((<)    "<")
+   ((>=)  ">=")
+   ((<=)  "<=")
+   (else "unk")))
+
+;;     (cond
+;;      ((eq? comp =)    "=")
+;;      ((eq? comp >)    ">")
+;;      ((eq? comp <)    "<")
+;;      ((eq? comp >=)  ">=")
+;;      ((eq? comp <=)  "<=")
+;;      ((string? comp) comp)
+;;      (else "unk"))))
+
 (define-inline (expects:get-where      vec)(vector-ref vec 0))
 (define-inline (expects:get-section    vec)(vector-ref vec 1))
 (define-inline (expects:get-comparison vec)(vector-ref vec 2))
 (define-inline (expects:get-comparison-as-text vec)
   (let ((comp (expects:get-comparison vec)))
-    (cond
-     ((eq? comp =)    "=")
-     ((eq? comp >)    ">")
-     ((eq? comp <)    "<")
-     ((eq? comp >=)  ">=")
-     ((eq? comp <=)  "<=")
-     ((string? comp) comp)
-     (else "unk"))))
+    (if (string? comp) comp (comp->text comp))))
 (define-inline (expects:get-value      vec)(vector-ref vec 3))
 (define-inline (expects:get-name       vec)(vector-ref vec 4))
 (define-inline (expects:get-count      vec)(vector-ref vec 5))
@@ -215,6 +226,28 @@
   (set! *got-an-error* #t)
   (apply print msg remmesg))
 
+;; if expires is a date convert it to seconds until or since expired
+(define (expect:process-expires expires type)
+  (let ((ex-val (if expires
+		    (if (string-match #/^\d+\/\d+\/\d+$/ expires)
+			(let ((secs (local-time->seconds (string->time expires "%D"))))
+			  (- secs (current-seconds))) ;; postive seconds, not expired, negative seconds, expired
+			(begin
+			  (print "WARNING: Couldn't parse date: " expires ", date should be MM/DD/YY")
+			  #f))
+		    #f)))
+    ;; now have #f: no expire spec'd, -ve num: expired, +ve num: not expired
+    (cond
+     ((not ex-val) #t)   ;; rules always apply if no expire specified
+     ((>= ex-val 0)      ;; expire specified and not expired
+      (case type
+	((error)    #t)
+	((warn)     #t)
+	((required) #t)  ;; leaving this case statement in until these semantics make full sense.
+	((waive)    #f)  ;; should required be #f?
+	(else       #t)))
+     (else #f))))
+
 (define (expect where section comparison value name patts #!key (expires #f)(type 'error)(hook #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
   (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
@@ -232,22 +265,23 @@
 	      (if (not (regexp? rx))
 		  (print:error "ERROR: your regex is not valid: " rx)))
 	    patts)
-  (if expires
-      (if (string-match #/^\d+\/\d+\/\d+$/ expires)
-	  (let ((secs (local-time->seconds (string->time expires "%D"))))
-	    (set! expires secs))
-	  (begin
-	    (print "WARNING: Couldn't parse date: " expires ", date should be MM/DD/YY")
-	    (set! expires (- (current-seconds) 1000000)))))
-  (if (or (not expires)
-	  (not (and expires (> expires (current-seconds)))))
-      (for-each
-       (lambda (sect)
-	 (hash-table-set! *expects*
-			  sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail 
-			  (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f)
-				(hash-table-ref/default *expects* section '()))))
-       (if (list? section) section (list section))))
+
+  ;; Change methodology here. Expires becomes a flag with the following meaning
+  ;;   #f              : no expires specified
+  ;;   negative number : seconds since this rule expired
+  ;;   postive number  : seconds until this rule expires
+  (if (expect:process-expires expires type)
+      (begin
+	(print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook)
+	(for-each
+	 (lambda (sect)
+	   (hash-table-set! *expects*
+			    sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail 
+			    (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f)
+				  (hash-table-ref/default *expects* section '()))))
+	 (if (list? section) section (list section))))
+      (print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook))
+      
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
 
 (define (expect:warning where section comparison value name patts #!key (expires #f)(type 'warning)(hook #f))
@@ -281,15 +315,12 @@
       (set! expires #f))
   (if (not (regexp? patt))
       (print:error "ERROR: your regex is not valid: " rx))
-  (if expires
-      (if (string-match #/^\d+\/\d+\/\d+$/ expires)
-	  (let ((secs (local-time->seconds (string->time expires "%D"))))
-	    (set! expires secs))
-	  (begin
-	    (print "WARNING: Couldn't parse date: " expires ", date should be MM/DD/YY")
-	    (set! expires (- (current-seconds) 1000000)))))
-  (if (or (not expires)
-	  (not (and expires (> expires (current-seconds)))))
+
+  ;; Change methodology here. Expires becomes a flag with the following meaning
+  ;;    #f             : no expires specified
+  ;;   negative number : seconds since this rule expired
+  ;;   postive number  : seconds until this rule expires
+  (if (expect:process-expires expires type) ;; true means yes, apply the rule, false means no, do not apply the rule
       (for-each
        (lambda (sect)
 	 (hash-table-set! *expects* ;; comparison is not used                 matchnum used to pick the match from the regex
@@ -474,7 +505,8 @@
 					#f))
 			 (color     (if is-value
 					(if (car pass-fail) "green" "red")
-					(expect:expect-type-get-color type-info))))
+					(expect:expect-type-get-color type-info)))
+			 (expires   (expects:get-expires expect)))
 		    (hash-table-set! *expect-link-nums* keyname errnum)
 		    (if is-value
 			(let ((extracted-value (cadr pass-fail)))

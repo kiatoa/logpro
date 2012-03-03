@@ -15,6 +15,16 @@ begin Blah3
 ERROR: Bad, but allowed for now, should be flagged in brown
 end Blah3
 
+// The following is an error that was Waived up to 01/01/2002 and thus should FAIL
+begin Blah4
+ERROR: An error that was suppressed before 01/01/2002
+end Blah4
+
+// The following is an error that is Waived up to 01/01/2100 and thus should PASS
+begin Blah5
+ERROR: This error is waived until 01/01/2100 and thus should PASS
+end Blah5
+
 miscellaneous output which doesn't match any expects
 more miscellaneous output
 still more miscellaneous output.

@@ -34,6 +34,8 @@
 (expect:value    in "LogFileBody" 110e9 1e9 "A big number (second), hook not called" #/Freq:\s*([\d\.\+\-e]+)Hz/)
 (expect:value    in "LogFileBody" 110e9 1e9 "A big number (never activated)" #/Freq:\s*([\d\.\+\-e]+)zH/)
 
+(expect:waive    in "LogFileBody" = 0 "ERROR: from before 2002, should be flagged as error" #/ERROR:.*2002/ expires: "01/01/2002")
+(expect:waive    in "LogFileBody" = 0 "ERROR: waived until 2100, should not be flagged as error" #/ERROR:.*2100/ expires: "01/01/2100")
 ;;                                                          miscellaneous output which doesn't match any expects
 (expect:ignore   in "LogFileBody" > 0 "Testing substitution" #/(misc).*(out\S+)\s+(.*ich).*(exp.*)$/ hook: "test")
 
