@@ -1,0 +1,1 @@
+(expect:value    in "LogFileBody" 1.9 > "Time voltage" #/out: (\d+)\s+(\d+)/ matchnum: 2)
