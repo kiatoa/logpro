@@ -26,6 +26,12 @@
 (trigger "Blah2End" #/^end Blah2/)
 (section "Blah2"    "Blah2" "Blah2End")
 
+(trigger "Blah3"    #/^begin Blah3/)
+(trigger "Blah3End" #/^end Blah3/)
+(section "Blah3"   "Blah3" "Blah3End")
+
+(expect:waive    in "Blah3" = 1 "A real error that has been waived" #/ERROR:/)
+
 (expect:required in "Init"  = 1 "Header"      #/This is a header/)
 (expect:required in "LogFileBody" > 0 "Something required but not found" #/This is required but not found/)
 (expect:value    in "LogFileBody" 1.9 0.1 "Output voltage" #/Measured voltage output:\s*([\d\.\+\-e]+)v/ hook: "freq")
@@ -34,8 +40,8 @@
 (expect:value    in "LogFileBody" 110e9 1e9 "A big number (second), hook not called" #/Freq:\s*([\d\.\+\-e]+)Hz/)
 (expect:value    in "LogFileBody" 110e9 1e9 "A big number (never activated)" #/Freq:\s*([\d\.\+\-e]+)zH/)
 
-(expect:waive    in "LogFileBody" = 0 "ERROR: from before 2002, should be flagged as error" #/ERROR:.*2002/ expires: "01/01/2002")
-(expect:waive    in "LogFileBody" = 0 "ERROR: waived until 2100, should not be flagged as error" #/ERROR:.*2100/ expires: "01/01/2100")
+(expect:error    in "LogFileBody" = 0 "ERROR: from before 2002, should be flagged as error" #/ERROR:.*2002/ expires: "01/01/2002")
+(expect:error    in "LogFileBody" = 0 "ERROR: waived until 2100, should not be flagged as error" #/ERROR:.*2100/ expires: "01/01/2100")
 ;;                                                          miscellaneous output which doesn't match any expects
 (expect:ignore   in "LogFileBody" > 0 "Testing substitution" #/(misc).*(out\S+)\s+(.*ich).*(exp.*)$/ hook: "test")
 

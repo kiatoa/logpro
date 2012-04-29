@@ -13,6 +13,10 @@
 
 (test "misc:line-match-regexs" '("hello") (misc:line-match-regexs "hello" regexs))
 
+(test "expires, expired error"      #f (expect:process-expires "2/2/2002"))
+(test "expires, not expired error"  #t (expect:process-expires "2/2/2020"))
+(test "expires, not specified"      #f (expect:process-expires #f))
+
 (define *sections* '())
 
 ;; Have the builtin trigger for Log start to account for.

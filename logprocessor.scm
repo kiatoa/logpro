@@ -227,26 +227,21 @@
   (apply print msg remmesg))
 
 ;; if expires is a date convert it to seconds until or since expired
-(define (expect:process-expires expires type)
+;; #t => rule is expired, no longer apply it
+;; #f => rule is not expired, it still applies
+(define (expect:process-expires expires)
   (let ((ex-val (if expires
 		    (if (string-match #/^\d+\/\d+\/\d+$/ expires)
-			(let ((secs (local-time->seconds (string->time expires "%D"))))
-			  (- secs (current-seconds))) ;; postive seconds, not expired, negative seconds, expired
+			(local-time->seconds (string->time expires "%m/%d/%Y"))
 			(begin
 			  (print "WARNING: Couldn't parse date: " expires ", date should be MM/DD/YY")
 			  #f))
 		    #f)))
     ;; now have #f: no expire spec'd, -ve num: expired, +ve num: not expired
-    (cond
-     ((not ex-val) #t)   ;; rules always apply if no expire specified
-     ((>= ex-val 0)      ;; expire specified and not expired
-      (case type
-	((error)    #t)
-	((warn)     #t)
-	((required) #t)  ;; leaving this case statement in until these semantics make full sense.
-	((waive)    #f)  ;; should required be #f?
-	(else       #t)))
-     (else #f))))
+    ;; (print "expires: " expires " type: " type " ex-val: " ex-val)
+    (if ex-val
+	(>= ex-val (current-seconds))  ;; expire specified
+	#f)))
 
 (define (expect where section comparison value name patts #!key (expires #f)(type 'error)(hook #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
@@ -270,9 +265,9 @@
   ;;   #f              : no expires specified
   ;;   negative number : seconds since this rule expired
   ;;   postive number  : seconds until this rule expires
-  (if (expect:process-expires expires type)
+  (if (not (expect:process-expires expires))
       (begin
-	(print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook)
+	;; (print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook)
 	(for-each
 	 (lambda (sect)
 	   (hash-table-set! *expects*
@@ -322,7 +317,7 @@
   ;;    #f             : no expires specified
   ;;   negative number : seconds since this rule expired
   ;;   postive number  : seconds until this rule expires
-  (if (expect:process-expires expires type) ;; true means yes, apply the rule, false means no, do not apply the rule
+  (if (not (expect:process-expires expires)) ;; #f means yes, apply the rule, #t means no, do not apply the rule, i.e. if expired do not apply the rule
       (for-each
        (lambda (sect)
 	 (hash-table-set! *expects* ;; comparison is not used                 matchnum used to pick the match from the regex

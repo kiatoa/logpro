@@ -15,14 +15,21 @@ begin Blah3
 ERROR: Bad, but allowed for now, should be flagged in brown
 end Blah3
 
-// The following is an error that was Waived up to 01/01/2002 and thus should FAIL
+// Expirations:
+// 
+// expired error  - error no longer applied after date
+// expired warn   - warn no longer applied after date
+// expired ignore - ignore no longer applied after date
+// I.e. an expired rule is no longer applied as if it is not even typed into the logpro file
+
+// The following is an error that was Waived up to 01/01/2002 and thus should FAIL (i.e. be red)
 begin Blah4
 ERROR: An error that was suppressed before 01/01/2002
 end Blah4
 
-// The following is an error that is Waived up to 01/01/2100 and thus should PASS
+// The following is an error that is Waived up to 01/01/2020 and thus should PASS (i.e. be brown)
 begin Blah5
-ERROR: This error is waived until 01/01/2100 and thus should PASS
+ERROR: This error is waived until 01/01/2020 and thus should PASS
 end Blah5
 
 miscellaneous output which doesn't match any expects
@@ -50,7 +57,6 @@ An expect:value test; out: 5 1.99 # should pass
 // these should trigger the > 1.9 expect:value check
 An expect:value test; cmpout: 6 1.89 # should fail
 An expect:value test; cmpout: 7 1.92 # should pass
-
 
 // This is nothing
 
