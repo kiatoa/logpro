@@ -3,13 +3,13 @@
 ;;   License GPL.
 
 ;; define your hooks
-(hook:add "error"   "echo \"Error hook activated: #{escaped msg}\"" one-time: #t)
-(hook:add "warning" "echo \"Got warning: #{escaped warnmsg}\"")
-(hook:add "test"    "echo \"m1=#{m1}, m2=#{m2}, m3=#{m3}, m4=#{m4}\"")
-(hook:add "freq"    "echo \"Value hook activated: expected=#{expected}, measured=#{measured}, tolerance=#{tolerance}, message=#{message}\"")
-(hook:add "logerr"  "echo \"\n\nLog an error: #{line}\n\nmsg: #{msg}\n\"")
+(hook:add "error"   "echo \"Error hook activated: #{escaped msg}\" > hooks-out.log" one-time: #t)
+(hook:add "warning" "echo \"Got warning: #{escaped warnmsg}\" >> hooks-out.log")
+(hook:add "test"    "echo \"m1=#{m1}, m2=#{m2}, m3=#{m3}, m4=#{m4}\" >> hooks-out.log")
+(hook:add "freq"    "echo \"Value hook activated: expected=#{expected}, measured=#{measured}, tolerance=#{tolerance}, message=#{message}\" >> hooks-out.log")
+(hook:add "logerr"  "echo \"\n\nLog an error: #{line}\n\nmsg: #{msg}\n\" >> hooks-out.log")
 ;; Capture four values and call four commands
-(hook:add "quadval" "echo \"Value1: #{m1}\";echo \"Value2: #{m2}\";echo \"Value3: #{m3}\";echo \"Value4: #{m4}\"") 
+(hook:add "quadval" "echo \"Value1: #{m1}\";echo \"Value2: #{m2}\";echo \"Value3: #{m3}\";echo \"Value4: #{m4}\" >> hooks-out.log") 
 
 ;; first ensure your run at least started
 ;;
@@ -40,10 +40,10 @@
 (expect:ignore   in "LogFileBody" > 0 "Testing substitution" #/(misc).*(out\S+)\s+(.*ich).*(exp.*)$/ hook: "test")
 
 ;; Using match number
-(expect:value    in "LogFileBody" 1.9 0.1 "Time Voltage" #/out: (\d+)\s+(\d+)/ matchnum: 2)
+(expect:value    in "LogFileBody" 1.9 0.1 "Time Voltage" #/ out: (\d+)\s+([\d\.\+\-e]+)/ matchnum: 2)
 
 ;; Comparison instead of tolerance
-(expect:value    in "LogFileBody" 1.9 >   "Time voltage" #/out: (\d+)\s+(\d+)/ matchnum: 2)
+(expect:value    in "LogFileBody" 1.9 >   "Time voltage" #/ cmpout: (\d+)\s+([\d\.\+\-e]+)/ matchnum: 2)
 
 (expect:ignore   in "Blah2" < 99 "FALSE ERROR" #/ERROR/)
 (expect:ignore   in "Body"  < 99 "Ignore the word error in comments" #/^\/\/.*error/)

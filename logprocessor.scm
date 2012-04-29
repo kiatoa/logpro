@@ -308,7 +308,9 @@
   (if (not (or (string? section)
 	       (list? section)))   (print:error "ERROR: section must be a string or list of strings"))
   (if (not (number? value))        (print:error "ERROR: value must be a number"))
-  (if (not (number? tol))          (print:error "ERROR: tolerance must be a number"))
+  (if (not (or (number? tol)
+	       (member tol (list < > <= >= =))))
+      ((print:error "ERROR: tolerance must be a number or one of < > <= >= =")))
   (if (not (string? name))         (print:error "ERROR: name must be a string"))
   (if (and expires (not (string? expires)))
       (print:error "ERROR: expires must be a date string MM/DD/YY, got " expires)
@@ -332,7 +334,7 @@
 
 ;; extract out the value if possible.
 (define (expect:value-compare expect match)
-  ;;  (print "expect:value-compare :\n   " expect "\n   " match)
+  ;; (print "expect:value-compare :\n   " expect "\n   " match)
   (let* ((which-match (if (expects:get-matchnum expect)
 			  (expects:get-matchnum expect);; expects:get-compiled-patts returns a list (patt matchnum)
 			  1)) ;; input is (patt) or (patt n) where n is the patt number to take as the value
@@ -341,8 +343,10 @@
 	 (value     (expects:get-value expect))
 	 (tol       (expects:get-tol   expect)))
     (if match-num
-	(let ((result (and (<= match-num (+ value tol))
-			   (>= match-num (- value tol)))))
+	(let ((result (if (number? tol)
+			  (and (<= match-num (+ value tol))
+			       (>= match-num (- value tol)))
+			  (tol match-num value))))
 	  (list result match-num "ok"))
 	(if match-str
 	    (list #f match-str "match is not a number")
@@ -392,7 +396,7 @@
 	 (close-output-port *htmlport*)
 	 (exit 1))
        (load cmdfname))
-      (analyze-logfile)
+      (analyze-logfile (current-output-port))
       (print-results)
       ))))
 
@@ -416,7 +420,7 @@
 	(lambda ()
 	  (apply print stuff)))))
 
-(define (analyze-logfile)
+(define (analyze-logfile oup)
   (let ((active-sections  (make-hash-table))
 	(found-expects    '())
 	(html-mode        'pre)
@@ -441,7 +445,9 @@
 		     (begin
 		       (trigger:set-remaining-hits! trigger (- remhits 1))
 		       (set! html-highlight-flag (vector "blue" #f #f (trigger:get-name trigger)))
-		       (print      "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)
+		       (with-output-to-port oup
+			 (lambda ()
+			   (print      "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)))
 		       (trigger:inc-total-hits trigger)
 		       (adj-active-sections trigger active-sections)))))
 	     *triggers*)
@@ -489,8 +495,9 @@
 								   (valb (expects:get-num (car b))))
 							       (if (and (number? vala)(number? valb))
 								   (< vala valb);; (print "car a: " (car a) " car b: " (car b))
-								   (begin
-								     (print "WARNING: You have triggered a bug, please report it.\n  vala: " vala " valb: " valb)
+								   (with-output-to-port oup
+								     (lambda ()
+								       (print "WARNING: You have triggered a bug, please report it.\n  vala: " vala " valb: " valb))
 								     #f)))))))
 			 (expect    (car dat))
 			 (section   (cadr dat))
@@ -531,25 +538,33 @@
 				" " 
 				(expects:get-value expect)
 				" in section " section " on line " line-num)))
-		      (apply print (cons "LOGPRO " msg))
+		      (with-output-to-port oup
+			(lambda ()
+			  (apply print (cons "LOGPRO " msg))))
 		      (if (and (not pass-fail)
 			       (eq? expect-type 'error))
 			  ;; failed error case
 			  (let ((cmd    (expects:get-hook expect)))
 			    (if cmd
 				(let ((errhook (hook:process-line cmd line match)))
-				  (print "ERRMSG HOOK CALLED: " errhook)
+				  (with-output-to-port oup
+				    (lambda ()
+				      (print "ERRMSG HOOK CALLED: " errhook)))
 				  (system errhook)
 				  (expects:delete-if-one-time expect))))
 			  (let ((cmd    (expects:get-hook expect)))
 			    (if cmd
 				(let ((hookcmd (hook:process-line cmd line match)))
-				  (print "NONERR HOOK CALLED: " hookcmd)
+				  (with-output-to-port oup
+				    (lambda ()
+				      (print "NONERR HOOK CALLED: " hookcmd)))
 				  (system hookcmd)
 				  (expects:delete-if-one-time expect))))))
 		    (expects:inc-count expect)
 		    (set! found-expects '()))))
-	    (print line)
+	    (with-output-to-port oup
+	      (lambda ()
+		(print line)))
 	    (if html-highlight-flag
 		(let ((color (vector-ref html-highlight-flag 0))
 		      (label (vector-ref html-highlight-flag 1))

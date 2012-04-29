@@ -43,6 +43,15 @@ Freq: 1.12e11 Hz
 
 Freq: 1.1197e+10Hz
 
+// these should trigger the 1.9 +/- 0.1 expect:value check
+An expect:value test; out: 4 2.01 # should fail
+An expect:value test; out: 5 1.99 # should pass
+
+// these should trigger the > 1.9 expect:value check
+An expect:value test; cmpout: 6 1.89 # should fail
+An expect:value test; cmpout: 7 1.92 # should pass
+
+
 // This is nothing
 
 // A case where we are capturing multiple values on a single line and exectuting 

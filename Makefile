@@ -5,9 +5,9 @@ logpro.profiled : logprocessor.scm logpro.scm
 	csc -profile -X regex -X regex-literals logpro.scm -o logpro.profiled
 
 test : logpro
-	csi -n -b tests/run.scm 
-	@echo next step is expected to fail
-	./logpro example.logpro example.html < example.log > example.out
+	csi -q -b -n tests/run.scm 
+	! ./logpro example.logpro example.html < example.log > example.out
+	firefox example.html
 
 examples :
 	(./logpro example.logpro example.html < example.log > /dev/null; echo "expect error code = 1, got $$?")
