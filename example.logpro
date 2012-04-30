@@ -3,6 +3,7 @@
 ;;   License GPL.
 
 ;; define your hooks
+;;
 (hook:add "error"   "echo \"Error hook activated: #{escaped msg}\" > hooks-out.log" one-time: #t)
 (hook:add "warning" "echo \"Got warning: #{escaped warnmsg}\" >> hooks-out.log")
 (hook:add "test"    "echo \"m1=#{m1}, m2=#{m2}, m3=#{m3}, m4=#{m4}\" >> hooks-out.log")
@@ -17,11 +18,6 @@
 (trigger "InitEnd"  #/^\s*$/)
 (section "Init" "Init" "InitEnd")
 
-(trigger "Body"     #/^.*$/) ;; anything starts the body
-;; (trigger "EndBody"  #/This had better never match/)
-
-(section "Body"     "Body" "EndBody")
-
 (trigger "Blah2"    #/^begin Blah2/)
 (trigger "Blah2End" #/^end Blah2/)
 (section "Blah2"    "Blah2" "Blah2End")
@@ -30,18 +26,32 @@
 (trigger "Blah3End" #/^end Blah3/)
 (section "Blah3"   "Blah3" "Blah3End")
 
+(trigger "Blah4"    #/^begin Blah4/)
+(trigger "Blah4End" #/^end Blah4/)
+(section "Blah4"   "Blah4" "Blah4End")
+
 (expect:waive    in "Blah3" = 1 "A real error that has been waived" #/ERROR:/)
 
+;; Required statements capture elements in your log file that *must* exist or the outcome is FAIL
+;;
 (expect:required in "Init"  = 1 "Header"      #/This is a header/)
 (expect:required in "LogFileBody" > 0 "Something required but not found" #/This is required but not found/)
+
+;; Value statements are used to extract values and compare them with an expected value
+;;
 (expect:value    in "LogFileBody" 1.9 0.1 "Output voltage" #/Measured voltage output:\s*([\d\.\+\-e]+)v/ hook: "freq")
 (expect:value    in "LogFileBody" 0.5 0.1 "Output current" #/Measured output current:\s*([\d\.\+\-e]+)mA/)
 (expect:value    in "LogFileBody" 110e9 2e9 "A big number (first)" #/Freq:\s*([\d\.\+\-e]+)\s+Hz/)
 (expect:value    in "LogFileBody" 110e9 1e9 "A big number (second), hook not called" #/Freq:\s*([\d\.\+\-e]+)Hz/)
 (expect:value    in "LogFileBody" 110e9 1e9 "A big number (never activated)" #/Freq:\s*([\d\.\+\-e]+)zH/)
 
-(expect:error    in "LogFileBody" = 0 "ERROR: from before 2002, should be flagged as error" #/ERROR:.*2002/ expires: "01/01/2002")
-(expect:error    in "LogFileBody" = 0 "ERROR: waived until 2100, should not be flagged as error" #/ERROR:.*2100/ expires: "01/01/2100")
+;; You can use expires to disable errors or ignores after a specific time
+;; NOTE: this can be a bit confusing. The effect is that after the expire date the rule is disabled.
+;;
+(expect:ignore   in "Blah4" < 4 "ERROR: ignore applied until 2002, thereafter flagged as error" #/ERROR:.*2002/ expires: "01/01/2002")
+(expect:ignore   in "Blah4" < 4 "ERROR: ignore applied until 2020, thereafter flagged as error" #/ERROR:.*2020/ expires: "01/01/2020")
+(expect:error    in "Blah4" = 0 "Any ERROR in section blah4" #/ERROR/)
+
 ;;                                                          miscellaneous output which doesn't match any expects
 (expect:ignore   in "LogFileBody" > 0 "Testing substitution" #/(misc).*(out\S+)\s+(.*ich).*(exp.*)$/ hook: "test")
 
@@ -52,9 +62,9 @@
 (expect:value    in "LogFileBody" 1.9 >   "Time voltage" #/ cmpout: (\d+)\s+([\d\.\+\-e]+)/ matchnum: 2)
 
 (expect:ignore   in "Blah2" < 99 "FALSE ERROR" #/ERROR/)
-(expect:ignore   in "Body"  < 99 "Ignore the word error in comments" #/^\/\/.*error/)
-(expect:warning  in "Body"  = 0 "Any warning" #/WARNING/)
-(expect:error    in "Body"  = 0 "ERROR BLAH"  (list #/ERROR/ #/error/) hook: "logerr") ;; but disallow any other errors
+(expect:ignore   in "LogFileBody"  < 99 "Ignore the word error in comments" #/^\/\/.*error/)
+(expect:warning  in "LogFileBody"  = 0 "Any warning" #/WARNING/)
+(expect:error    in "LogFileBody"  = 0 "ERROR BLAH"  (list #/ERROR/ #/error/) hook: "logerr") ;; but disallow any other errors
 
 ;; Use expect:required to extract some values
 (expect:required   in "LogFileBody" = 1 "Quad values" #/First:\s+(\d+)\s+Second:\s+(\d+)\s+Third:\s+(\d+)\s+Fourth:\s+(\d+)/ hook: "quadval")

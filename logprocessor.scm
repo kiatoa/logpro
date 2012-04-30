@@ -240,7 +240,7 @@
     ;; now have #f: no expire spec'd, -ve num: expired, +ve num: not expired
     ;; (print "expires: " expires " type: " type " ex-val: " ex-val)
     (if ex-val
-	(>= ex-val (current-seconds))  ;; expire specified
+	(<= ex-val (current-seconds))  ;; expire specified
 	#f)))
 
 (define (expect where section comparison value name patts #!key (expires #f)(type 'error)(hook #f))
@@ -252,8 +252,7 @@
   (if (not (number? value))        (print:error "ERROR: value must be a number"))
   (if (not (string? name))         (print:error "ERROR: name must be a string"))
   (if (and expires (not (string? expires)))
-      (print:error "ERROR: expires must be a date string MM/DD/YY, got " expires)
-      (set! expires #f))
+      (print:error "ERROR: expires must be a date string MM/DD/YY, got " expires))
   (if (not (list? patts))
       (set! patts (list patts)))
   (for-each (lambda (rx)
@@ -261,10 +260,8 @@
 		  (print:error "ERROR: your regex is not valid: " rx)))
 	    patts)
 
-  ;; Change methodology here. Expires becomes a flag with the following meaning
-  ;;   #f              : no expires specified
-  ;;   negative number : seconds since this rule expired
-  ;;   postive number  : seconds until this rule expires
+  ;; #f => rule is not expired, go ahead and apply it
+  ;; #t => rule is expired, do NOT apply it
   (if (not (expect:process-expires expires))
       (begin
 	;; (print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook)
