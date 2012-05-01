@@ -38,6 +38,20 @@
 		  #f
 		  (loop (car tal)(cdr tal))))))))
 
+;; convert some procs to nice symbols
+;; merge this with comp->string
+(define (misc:op->symbol op)
+  (cond
+   ((or (string? op)
+	(symbol? op)
+	(number? op)) op)
+   ((eq? op =)  '=)
+   ((eq? op >)  '>)
+   ((eq? op <)  '<)
+   ((eq? op >=) '>=)
+   ((eq? op <=) '<=)
+   (else 'unk)))
+   
 ;;======================================================================
 ;; Hooks
 ;;======================================================================
@@ -659,7 +673,7 @@
 					section 
 					(if xstatus "OK" "FAIL") 
 					value 
-					tolerance
+					(misc:op->symbol tolerance)
 					measured
 					(expects:get-val-pass-count expect) 
 					(expects:get-val-fail-count expect)))
@@ -671,7 +685,7 @@
 					  (hook:subst-var cmd "measured" (conc measured))
 					  "message" name)
 					 "expected" (conc value))
-					"tolerance" (conc tolerance))))
+					"tolerance" (conc (misc:op->symbol tolerance)))))
 			(print "VALUE HOOK CALLED: " valuehook)
 			(system valuehook))))
 		(set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name count)))
