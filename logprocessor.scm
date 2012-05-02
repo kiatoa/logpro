@@ -536,10 +536,12 @@
 				(expect:expect-type-get-type type-info) ": " 
 				(expects:get-name expect) " "
 				(if is-value
-				    (conc (expects:get-value expect) "+/-" 
-					  (expects:get-tol expect) 
-					  " got " (cadr pass-fail)
-					  " which is " (if (car pass-fail) "PASS" "FAIL"))
+				    (let ((tol (expects:get-tol expect))
+					  (val (expects:get-value expect)))
+				      (conc (if (number? tol) val "") " "
+					    (if (number? tol) "+/-" (conc (misc:op->symbol tol) " " val))
+					    " got " (cadr pass-fail)
+					    " which is " (if (car pass-fail) "PASS" "FAIL")))
 				    (expects:get-comparison-as-text expect))
 				" " 
 				(expects:get-value expect)
@@ -599,7 +601,7 @@
 	(toterrcount  0)
 	(totwarncount 0)
 	;;           type where section OK/FAIL compsym value name count
-	(valfmt      "  ~8a ~2@a ~12a ~4@a, expected ~a +/- ~a got ~a, ~a pass, ~a fail")
+	(valfmt      "  ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
         ;;            type where section OK/FAIL compsym value name count
 	(fmt         "  ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
 	(fmt-trg     "Trigger: ~13a ~15@a, count=~a"))
@@ -672,8 +674,9 @@
 					where 
 					section 
 					(if xstatus "OK" "FAIL") 
-					value 
-					(misc:op->symbol tolerance)
+					(if (number? tolerance) value (misc:op->symbol tolerance))
+					(if (number? tolerance) "+/-" "")
+					(if (number? tolerance) (misc:op->symbol tolerance) value)
 					measured
 					(expects:get-val-pass-count expect) 
 					(expects:get-val-fail-count expect)))
