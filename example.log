@@ -15,6 +15,17 @@ begin Blah3
 ERROR: Bad, but allowed for now, should be flagged in brown
 end Blah3
 
+// Blah5 tests. Errors are suppressed in section Blah5 but not otherwise
+begin Blah5
+A BLAH5 message in a BLAH5 section is suppressed
+end Blah5
+
+A BLAH5 message outside a BLAH5 section is counted
+
+begin Blah5
+A second BLAH5 message in a BLAH5 section is suppressed
+end Blah5
+
 // Expirations:
 // 
 // expired error  - error no longer applied after date

@@ -30,6 +30,13 @@
 (trigger "Blah4End" #/^end Blah4/)
 (section "Blah4"   "Blah4" "Blah4End")
 
+(trigger-with-limit "Blah5"    100 #/^begin Blah5/)
+(trigger-with-limit "Blah5End" 100 #/^end Blah5/)
+(section "Blah5" "Blah5" "Blah5End")
+
+(expect:waive in "Blah5"       = 2 "Have exactly two BLAH5 errors to waive inside the two Blah5 sections" #/^A.*BLAH5/)
+(expect:error in "LogFileBody" < 1 "Only have one BLAH5 error outside of the Blah5 section" #/^A.*BLAH5/)
+
 (expect:waive    in "Blah3" = 1 "A real error that has been waived" #/ERROR:/)
 
 ;; Required statements capture elements in your log file that *must* exist or the outcome is FAIL
