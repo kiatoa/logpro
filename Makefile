@@ -1,6 +1,9 @@
 logpro : logprocessor.scm logpro.scm
 	csc -X regex -X regex-literals logpro.scm -o logpro
 
+$(DEPLOYTARG)/logpro : logprocessor.scm logpro.scm
+	csc -X regex -X regex-literals logpro.scm -deployed -o $(DEPLOYTARG)/logpro
+
 logpro.profiled : logprocessor.scm logpro.scm
 	csc -profile -X regex -X regex-literals logpro.scm -o logpro.profiled
 
