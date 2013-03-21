@@ -1,7 +1,12 @@
+
+CSI = $(shell which csi)
+LIBCHK = $(shell ldd $(CSI) | grep libchicken.so.6 | awk '{print $$3}')
+
 logpro : logprocessor.scm logpro.scm
 	csc -X regex -X regex-literals logpro.scm -o logpro
 
 $(DEPLOYTARG)/logpro : logprocessor.scm logpro.scm
+	cp $(LIBCHK) $(DEPLOYTARG)
 	chicken-install -prefix $(DEPLOYTARG) -deploy format srfi-69 srfi-1 posix regex regex-literals
 	csc -X regex -X regex-literals logpro.scm -deployed -o $(DEPLOYTARG)/logpro
 
