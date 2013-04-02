@@ -77,3 +77,8 @@
 (expect:required   in "LogFileBody" = 1 "Quad values" #/First:\s+(\d+)\s+Second:\s+(\d+)\s+Third:\s+(\d+)\s+Fourth:\s+(\d+)/ hook: "quadval")
 
 ;(expect in "Init"  < 1 "Junk"        #/This is bogus/)
+
+;; A convience variable "logfile" was defined to make the common case of applying rules to the 
+;; entire logfile a tad easier
+(expect:check in logfile = 1 "If flagged, raise CHECKED flag and exit with error code 3" #/This is a line to trigger CHECK/)
+

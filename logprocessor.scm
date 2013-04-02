@@ -147,6 +147,9 @@
 (trigger "LogFileBodyStart" #/.*/)
 (section "LogFileBody" "LogFileBodyStart" "LogFileBodyEnd")
 
+;; For those of us who wish to save a little typing (is this mildly dangerous?)
+(define logfile "LogFileBody")
+
 ;;======================================================================
 ;; Expects
 ;;======================================================================
@@ -305,6 +308,9 @@
 (define (expect:required where section comparison value name patts #!key (expires #f)(type 'required)(hook #f))
   (expect where section comparison value name patts expires: expires type: type hook: hook))
 
+(define (expect:check where section comparison value name patts #!key (expires #f)(type 'check)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
+
 ;;======================================================================
 ;; TODO: Compress this in with the expect routine above
 ;;======================================================================
@@ -366,6 +372,7 @@
     ((error)    (vector "Error"    "red"))
     ((warning)  (vector "Warning"  "orange"))
     ((required) (vector "Required" "purple"))
+    ((check)    (vector "Check"    "pink"))
     ((value)    (vector "Value"    "blue"))
     (else       (vector "Error"    "red"))))
 
@@ -600,6 +607,7 @@
   (let ((status       #t)
 	(toterrcount  0)
 	(totwarncount 0)
+	(totcheckcount 0)
 	;;           type where section OK/FAIL compsym value name count
 	(valfmt      "  ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
         ;;            type where section OK/FAIL compsym value name count
@@ -711,7 +719,9 @@
 		   ((or (eq? etype 'error)(eq? etype 'required)(eq? etype 'value))
 		    (set! toterrcount (+ toterrcount 1)))
 		   ((eq? etype 'warning)
-		    (set! totwarncount (+ totwarncount 1))))))))
+		    (set! totwarncount (+ totwarncount 1)))
+		   ((eq? etype 'check)
+		    (set! totcheckcount (+ totcheckcount 1))))))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
     ;; (print "Total errors: " toterrcount)
@@ -721,16 +731,14 @@
     ;; (if (and (not *got-an-error*) status)
     ;;     (exit 0)
     (cond 
-     ((> toterrcount 0)  (exit 1))
-     ((> totwarncount 0) (exit 2))
-     (*got-an-error*     (begin
-			   (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
-			   (exit 1)))
+     ((> toterrcount 0)   (exit 1))
+     ((> totwarncount 0)  (exit 2))
+     ((> totcheckcount 0) (exit 3))
+     (*got-an-error*      (begin
+			    (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
+			    (exit 1)))
      (status             (exit 0))
      (else               (exit 0)))))
-     ;; (if (and *got-an-error* (> toterrcount 0))
-     ;;        (exit 1)
-     ;;        (exit 2)))))
 
 (define (setup-logpro)
   (use regex)

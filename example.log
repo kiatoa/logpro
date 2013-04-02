@@ -74,6 +74,8 @@ An expect:value test; cmpout: 7 1.92 # should pass
 
 First: 1 Second: 2 Third: 3 Fourth: 4
 
+This is a line to trigger CHECK
+
 The End
 
 
