@@ -732,8 +732,8 @@
     ;;     (exit 0)
     (cond 
      ((> toterrcount 0)   (exit 1))
-     ((> totwarncount 0)  (exit 2))
      ((> totcheckcount 0) (exit 3))
+     ((> totwarncount 0)  (exit 2))
      (*got-an-error*      (begin
 			    (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
 			    (exit 1)))
