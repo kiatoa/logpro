@@ -15,7 +15,12 @@
   (if (< (length args) 2)
       (begin
 	(print "Usage: logpro cmdfile [htmlfile] > annotated.log < inputfile.log")
-	(print "  Exits with error code = 0 on success, 1 for errors found and 2 for Warnings only")
+	(print "  Exits with ")
+	(print "    error code = 0 on success,")
+	(print "    error code = 1 errors found,")
+	(print "    error code = 2 warnings found,")
+	(print "    error code = 3 check condition found,")
+	(print "    error code = 4 waivers found.")
 	(print "  Version " logpro-version)
 	(print "  License GPL, more info about logpro at http://www.kiatoa.com/fossils/logpro")
 	(exit 1))))
@@ -719,12 +724,10 @@
 		(begin
 		  (set! status #f)
 		  (cond
-		   ((or (eq? etype 'error)(eq? etype 'required)(eq? etype 'value)(eq? etype 'waive))
+		   ((or (member etype '(error required value waive check))) ;; (eq? etype 'error)(eq? etype 'required)(eq? etype 'value)(eq? etype 'waive))
 		    (set! toterrcount (+ toterrcount 1)))
 		   ((eq? etype 'warning)
 		    (set! totwarncount (+ totwarncount 1)))
-		   ((eq? etype 'waive)
-		    (set! toterrcount (+ toterrcount 1)))
 		   ))
 		(begin
 		  (cond
