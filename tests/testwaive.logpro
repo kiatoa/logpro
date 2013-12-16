@@ -1,0 +1,1 @@
+(expect:waive in "LogFileBody" = 1 "Require match then is waived" #/waive me/)

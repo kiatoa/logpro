@@ -608,6 +608,7 @@
 	(toterrcount  0)
 	(totwarncount 0)
 	(totcheckcount 0)
+	(totwaivecount 0)
 	;;           type where section OK/FAIL compsym value name count
 	(valfmt      "  ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
         ;;            type where section OK/FAIL compsym value name count
@@ -636,6 +637,8 @@
     ;; now print the expects
     (for-each 
      (lambda (section)
+       (print "\nExpects for " section " section: ")
+       (html-print "<p>Expects for " section " section: ")
        (for-each 
 	(lambda (expect)
 	  (let* ((where   (expects:get-where expect)) ;; not used yet, "in" is only option
@@ -716,12 +719,20 @@
 		(begin
 		  (set! status #f)
 		  (cond
-		   ((or (eq? etype 'error)(eq? etype 'required)(eq? etype 'value))
+		   ((or (eq? etype 'error)(eq? etype 'required)(eq? etype 'value)(eq? etype 'waive))
 		    (set! toterrcount (+ toterrcount 1)))
 		   ((eq? etype 'warning)
 		    (set! totwarncount (+ totwarncount 1)))
+		   ((eq? etype 'waive)
+		    (set! toterrcount (+ toterrcount 1)))
+		   ))
+		(begin
+		  (cond
 		   ((eq? etype 'check)
-		    (set! totcheckcount (+ totcheckcount 1))))))))
+		    (set! totcheckcount (+ totcheckcount 1)))
+		   ((eq? etype 'waive)
+		    (set! totwaivecount (+ totwaivecount 1)))
+		   )))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
     ;; (print "Total errors: " toterrcount)
@@ -734,6 +745,7 @@
      ((> toterrcount 0)   (exit 1))
      ((> totcheckcount 0) (exit 3))
      ((> totwarncount 0)  (exit 2))
+     ((> totwaivecount 0) (exit 4))
      (*got-an-error*      (begin
 			    (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
 			    (exit 1)))
