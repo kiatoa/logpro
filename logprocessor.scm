@@ -316,6 +316,9 @@
 (define (expect:check where section comparison value name patts #!key (expires #f)(type 'check)(hook #f))
   (expect where section comparison value name patts expires: expires type: type hook: hook))
 
+(define (expect:abort where section comparison value name patts #!key (expires #f)(type 'abort)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
+
 ;;======================================================================
 ;; TODO: Compress this in with the expect routine above
 ;;======================================================================
@@ -378,6 +381,7 @@
     ((warning)  (vector "Warning"  "orange"))
     ((required) (vector "Required" "purple"))
     ((check)    (vector "Check"    "pink"))
+    ((abort)    (vector "Abort"    "crimson"))
     ((value)    (vector "Value"    "blue"))
     (else       (vector "Error"    "red"))))
 
@@ -614,6 +618,7 @@
 	(totwarncount 0)
 	(totcheckcount 0)
 	(totwaivecount 0)
+	(totabortcount 0)
 	;;           type where section OK/FAIL compsym value name count
 	(valfmt      "  ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
         ;;            type where section OK/FAIL compsym value name count
@@ -735,6 +740,8 @@
 		    (set! totcheckcount (+ totcheckcount 1)))
 		   ((eq? etype 'waive)
 		    (set! totwaivecount (+ totwaivecount 1)))
+		   ((eq? etype 'abort)
+		    (set! totabortcount (+ totabortcount 1)))
 		   )))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
@@ -749,6 +756,7 @@
      ((> totcheckcount 0) (exit 3))
      ((> totwarncount 0)  (exit 2))
      ((> totwaivecount 0) (exit 4))
+     ((> totabortcount 0) (exit 5))
      (*got-an-error*      (begin
 			    (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
 			    (exit 1)))

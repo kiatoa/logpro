@@ -82,3 +82,5 @@
 ;; entire logfile a tad easier
 (expect:check in logfile = 1 "If flagged, raise CHECKED flag and exit with error code 3" #/This is a line to trigger CHECK/)
 
+;; Abort check
+(expect:abort in logfile = 0 "If flagged our process failed to run correctly" #/^CRASH/)

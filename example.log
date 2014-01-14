@@ -67,6 +67,9 @@ An expect:value test; out: 5 1.99 # should pass
 An expect:value test; cmpout: 6 1.89 # should fail
 An expect:value test; cmpout: 7 1.92 # should pass
 
+// A crash is captured as an abort
+CRASH!!!
+
 // This is nothing
 
 // A case where we are capturing multiple values on a single line and exectuting 
