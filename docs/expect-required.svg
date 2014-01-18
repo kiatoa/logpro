@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="990"
+   height="765"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="expect-required.svg">
+  <defs
+     id="defs4">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 382.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="990 : 382.5 : 1"
+       inkscape:persp3d-origin="495 : 255 : 1"
+       id="perspective3032" />
+    <marker
+       inkscape:stockid="Arrow1Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lend"
+       style="overflow:visible;">
+      <path
+         id="path3855"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;"
+         transform="scale(0.8) rotate(180) translate(12.5,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow2Lend"
+       style="overflow:visible;">
+      <path
+         id="path3873"
+         style="fill-rule:evenodd;stroke-width:0.62500000;stroke-linejoin:round;"
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         transform="scale(1.1) rotate(180) translate(1,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Lend-7"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3873-1"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Lend-0"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3873-3"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Lend-5"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3873-17"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Lend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Lend-3"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path3873-6"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.0733333"
+     inkscape:cx="495"
+     inkscape:cy="452.87149"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="true"
+     inkscape:window-width="1366"
+     inkscape:window-height="768"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0">
+    <inkscape:grid
+       type="xygrid"
+       id="grid3026"
+       empspacing="5"
+       visible="true"
+       enabled="true"
+       snapvisiblegridlinesonly="true"
+       units="in"
+       spacingx="0.01in"
+       spacingy="0.01in" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-287.36218)">
+    <rect
+       style="opacity:0.90196078000000002;fill:#ffb380;fill-opacity:1"
+       id="rect2985"
+       width="637.14288"
+       height="144.28571"
+       x="179.42859"
+       y="322.07648" />
+    <text
+       xml:space="preserve"
+       style="font-size:48px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="288"
+       y="386.36218"
+       id="text2987"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2989"
+         x="288"
+         y="386.36218">expect:required</tspan></text>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot2991"
+       style="font-size:18px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"><flowRegion
+         id="flowRegion2993"><rect
+           id="rect2995"
+           width="561.42859"
+           height="182.85715"
+           x="92.85714"
+           y="233.79076"
+           style="font-size:18px" /></flowRegion><flowPara
+         id="flowPara2997" /></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot2999"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(133.71429,196.85714)"><flowRegion
+         id="flowRegion3001"><rect
+           id="rect3003"
+           width="560"
+           height="42.857143"
+           x="78.571426"
+           y="220.93361" /></flowRegion><flowPara
+         id="flowPara3005"
+         style="text-align:center;text-anchor:middle">The &quot;expect:required&quot; rule is used to ensure that certain output exists to be considered a PASS</flowPara></flowRoot>    <rect
+       style="opacity:0.90196078000000002;fill:none;fill-opacity:1;stroke:#000000;stroke-opacity:1;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none"
+       id="rect3028"
+       width="972"
+       height="747"
+       x="9"
+       y="9"
+       transform="translate(0,287.36218)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3820"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(45,290.4402)"><flowRegion
+         id="flowRegion3822"><rect
+           id="rect3824"
+           width="990.00043"
+           height="180"
+           x="18"
+           y="212.92198" /></flowRegion><flowPara
+         id="flowPara3826"
+         style="font-size:24px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:FreeMono;-inkscape-font-specification:FreeMono">( expect:required in &quot;section&quot; &gt; 0 &quot;Description&quot; #/pattern/ )</flowPara></flowRoot>    <rect
+       style="opacity:0.90196078;fill:none;stroke:#c72d2d;stroke-width:3.23452115;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3828"
+       width="225"
+       height="53.999996"
+       x="90"
+       y="494.36218"
+       ry="8.9609137" />
+    <rect
+       style="opacity:0.90196078;fill:none;stroke:#d6dc22;stroke-width:3.28302646;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3830"
+       width="134.99997"
+       height="53.999908"
+       x="360"
+       y="494.36218"
+       ry="8.9528294" />
+    <rect
+       style="opacity:0.90196078;fill:none;stroke:#24d3c5;stroke-width:3.531286;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3832"
+       width="54.000004"
+       height="54.00008"
+       x="504"
+       y="494.36218"
+       ry="8.9114523" />
+    <rect
+       style="opacity:0.90196078;fill:none;stroke:#3738c9;stroke-width:3.27534795;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3834"
+       width="188.99998"
+       height="54.000076"
+       x="567"
+       y="494.36218"
+       ry="8.9541082" />
+    <rect
+       style="opacity:0.90196078;fill:none;stroke:#c73cb3;stroke-width:3.33956313;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3836"
+       width="152.60655"
+       height="54.445068"
+       x="765"
+       y="494.36218"
+       ry="8.9434061" />
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="551.5528"
+       y="236.73914"
+       id="text3838"
+       sodipodi:linespacing="125%"
+       transform="translate(0,287.36218)"><tspan
+         sodipodi:role="line"
+         id="tspan3840"
+         x="551.5528"
+         y="236.73914" /></text>
+    <text
+       xml:space="preserve"
+       style="font-size:18px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="36"
+       y="611.36218"
+       id="text3842"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3844"
+         x="36"
+         y="611.36218">type of rule</tspan></text>
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow2Lend)"
+       d="m 135,306 81,-36"
+       id="path4664"
+       inkscape:connector-curvature="0"
+       transform="translate(0,287.36218)"
+       sodipodi:nodetypes="cc" />
+    <text
+       xml:space="preserve"
+       style="font-size:18px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="81"
+       y="728.36218"
+       id="text3842-5"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3844-9"
+         x="81"
+         y="728.36218">Section of the log file where </tspan><tspan
+         sodipodi:role="line"
+         x="81"
+         y="750.86218"
+         id="tspan5166">this rule is applied. </tspan><tspan
+         sodipodi:role="line"
+         x="81"
+         y="773.36218"
+         id="tspan5106" /></text>
+    <text
+       xml:space="preserve"
+       style="font-size:18px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="405"
+       y="620.36218"
+       id="text3842-55"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3844-2"
+         x="405"
+         y="620.36218">Number of matches</tspan><tspan
+         sodipodi:role="line"
+         x="405"
+         y="642.86218"
+         id="tspan5110">expected for this rule. </tspan><tspan
+         sodipodi:role="line"
+         x="405"
+         y="665.36218"
+         id="tspan5112" /><tspan
+         sodipodi:role="line"
+         x="405"
+         y="687.86218"
+         id="tspan5114">The rule will FAIL if this</tspan><tspan
+         sodipodi:role="line"
+         x="405"
+         y="710.36218"
+         id="tspan5116">constraint is not met</tspan></text>
+    <rect
+       style="opacity:0.90196078;fill:none;stroke:#d6dc22;stroke-width:3.28302646;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3830-6"
+       width="302.97028"
+       height="209.54175"
+       x="66.029716"
+       y="698.82043"
+       ry="8.9528294" />
+    <rect
+       style="opacity:0.90196078;fill:none;stroke:#c73cb3;stroke-width:1.5;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect5108"
+       width="9"
+       height="9"
+       x="369"
+       y="261"
+       transform="translate(0,287.36218)"
+       ry="4.5" />
+    <rect
+       style="opacity:0.90196078;fill:none;stroke:#24d3c5;stroke-width:3.531286;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3832-7"
+       width="231.92691"
+       height="143.0636"
+       x="389.07309"
+       y="585.29858"
+       ry="8.9114523" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow2Lend)"
+       d="m 495,584.36218 18,-36"
+       id="path4664-4-0"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <g
+       sodipodi:type="inkscape:box3d"
+       style="opacity:0.90196078;fill:none;stroke:#c73cb3;stroke-width:1.5;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="g3034"
+       inkscape:perspectiveID="#perspective3032"
+       inkscape:corner0="-0.35833336 : 0.14689947 : 0 : 1"
+       inkscape:corner7="-0.43877551 : 0.049209184 : 0.25 : 1" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow2Lend)"
+       d="m 216,692.36218 198,-135"
+       id="path4664-9"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-end:url(#Arrow2Lend)"
+       d="m 639,746.36218 0,-198"
+       id="path4664-4-0-5"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <rect
+       style="opacity:0.90196078;fill:none;stroke:#3738c9;stroke-width:3.27534795;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3834-1"
+       width="208.12939"
+       height="95.918274"
+       x="538.87061"
+       y="749.44391"
+       ry="8.9541082" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3138"
+       style="font-size:18px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(10.1875,296.63945)"><flowRegion
+         id="flowRegion3140"><rect
+           id="rect3142"
+           width="190.17389"
+           height="72.204987"
+           x="547.82611"
+           y="467.79501" /></flowRegion><flowPara
+         id="flowPara3144">The description will be seen in the html summary</flowPara></flowRoot>  </g>
+</svg>

@@ -6,9 +6,16 @@
 
 (include "logprocessor.scm")
 
+(define oup (open-output-file "test-output.log"))
+(current-error-port oup)
+
 (define regexs (list (regexp "^hello$")(regexp "\\s+goodbye\\s+")))
 
 (test "misc:line-match-regexs" '("hello") (misc:line-match-regexs "hello" regexs))
+
+(test "expires, expired rule"      #t (expect:process-expires "1/1/2002"))
+(test "expires, not expired rule"  #f (expect:process-expires "1/1/2020"))
+(test "expires, no expiration"     #f (expect:process-expires #f))
 
 (define *sections* '())
 
@@ -19,11 +26,15 @@
 (test "register a section" 1 (begin (section "Nada" "Start" "End")
 				    (length *sections*)))
 
-(test "add an expect" 1 (begin (expect in "Nada" < 1 "Error 1" (regexp "foo"))
-			       (length (hash-table-keys *expects*))))
+(test "add an expect" 1 (with-output-to-port oup
+			  (lambda ()
+			    (expect in "Nada" < 1 "Error 1" (regexp "foo"))
+			    (length (hash-table-keys *expects*)))))
 
 (define logpro-version -1) ;; need to fake it out
-(test "load a command file" #t (begin (load "example.logpro") #t))
+(test "load a command file" #t (with-output-to-port oup
+                                 (lambda ()
+				   (load "example.logpro") #t)))
 
 ;; (use trace)
 ;; (trace analyze-logfile)
@@ -33,7 +44,8 @@
 
 (test "analyze loaded logfile" #t (with-input-from-file "example.log"
 				    (lambda ()
-				      (analyze-logfile) #t)))
+				      (analyze-logfile oup) #t)))
 				   
+(close-output-port oup)
 (test-exit)
  

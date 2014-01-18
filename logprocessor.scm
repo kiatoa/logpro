@@ -15,7 +15,12 @@
   (if (< (length args) 2)
       (begin
 	(print "Usage: logpro cmdfile [htmlfile] > annotated.log < inputfile.log")
-	(print "  Exits with error code = 0 on success, 1 for errors found and 2 for Warnings only")
+	(print "  Exits with ")
+	(print "    error code = 0 on success,")
+	(print "    error code = 1 errors found,")
+	(print "    error code = 2 warnings found,")
+	(print "    error code = 3 check condition found,")
+	(print "    error code = 4 waivers found.")
 	(print "  Version " logpro-version)
 	(print "  License GPL, more info about logpro at http://www.kiatoa.com/fossils/logpro")
 	(exit 1))))
@@ -38,20 +43,33 @@
 		  #f
 		  (loop (car tal)(cdr tal))))))))
 
+;; convert some procs to nice symbols
+;; merge this with comp->string
+(define (misc:op->symbol op)
+  (cond
+   ((or (string? op)
+	(symbol? op)
+	(number? op)) op)
+   ((eq? op =)  '=)
+   ((eq? op >)  '>)
+   ((eq? op <)  '<)
+   ((eq? op >=) '>=)
+   ((eq? op <=) '<=)
+   (else 'unk)))
+   
 ;;======================================================================
 ;; Hooks
 ;;======================================================================
 
 (define *hooks* (make-hash-table))
 
-(define (hook:first-error command)
-  (hash-table-set! *hooks* 'first-error command))
-
-(define (hook:first-warning command)
-  (hash-table-set! *hooks* 'first-warning command))
-
-(define (hook:value command)
-  (hash-table-set! *hooks* 'value command))
+;; if command is a string it is executed by system after substituting matches
+;;    m1, m2, m3, m4 in #{m5} type string targets.
+;;
+;; if command is a proc it is called with the list of match results
+;;
+(define (hook:add name command #!key (one-time #f))
+  (hash-table-set! *hooks* name (vector command one-time)))
 
 ;; escape single quotes and surround with single quotes
 (define (hook:command-param-escape val)
@@ -67,6 +85,27 @@
    (hook:command-param-escape val)
    (string-substitute (regexp (conc "#\\{" var "\\}")) (conc val)
 		      hookstr #t) #t))
+
+;; Variables to be substituted:
+;;
+;; line: the entire line matched
+;; msg:  the expect message (usually the 5th parameter)
+;; m1, m2 .... mN the regex matches
+;;
+(define (hook:process-line hookstr msg matches)
+  ;; (print "HOOK:PROCESS-LINE hookstr: " hookstr "\nmsg: " msg "\nmatches: " matches)
+  (let ((line  (car matches))
+	(subm  (cdr matches))
+	(res   ""))
+    (set! res (hook:subst-var hookstr "msg" msg))
+    (set! res (hook:subst-var res "line" line))
+    (if (null? subm) res 
+	(let loop ((hed (car subm))
+		   (tal (cdr subm))
+		   (cur 1))
+	  (set! res (hook:subst-var res (conc "m" cur) hed))
+	  (if (null? tal) res
+	      (loop (car tal)(cdr tal)(+ cur 1)))))))
 
 ;;======================================================================
 ;; Triggers
@@ -113,6 +152,9 @@
 (trigger "LogFileBodyStart" #/.*/)
 (section "LogFileBody" "LogFileBodyStart" "LogFileBodyEnd")
 
+;; For those of us who wish to save a little typing (is this mildly dangerous?)
+(define logfile "LogFileBody")
+
 ;;======================================================================
 ;; Expects
 ;;======================================================================
@@ -127,19 +169,30 @@
 (define before 'before)
 (define after  'after)
 
+(define-inline (comp->text comp)
+  (case comp
+   ((=)    "=")
+   ((>)    ">")
+   ((<)    "<")
+   ((>=)  ">=")
+   ((<=)  "<=")
+   (else "unk")))
+
+;;     (cond
+;;      ((eq? comp =)    "=")
+;;      ((eq? comp >)    ">")
+;;      ((eq? comp <)    "<")
+;;      ((eq? comp >=)  ">=")
+;;      ((eq? comp <=)  "<=")
+;;      ((string? comp) comp)
+;;      (else "unk"))))
+
 (define-inline (expects:get-where      vec)(vector-ref vec 0))
 (define-inline (expects:get-section    vec)(vector-ref vec 1))
 (define-inline (expects:get-comparison vec)(vector-ref vec 2))
 (define-inline (expects:get-comparison-as-text vec)
   (let ((comp (expects:get-comparison vec)))
-    (cond
-     ((eq? comp =)    "=")
-     ((eq? comp >)    ">")
-     ((eq? comp <)    "<")
-     ((eq? comp >=)  ">=")
-     ((eq? comp <=)  "<=")
-     ((string? comp) comp)
-     (else "unk"))))
+    (if (string? comp) comp (comp->text comp))))
 (define-inline (expects:get-value      vec)(vector-ref vec 3))
 (define-inline (expects:get-name       vec)(vector-ref vec 4))
 (define-inline (expects:get-count      vec)(vector-ref vec 5))
@@ -151,21 +204,36 @@
 (define-inline (expects:get-keyname    vec)(vector-ref vec 10))
 (define-inline (expects:get-tol        vec)(vector-ref vec 11))
 (define-inline (expects:get-measured   vec)(vector-ref vec 12))
-(define (expects:get-val-pass-count vec)
+(define-inline (expects:get-val-pass-count vec)
   (let ((pfv (vector-ref vec 13)))
     (vector-ref pfv 0)))
-(define (expects:get-val-fail-count vec)
+(define-inline (expects:get-val-fail-count vec)
   (let ((pfv (vector-ref vec 13)))
     (vector-ref pfv 1)))
-(define (expects:inc-val-pass-count vec)
+(define-inline (expects:inc-val-pass-count vec)
   (let ((pfv (vector-ref vec 13)))
     (vector-set! pfv 0 (+ 1 (vector-ref pfv 0)))))
-(define (expects:inc-val-fail-count vec)
+(define-inline (expects:inc-val-fail-count vec)
   (let ((pfv (vector-ref vec 13)))
     (vector-set! pfv 1 (+ 1 (vector-ref pfv 1)))))
 
 (define-inline (expects:set-measured   vec val)(vector-set! vec 12 (cons val (expects:get-measured vec))))
 (define-inline (expects:set-val-pass/fail vec val)(vector-set! vec 13 val))
+
+(define-inline (expects:get-hook-ptr   vec)(vector-ref vec 14))
+(define-inline (expects:get-hook vec)
+  (vector-ref 
+     (hash-table-ref/default *hooks* (expects:get-hook-ptr vec)(vector #f #f))
+     0))
+;; returns #t if it is a one-time hook
+(define-inline (expects:get-hook-type vec)
+  (vector-ref 
+     (hash-table-ref/default *hooks* (expects:get-hook-ptr vec)(vector #f #f))
+     1))
+(define-inline (expects:delete-if-one-time vec)
+  (if (expects:get-hook-type vec)
+      (hash-table-delete *hooks* (expects:get-hook-ptr vec))))
+(define-inline (expects:get-matchnum vec)(vector-ref vec 15))
 
 ;; where is 'in, 'before or 'after but only 'in is supported now.
 ;; (expect in "Header" > 0 "Copywrite" #/Copywrite/)
@@ -173,100 +241,132 @@
 ;; NOTE: patts and section can be lists
 ;; (list rexp1 rexp2 ...)
 ;; '("section1" "section2" ....)
-(define (expect where section comparison value name patts #!key (expires #f)(type 'expect))
+
+(define *got-an-error* #f)
+
+(define (print:error msg . remmesg)
+  (set! *got-an-error* #t)
+  (apply print msg remmesg))
+
+;; if expires is a date convert it to seconds until or since expired
+;; #t => rule is expired, no longer apply it
+;; #f => rule is not expired, it still applies
+(define (expect:process-expires expires)
+  (let ((ex-val (if expires
+		    (if (string-match #/^\d+\/\d+\/\d+$/ expires)
+			(local-time->seconds (string->time expires "%m/%d/%Y"))
+			(begin
+			  (print "WARNING: Couldn't parse date: " expires ", date should be MM/DD/YY")
+			  #f))
+		    #f)))
+    ;; now have #f: no expire spec'd, -ve num: expired, +ve num: not expired
+    ;; (print "expires: " expires " type: " type " ex-val: " ex-val)
+    (if ex-val
+	(<= ex-val (current-seconds))  ;; expire specified
+	#f)))
+
+(define (expect where section comparison value name patts #!key (expires #f)(type 'error)(hook #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
-  (if (not (symbol? where))        (print "ERROR: where must be a symbol"))
+  (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
-	       (list? section)))   (print "ERROR: section must be a string or a list of strings"))
-  (if (not (procedure? comparison))(print "ERROR: comparison must be one of > < >= <= or ="))
-  (if (not (number? value))        (print "ERROR: value must be a number"))
-  (if (not (string? name))         (print "ERROR: name must be a string"))
+	       (list? section)))   (print:error "ERROR: section must be a string or a list of strings"))
+  (if (not (procedure? comparison))(print:error "ERROR: comparison must be one of > < >= <= or ="))
+  (if (not (number? value))        (print:error "ERROR: value must be a number"))
+  (if (not (string? name))         (print:error "ERROR: name must be a string"))
   (if (and expires (not (string? expires)))
-      (print "ERROR: expires must be a date string MM/DD/YY, got " expires)
-      (set! expires #f))
+      (print:error "ERROR: expires must be a date string MM/DD/YY, got " expires))
   (if (not (list? patts))
       (set! patts (list patts)))
   (for-each (lambda (rx)
 	      (if (not (regexp? rx))
-		  (print "ERROR: your regex is not valid: " rx)))
+		  (print:error "ERROR: your regex is not valid: " rx)))
 	    patts)
-  (if expires
-      (if (string-match #/^\d+\/\d+\/\d+$/ expires)
-	  (let ((secs (local-time->seconds (string->time expires "%D"))))
-	    (set! expires secs))
-	  (begin
-	    (print "WARNING: Couldn't parse date: " expires ", date should be MM/DD/YY")
-	    (set! expires (- (current-seconds) 1000000)))))
-  (if (or (not expires)
-	  (not (and expires (> expires (current-seconds)))))
-      (for-each
-       (lambda (sect)
-	 (hash-table-set! *expects*
-			  sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail 
-			  (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0))
-				(hash-table-ref/default *expects* section '()))))
-       (if (list? section) section (list section))))
+
+  ;; #f => rule is not expired, go ahead and apply it
+  ;; #t => rule is expired, do NOT apply it
+  (if (not (expect:process-expires expires))
+      (begin
+	;; (print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook)
+	(for-each
+	 (lambda (sect)
+	   (hash-table-set! *expects*
+			    sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail 
+			    (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f)
+				  (hash-table-ref/default *expects* section '()))))
+	 (if (list? section) section (list section))))
+      (print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook))
+      
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
 
-(define (expect:warning where section comparison value name patts #!key (expires #f)(type 'warning))
-  (expect where section comparison value name patts expires: expires type: type))
+(define (expect:warning where section comparison value name patts #!key (expires #f)(type 'warning)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
 
-(define (expect:ignore where section comparison value name patts #!key (expires #f)(type 'ignore))
-  (expect where section comparison value name patts expires: expires type: type))
+(define (expect:ignore where section comparison value name patts #!key (expires #f)(type 'ignore)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
 
-(define (expect:waive where section comparison value name patts #!key (expires #f)(type 'waive))
-  (expect where section comparison value name patts expires: expires type: type))
+(define (expect:waive where section comparison value name patts #!key (expires #f)(type 'waive)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
 
-(define (expect:error where section comparison value name patts #!key (expires #f)(type 'error))
-  (expect where section comparison value name patts expires: expires type: type))
+(define (expect:error where section comparison value name patts #!key (expires #f)(type 'error)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
 
-(define (expect:required where section comparison value name patts #!key (expires #f)(type 'required))
-  (expect where section comparison value name patts expires: expires type: type))
+(define (expect:required where section comparison value name patts #!key (expires #f)(type 'required)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
+
+(define (expect:check where section comparison value name patts #!key (expires #f)(type 'check)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
+
+(define (expect:abort where section comparison value name patts #!key (expires #f)(type 'abort)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
 
 ;;======================================================================
 ;; TODO: Compress this in with the expect routine above
 ;;======================================================================
-(define (expect:value where section value tol name patt #!key (expires #f)(type 'value))
+(define (expect:value where section value tol name patt #!key (expires #f)(type 'value)(matchnum 1)(hook #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
-  (if (not (symbol? where))        (print "ERROR: where must be a symbol"))
+  (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
-	       (list? section)))   (print "ERROR: section must be a string or list of strings"))
-  (if (not (number? value))        (print "ERROR: value must be a number"))
-  (if (not (number? tol))          (print "ERROR: tolerance must be a number"))
-  (if (not (string? name))         (print "ERROR: name must be a string"))
+	       (list? section)))   (print:error "ERROR: section must be a string or list of strings"))
+  (if (not (number? value))        (print:error "ERROR: value must be a number"))
+  (if (not (or (number? tol)
+	       (member tol (list < > <= >= =))))
+      ((print:error "ERROR: tolerance must be a number or one of < > <= >= =")))
+  (if (not (string? name))         (print:error "ERROR: name must be a string"))
   (if (and expires (not (string? expires)))
-      (print "ERROR: expires must be a date string MM/DD/YY, got " expires)
+      (print:error "ERROR: expires must be a date string MM/DD/YY, got " expires)
       (set! expires #f))
   (if (not (regexp? patt))
-      (print "ERROR: your regex is not valid: " rx))
-  (if expires
-      (if (string-match #/^\d+\/\d+\/\d+$/ expires)
-	  (let ((secs (local-time->seconds (string->time expires "%D"))))
-	    (set! expires secs))
-	  (begin
-	    (print "WARNING: Couldn't parse date: " expires ", date should be MM/DD/YY")
-	    (set! expires (- (current-seconds) 1000000)))))
-  (if (or (not expires)
-	  (not (and expires (> expires (current-seconds)))))
+      (print:error "ERROR: your regex is not valid: " rx))
+
+  ;; Change methodology here. Expires becomes a flag with the following meaning
+  ;;    #f             : no expires specified
+  ;;   negative number : seconds since this rule expired
+  ;;   postive number  : seconds until this rule expires
+  (if (not (expect:process-expires expires)) ;; #f means yes, apply the rule, #t means no, do not apply the rule, i.e. if expired do not apply the rule
       (for-each
        (lambda (sect)
-	 (hash-table-set! *expects* ;; comparison is not used
-			  sect ;;         0     1       2       3  4   5       6         7               8      9   10                               11 12  value=pass/fail
-			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0))
+	 (hash-table-set! *expects* ;; comparison is not used                 matchnum used to pick the match from the regex
+			  sect ;;         0     1       2       3  4   5       6                   7               8      9   10                               11 12  value=pass/fail
+			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0) hook matchnum)
 				(hash-table-ref/default *expects* section '()))))
        (if (list? section) section (list section))))
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
 
 ;; extract out the value if possible.
 (define (expect:value-compare expect match)
-  ;;  (print "expect:value-compare :\n   " expect "\n   " match)
-  (let* ((match-str (if (> (length match) 1)(cadr match) #f))
+  ;; (print "expect:value-compare :\n   " expect "\n   " match)
+  (let* ((which-match (if (expects:get-matchnum expect)
+			  (expects:get-matchnum expect);; expects:get-compiled-patts returns a list (patt matchnum)
+			  1)) ;; input is (patt) or (patt n) where n is the patt number to take as the value
+	 (match-str (if (> (length match) which-match)(list-ref match which-match) #f))
 	 (match-num (if (string? match-str)(string->number match-str) #f))
 	 (value     (expects:get-value expect))
 	 (tol       (expects:get-tol   expect)))
     (if match-num
-	(let ((result (and (<= match-num (+ value tol))
-			   (>= match-num (- value tol)))))
+	(let ((result (if (number? tol)
+			  (and (<= match-num (+ value tol))
+			       (>= match-num (- value tol)))
+			  (tol match-num value))))
 	  (list result match-num "ok"))
 	(if match-str
 	    (list #f match-str "match is not a number")
@@ -280,6 +380,8 @@
     ((error)    (vector "Error"    "red"))
     ((warning)  (vector "Warning"  "orange"))
     ((required) (vector "Required" "purple"))
+    ((check)    (vector "Check"    "pink"))
+    ((abort)    (vector "Abort"    "crimson"))
     ((value)    (vector "Value"    "blue"))
     (else       (vector "Error"    "red"))))
 
@@ -295,7 +397,7 @@
 (define (process-log-file cmdfname . htmlfile)
   (cond 
    ((not (file-exists? cmdfname))
-    (print "ERROR: command file " cmdfname " not found")
+    (print:error "ERROR: command file " cmdfname " not found")
     (exit 1))
    (else
     (let* ((html-file (if (not (null? htmlfile))
@@ -316,7 +418,7 @@
 	 (close-output-port *htmlport*)
 	 (exit 1))
        (load cmdfname))
-      (analyze-logfile)
+      (analyze-logfile (current-output-port))
       (print-results)
       ))))
 
@@ -340,7 +442,7 @@
 	(lambda ()
 	  (apply print stuff)))))
 
-(define (analyze-logfile)
+(define (analyze-logfile oup)
   (let ((active-sections  (make-hash-table))
 	(found-expects    '())
 	(html-mode        'pre)
@@ -365,7 +467,9 @@
 		     (begin
 		       (trigger:set-remaining-hits! trigger (- remhits 1))
 		       (set! html-highlight-flag (vector "blue" #f #f (trigger:get-name trigger)))
-		       (print      "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)
+		       (with-output-to-port oup
+			 (lambda ()
+			   (print      "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)))
 		       (trigger:inc-total-hits trigger)
 		       (adj-active-sections trigger active-sections)))))
 	     *triggers*)
@@ -395,9 +499,10 @@
 		 (if expects
 		     (for-each 
 		      (lambda (expect)
-			(let ((patts (expects:get-compiled-patts expect)))
-			  (if (misc:line-match-regexs line patts)
-			      (set! found-expects (cons (list expect section) found-expects)))))
+			(let* ((patts   (expects:get-compiled-patts expect))
+			       (matches (misc:line-match-regexs line patts)))
+			  (if matches
+			      (set! found-expects (cons (list expect section match) found-expects)))))
 		      expects))))
 	     (filter (lambda (x)(not (member x (hash-table-keys active-sections))))
 		     (map section:get-name *sections*)))
@@ -412,8 +517,9 @@
 								   (valb (expects:get-num (car b))))
 							       (if (and (number? vala)(number? valb))
 								   (< vala valb);; (print "car a: " (car a) " car b: " (car b))
-								   (begin
-								     (print "WARNING: You have triggered a bug, please report it.\n  vala: " vala " valb: " valb)
+								   (with-output-to-port oup
+								     (lambda ()
+								       (print "WARNING: You have triggered a bug, please report it.\n  vala: " vala " valb: " valb))
 								     #f)))))))
 			 (expect    (car dat))
 			 (section   (cadr dat))
@@ -428,7 +534,8 @@
 					#f))
 			 (color     (if is-value
 					(if (car pass-fail) "green" "red")
-					(expect:expect-type-get-color type-info))))
+					(expect:expect-type-get-color type-info)))
+			 (expires   (expects:get-expires expect)))
 		    (hash-table-set! *expect-link-nums* keyname errnum)
 		    (if is-value
 			(let ((extracted-value (cadr pass-fail)))
@@ -445,27 +552,43 @@
 				(expect:expect-type-get-type type-info) ": " 
 				(expects:get-name expect) " "
 				(if is-value
-				    (conc (expects:get-value expect) "+/-" 
-					  (expects:get-tol expect) 
-					  " got " (cadr pass-fail)
-					  " which is " (if (car pass-fail) "PASS" "FAIL"))
+				    (let ((tol (expects:get-tol expect))
+					  (val (expects:get-value expect)))
+				      (conc (if (number? tol) val "") " "
+					    (if (number? tol) "+/-" (conc (misc:op->symbol tol) " " val))
+					    " got " (cadr pass-fail)
+					    " which is " (if (car pass-fail) "PASS" "FAIL")))
 				    (expects:get-comparison-as-text expect))
 				" " 
 				(expects:get-value expect)
 				" in section " section " on line " line-num)))
-		      (apply print (cons "LOGPRO " msg))
+		      (with-output-to-port oup
+			(lambda ()
+			  (apply print (cons "LOGPRO " msg))))
 		      (if (and (not pass-fail)
 			       (eq? expect-type 'error))
-			  (let ((cmd (hash-table-ref/default *hooks* 'first-error #f)))
+			  ;; failed error case
+			  (let ((cmd    (expects:get-hook expect)))
 			    (if cmd
-				(let ((errhook (hook:subst-var cmd "errmsg" line)))
-				  (print "ERRMSG HOOK CALLED: " errhook)
+				(let ((errhook (hook:process-line cmd line match)))
+				  (with-output-to-port oup
+				    (lambda ()
+				      (print "ERRMSG HOOK CALLED: " errhook)))
 				  (system errhook)
-				  (hash-table-delete! *hooks* 'first-error) ;; delete it so only first time gets called
-				  )))))
+				  (expects:delete-if-one-time expect))))
+			  (let ((cmd    (expects:get-hook expect)))
+			    (if cmd
+				(let ((hookcmd (hook:process-line cmd line match)))
+				  (with-output-to-port oup
+				    (lambda ()
+				      (print "NONERR HOOK CALLED: " hookcmd)))
+				  (system hookcmd)
+				  (expects:delete-if-one-time expect))))))
 		    (expects:inc-count expect)
 		    (set! found-expects '()))))
-	    (print line)
+	    (with-output-to-port oup
+	      (lambda ()
+		(print line)))
 	    (if html-highlight-flag
 		(let ((color (vector-ref html-highlight-flag 0))
 		      (label (vector-ref html-highlight-flag 1))
@@ -493,11 +616,14 @@
   (let ((status       #t)
 	(toterrcount  0)
 	(totwarncount 0)
+	(totcheckcount 0)
+	(totwaivecount 0)
+	(totabortcount 0)
 	;;           type where section OK/FAIL compsym value name count
-	(valfmt      "  ~8a ~2@a ~12a ~4@a, expected ~a +/- ~a got ~a, ~a pass, ~a fail")
+	(valfmt      "  ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
         ;;            type where section OK/FAIL compsym value name count
 	(fmt         "  ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
-	(fmt-trg     "Trigger: ~25a ~15@a, count=~a"))
+	(fmt-trg     "Trigger: ~13a ~15@a, count=~a"))
     ;; first print any triggers that didn't get triggered - these are automatic failures
     (print      "==========================LOGPRO SUMMARY==========================")
     (html-print "<a name=\"summary\"></a>")
@@ -521,6 +647,8 @@
     ;; now print the expects
     (for-each 
      (lambda (section)
+       (print "\nExpects for " section " section: ")
+       (html-print "<p>Expects for " section " section: ")
        (for-each 
 	(lambda (expect)
 	  (let* ((where   (expects:get-where expect)) ;; not used yet, "in" is only option
@@ -559,7 +687,7 @@
 	      ;(print "xstatus: " xstatus " fail-count: " (expects:get-val-fail-count expect) " pass-count: " (expects:get-val-pass-count expect))
 	      ))
 	    (if is-value
-		(let ((cmd       (hash-table-ref/default *hooks* 'value #f))
+		(let ((cmd       (expects:get-hook expect))
 		      (tolerance (expects:get-tol expect))
 		      (measured  (if (null? (expects:get-measured expect)) "-" (car (expects:get-measured expect)))))
 		  (set! lineout (format #f valfmt 
@@ -567,8 +695,9 @@
 					where 
 					section 
 					(if xstatus "OK" "FAIL") 
-					value 
-					tolerance
+					(if (number? tolerance) value (misc:op->symbol tolerance))
+					(if (number? tolerance) "+/-" "")
+					(if (number? tolerance) (misc:op->symbol tolerance) value)
 					measured
 					(expects:get-val-pass-count expect) 
 					(expects:get-val-fail-count expect)))
@@ -580,7 +709,7 @@
 					  (hook:subst-var cmd "measured" (conc measured))
 					  "message" name)
 					 "expected" (conc value))
-					"tolerance" (conc tolerance))))
+					"tolerance" (conc (misc:op->symbol tolerance)))))
 			(print "VALUE HOOK CALLED: " valuehook)
 			(system valuehook))))
 		(set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name count)))
@@ -600,20 +729,39 @@
 		(begin
 		  (set! status #f)
 		  (cond
-		   ((or (eq? etype 'error)(eq? etype 'value))
+		   ((or (member etype '(error required value waive check))) ;; (eq? etype 'error)(eq? etype 'required)(eq? etype 'value)(eq? etype 'waive))
 		    (set! toterrcount (+ toterrcount 1)))
 		   ((eq? etype 'warning)
-		    (set! totwarncount (+ totwarncount 1))))))))
+		    (set! totwarncount (+ totwarncount 1)))
+		   ))
+		(begin
+		  (cond
+		   ((eq? etype 'check)
+		    (set! totcheckcount (+ totcheckcount 1)))
+		   ((eq? etype 'waive)
+		    (set! totwaivecount (+ totwaivecount 1)))
+		   ((eq? etype 'abort)
+		    (set! totabortcount (+ totabortcount 1)))
+		   )))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
     ;; (print "Total errors: " toterrcount)
     ;; (print "Total warnings: " totwarncount)
+    ;; (print "status: " status)
     (html-print "</pre></body></html>")
-    (if status
-	(exit 0)
-	(if (> toterrcount 0)
-	    (exit 1)
-	    (exit 2)))))
+    ;; (if (and (not *got-an-error*) status)
+    ;;     (exit 0)
+    (cond 
+     ((> toterrcount 0)   (exit 1))
+     ((> totcheckcount 0) (exit 3))
+     ((> totwarncount 0)  (exit 2))
+     ((> totwaivecount 0) (exit 4))
+     ((> totabortcount 0) (exit 5))
+     (*got-an-error*      (begin
+			    (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
+			    (exit 1)))
+     (status             (exit 0))
+     (else               (exit 0)))))
 
 (define (setup-logpro)
   (use regex)

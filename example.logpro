@@ -3,9 +3,14 @@
 ;;   License GPL.
 
 ;; define your hooks
-(hook:first-error   "echo \"Error hook activated: #{escaped errmsg}\"")
-(hook:first-warning "echo \"Got warning: #{escaped warnmsg}\"")
-(hook:value "echo \"Value hook activated: expected=#{expected}, measured=#{measured}, tolerance=#{tolerance}, message=#{message}\"")
+;;
+(hook:add "error"   "echo \"Error hook activated: #{escaped msg}\" > hooks-out.log" one-time: #t)
+(hook:add "warning" "echo \"Got warning: #{escaped warnmsg}\" >> hooks-out.log")
+(hook:add "test"    "echo \"m1=#{m1}, m2=#{m2}, m3=#{m3}, m4=#{m4}\" >> hooks-out.log")
+(hook:add "freq"    "echo \"Value hook activated: expected=#{expected}, measured=#{measured}, tolerance=#{tolerance}, message=#{message}\" >> hooks-out.log")
+(hook:add "logerr"  "echo \"\n\nLog an error: #{line}\n\nmsg: #{msg}\n\" >> hooks-out.log")
+;; Capture four values and call four commands
+(hook:add "quadval" "echo \"Value1: #{m1}\";echo \"Value2: #{m2}\";echo \"Value3: #{m3}\";echo \"Value4: #{m4}\" >> hooks-out.log") 
 
 ;; first ensure your run at least started
 ;;
@@ -13,35 +18,69 @@
 (trigger "InitEnd"  #/^\s*$/)
 (section "Init" "Init" "InitEnd")
 
-(trigger "Body"     #/^.*$/) ;; anything starts the body
-;; (trigger "EndBody"  #/This had better never match/)
-(section "Body"     "Body" "EndBody")
-
-;; A non-required trigger will not cause an error if never triggered
-(trigger:non-required "FooBlaz" #/This string may or may not ever be hit/)
-
 (trigger "Blah2"    #/^begin Blah2/)
 (trigger "Blah2End" #/^end Blah2/)
 (section "Blah2"    "Blah2" "Blah2End")
 
 (trigger "Blah3"    #/^begin Blah3/)
 (trigger "Blah3End" #/^end Blah3/)
-(section "Blah3" "Blah3" "Blah3End")
+(section "Blah3"   "Blah3" "Blah3End")
 
+(trigger "Blah4"    #/^begin Blah4/)
+(trigger "Blah4End" #/^end Blah4/)
+(section "Blah4"   "Blah4" "Blah4End")
+
+(trigger-with-limit "Blah5"    100 #/^begin Blah5/)
+(trigger-with-limit "Blah5End" 100 #/^end Blah5/)
+(section "Blah5" "Blah5" "Blah5End")
+
+(expect:waive in "Blah5"       = 2 "Have exactly two BLAH5 errors to waive inside the two Blah5 sections" #/^A.*BLAH5/)
+(expect:error in "LogFileBody" < 1 "Only have one BLAH5 error outside of the Blah5 section" #/^A.*BLAH5/)
+
+(expect:waive    in "Blah3" = 1 "A real error that has been waived" #/ERROR:/)
+
+;; Required statements capture elements in your log file that *must* exist or the outcome is FAIL
+;;
 (expect:required in "Init"  = 1 "Header"      #/This is a header/)
 (expect:required in "LogFileBody" > 0 "Something required but not found" #/This is required but not found/)
 
-(expect:value    in "LogFileBody" 1.9 0.1 "Output voltage" #/Measured voltage output:\s*([\d\.\+\-e]+)v/)
+;; Value statements are used to extract values and compare them with an expected value
+;;
+(expect:value    in "LogFileBody" 1.9 0.1 "Output voltage" #/Measured voltage output:\s*([\d\.\+\-e]+)v/ hook: "freq")
 (expect:value    in "LogFileBody" 0.5 0.1 "Output current" #/Measured output current:\s*([\d\.\+\-e]+)mA/)
 (expect:value    in "LogFileBody" 110e9 2e9 "A big number (first)" #/Freq:\s*([\d\.\+\-e]+)\s+Hz/)
 (expect:value    in "LogFileBody" 110e9 1e9 "A big number (second), hook not called" #/Freq:\s*([\d\.\+\-e]+)Hz/)
 (expect:value    in "LogFileBody" 110e9 1e9 "A big number (never activated)" #/Freq:\s*([\d\.\+\-e]+)zH/)
 
-(expect:waive    in "Blah3" < 10 "Waive this for now" #/ERROR/)
+;; You can use expires to disable errors or ignores after a specific time
+;; NOTE: this can be a bit confusing. The effect is that after the expire date the rule is disabled.
+;;
+(expect:ignore   in "Blah4" < 4 "ERROR: ignore applied until 2002, thereafter flagged as error" #/ERROR:.*2002/ expires: "01/01/2002")
+(expect:ignore   in "Blah4" < 4 "ERROR: ignore applied until 2020, thereafter flagged as error" #/ERROR:.*2020/ expires: "01/01/2020")
+(expect:error    in "Blah4" = 0 "Any ERROR in section blah4" #/ERROR/)
+
+;;                                                          miscellaneous output which doesn't match any expects
+(expect:ignore   in "LogFileBody" > 0 "Testing substitution" #/(misc).*(out\S+)\s+(.*ich).*(exp.*)$/ hook: "test")
+
+;; Using match number
+(expect:value    in "LogFileBody" 1.9 0.1 "Time Voltage" #/ out: (\d+)\s+([\d\.\+\-e]+)/ matchnum: 2)
+
+;; Comparison instead of tolerance
+(expect:value    in "LogFileBody" 1.9 >   "Time voltage" #/ cmpout: (\d+)\s+([\d\.\+\-e]+)/ matchnum: 2)
 
 (expect:ignore   in "Blah2" < 99 "FALSE ERROR" #/ERROR/)
-(expect:ignore   in "Body"  < 99 "Ignore the word error in comments" #/^\/\/.*error/)
-(expect:warning  in "Body"  = 0 "Any warning" #/WARNING/)
-(expect:error    in "Body"  = 0 "ERROR BLAH"  (list #/ERROR/ #/error/)) ;; but disallow any other errors
+(expect:ignore   in "LogFileBody"  < 99 "Ignore the word error in comments" #/^\/\/.*error/)
+(expect:warning  in "LogFileBody"  = 0 "Any warning" #/WARNING/)
+(expect:error    in "LogFileBody"  = 0 "ERROR BLAH"  (list #/ERROR/ #/error/) hook: "logerr") ;; but disallow any other errors
+
+;; Use expect:required to extract some values
+(expect:required   in "LogFileBody" = 1 "Quad values" #/First:\s+(\d+)\s+Second:\s+(\d+)\s+Third:\s+(\d+)\s+Fourth:\s+(\d+)/ hook: "quadval")
 
 ;(expect in "Init"  < 1 "Junk"        #/This is bogus/)
+
+;; A convience variable "logfile" was defined to make the common case of applying rules to the 
+;; entire logfile a tad easier
+(expect:check in logfile = 1 "If flagged, raise CHECKED flag and exit with error code 3" #/This is a line to trigger CHECK/)
+
+;; Abort check
+(expect:abort in logfile = 0 "If flagged our process failed to run correctly" #/^CRASH/)

@@ -1,19 +1,45 @@
 // This is a header
 
-// The following is an error
+// The following is an error, also this comment should be "ignored" and thus green, not red
 begin Blah1
 ERROR: This is a real error. It should be red.
 end Blah1
 
-// The following is an expected error
+// The following is an expected Error
 begin Blah2
 ERROR: This error is expected, it will be green.
 end Blah2
 
-// The following is an error that is Waived (i.e. permitted for the moment).
+// The following is an Error that is Waived (i.e. permitted for the moment).
 begin Blah3
 ERROR: Bad, but allowed for now, should be flagged in brown
 end Blah3
+
+// Blah5 tests. Errors are suppressed in section Blah5 but not otherwise
+begin Blah5
+A BLAH5 message in a BLAH5 section is suppressed
+end Blah5
+
+A BLAH5 message outside a BLAH5 section is counted
+
+begin Blah5
+A second BLAH5 message in a BLAH5 section is suppressed
+end Blah5
+
+// Expirations:
+// 
+// expired error  - error no longer applied after date
+// expired warn   - warn no longer applied after date
+// expired ignore - ignore no longer applied after date
+// I.e. an expired rule is no longer applied, as if it is not even typed into the logpro file
+
+begin Blah4
+// The following is an Error that was ignored through 01/01/2002 and thus should now be FAIL (i.e. be red)
+ERROR: An error that was suppressed before 01/01/2002, this should now FAIL
+
+// The following is an Error that is ignored through 01/01/2020 and thus should currently PASS (i.e. be green)
+ERROR: This error is waived until 01/01/2020 and thus should PASS
+end Blah4
 
 miscellaneous output which doesn't match any expects
 more miscellaneous output
@@ -33,7 +59,26 @@ Freq: 1.12e11 Hz
 
 Freq: 1.1197e+10Hz
 
+// these should trigger the 1.9 +/- 0.1 expect:value check
+An expect:value test; out: 4 2.01 # should fail
+An expect:value test; out: 5 1.99 # should pass
+
+// these should trigger the > 1.9 expect:value check
+An expect:value test; cmpout: 6 1.89 # should fail
+An expect:value test; cmpout: 7 1.92 # should pass
+
+// A crash is captured as an abort
+CRASH!!!
+
 // This is nothing
+
+// A case where we are capturing multiple values on a single line and exectuting 
+// multiple calls to load them
+
+First: 1 Second: 2 Third: 3 Fourth: 4
+
+This is a line to trigger CHECK
+
 The End
 
 
