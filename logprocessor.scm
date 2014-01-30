@@ -21,6 +21,7 @@
 	(print "    error code = 2 warnings found,")
 	(print "    error code = 3 check condition found,")
 	(print "    error code = 4 waivers found.")
+	(print "    error code = 5 abort signature found.")
 	(print "  Version " logpro-version)
 	(print "  License GPL, more info about logpro at http://www.kiatoa.com/fossils/logpro")
 	(exit 1))))
