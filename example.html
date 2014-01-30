@@ -121,17 +121,10 @@ Trigger: Blah2                      OK, count=1
 Trigger: InitEnd                    OK, count=1
 Trigger: Init                       OK, count=1
 Trigger: LogFileBodyStart              OK, count=1
-<p>Expects for Blah4 section: 
-<font color="red"><a name="key_12_2"></a><a href="#key_12_1">Expect:</a>  Error    in Blah4        FAIL, expected = 0 of Any ERROR in section blah4, got 1</font>
-<font color="green"><a name="key_11_2"></a><a href="#key_11_1">Expect:</a>  Ignore   in Blah4          OK, expected < 4 of ERROR: ignore applied until 2020, thereafter flagged as error, got 1</font>
-<p>Expects for Blah5 section: 
-<font color="brown"><a name="key_0_3"></a><a href="#key_0_1">Expect:</a>  Waive    in Blah5          OK, expected = 2 of Have exactly two BLAH5 errors to waive inside the two Blah5 sections, got 2</font>
-<p>Expects for Blah2 section: 
-<font color="green"><a name="key_16_2"></a><a href="#key_16_1">Expect:</a>  Ignore   in Blah2          OK, expected < 99 of FALSE ERROR, got 1</font>
-<p>Expects for Blah3 section: 
-<font color="brown"><a name="key_2_2"></a><a href="#key_2_1">Expect:</a>  Waive    in Blah3          OK, expected = 1 of A real error that has been waived, got 1</font>
 <p>Expects for Init section: 
 <font color="purple"><a name="key_3_2"></a><a href="#key_3_1">Expect:</a>  Required in Init           OK, expected = 1 of Header, got 1</font>
+<p>Expects for Blah2 section: 
+<font color="green"><a name="key_16_2"></a><a href="#key_16_1">Expect:</a>  Ignore   in Blah2          OK, expected < 99 of FALSE ERROR, got 1</font>
 <p>Expects for LogFileBody section: 
 <font color="crimson"><a name="key_22_2"></a><a href="#key_22_1">Expect:</a>  Abort    in LogFileBody  FAIL, expected = 0 of If flagged our process failed to run correctly, got 1</font>
 <font color="pink"><a name="key_21_2"></a><a href="#key_21_1">Expect:</a>  Check    in LogFileBody    OK, expected = 1 of If flagged, raise CHECKED flag and exit with error code 3, got 1</font>
@@ -149,4 +142,11 @@ Trigger: LogFileBodyStart              OK, count=1
 <font color="green"><a name="key_5_2"></a><a href="#key_5_1">Expect:</a>  Value    in LogFileBody    OK, expected 1.9 +/- 0.1 got 1.8, 1 pass, 0 fail</font>
 <font color="red"><a name="key_4_1"></a>Expect:  Required in LogFileBody  FAIL, expected > 0 of Something required but not found, got 0</font>
 <font color="red"><a name="key_1_2"></a><a href="#key_1_1">Expect:</a>  Error    in LogFileBody  FAIL, expected < 1 of Only have one BLAH5 error outside of the Blah5 section, got 1</font>
+<p>Expects for Blah3 section: 
+<font color="brown"><a name="key_2_2"></a><a href="#key_2_1">Expect:</a>  Waive    in Blah3          OK, expected = 1 of A real error that has been waived, got 1</font>
+<p>Expects for Blah4 section: 
+<font color="red"><a name="key_12_2"></a><a href="#key_12_1">Expect:</a>  Error    in Blah4        FAIL, expected = 0 of Any ERROR in section blah4, got 1</font>
+<font color="green"><a name="key_11_2"></a><a href="#key_11_1">Expect:</a>  Ignore   in Blah4          OK, expected < 4 of ERROR: ignore applied until 2020, thereafter flagged as error, got 1</font>
+<p>Expects for Blah5 section: 
+<font color="brown"><a name="key_0_3"></a><a href="#key_0_1">Expect:</a>  Waive    in Blah5          OK, expected = 2 of Have exactly two BLAH5 errors to waive inside the two Blah5 sections, got 2</font>
 </pre></body></html>

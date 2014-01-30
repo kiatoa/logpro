@@ -734,6 +734,8 @@
 		    (set! toterrcount (+ toterrcount 1)))
 		   ((eq? etype 'warning)
 		    (set! totwarncount (+ totwarncount 1)))
+		   ((eq? etype 'abort)
+		    (set! totabortcount (+ totabortcount 1)))
 		   ))
 		(begin
 		  (cond
@@ -741,8 +743,6 @@
 		    (set! totcheckcount (+ totcheckcount 1)))
 		   ((eq? etype 'waive)
 		    (set! totwaivecount (+ totwaivecount 1)))
-		   ((eq? etype 'abort)
-		    (set! totabortcount (+ totabortcount 1)))
 		   )))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
