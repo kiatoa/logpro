@@ -395,15 +395,13 @@
 
 (define *htmlport* #f)
 
-(define (process-log-file cmdfname . htmlfile)
+(define (process-log-file cmdfname html-file waiver-file)
   (cond 
    ((not (file-exists? cmdfname))
     (print:error "ERROR: command file " cmdfname " not found")
     (exit 1))
    (else
-    (let* ((html-file (if (not (null? htmlfile))
-			  (car htmlfile)))
-	   (html-port (if html-file (open-output-file html-file) #f)))
+    (let* ((html-port (if html-file (open-output-file html-file) #f)))
       (set! *htmlport* html-port) ;; sigh, do me right some day...
       (eval '(require-extension regex-literals))
       (eval '(require-extension regex))
@@ -420,8 +418,8 @@
 	 (exit 1))
        (load cmdfname))
       (analyze-logfile (current-output-port))
-      (print-results)
-      ))))
+      (let ((exit-code (print-results)))
+	(exit exit-code))))))
 
 (define (adj-active-sections trigger active-sections)
   (for-each 
@@ -753,16 +751,16 @@
     ;; (if (and (not *got-an-error*) status)
     ;;     (exit 0)
     (cond 
-     ((> toterrcount 0)   (exit 1))
-     ((> totcheckcount 0) (exit 3))
-     ((> totwarncount 0)  (exit 2))
-     ((> totwaivecount 0) (exit 4))
-     ((> totabortcount 0) (exit 5))
+     ((> toterrcount 0)   1)
+     ((> totcheckcount 0) 3)
+     ((> totwarncount 0)  2)
+     ((> totwaivecount 0) 4)
+     ((> totabortcount 0) 5)
      (*got-an-error*      (begin
 			    (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
-			    (exit 1)))
-     (status             (exit 0))
-     (else               (exit 0)))))
+			    1))
+     (status             0)
+     (else               0))))
 
 (define (setup-logpro)
   (use regex)
