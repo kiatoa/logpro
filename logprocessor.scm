@@ -518,8 +518,8 @@
 								   (< vala valb);; (print "car a: " (car a) " car b: " (car b))
 								   (with-output-to-port oup
 								     (lambda ()
-								       (print "WARNING: You have triggered a bug, please report it.\n  vala: " vala " valb: " valb))
-								     #f)))))))
+								       (print "WARNING: You have triggered a bug, please report it.\n  vala: " vala " valb: " valb)
+								       #f))))))))
 			 (expect    (car dat))
 			 (section   (cadr dat))
 			 (match     (if (> (length dat) 2)(caddr dat) #f))
@@ -659,6 +659,7 @@
 		(typeinfo (expect:get-type-info expect))
 		(etype    (expects:get-type expect))
 		(keyname  (expects:get-keyname expect))
+		;; xstatus is the expected vs. actual count of the item in question
 		(xstatus #f) ;; Jul 08, 2011 - changed to #f - seems safer
 		(compsym "=")
 		(lineout "")
@@ -724,7 +725,7 @@
 			      (if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
 			      lineout "</font>"))
 	    (if (> (string-length lineout) 0)(print "Expect:" lineout))
-	    (if (not xstatus)
+	    (if (not xstatus) ;; 
 		(begin
 		  (set! status #f)
 		  (cond
@@ -734,14 +735,14 @@
 		    (set! totwarncount (+ totwarncount 1)))
 		   ((eq? etype 'abort)
 		    (set! totabortcount (+ totabortcount 1)))
-		   ))
-		(begin
-		  (cond
 		   ((eq? etype 'check)
 		    (set! totcheckcount (+ totcheckcount 1)))
 		   ((eq? etype 'waive)
 		    (set! totwaivecount (+ totwaivecount 1)))
 		   )))))
+		;; (begin
+		;;   (cond
+		;;    )))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
     ;; (print "Total errors: " toterrcount)
