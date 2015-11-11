@@ -1,152 +1,23 @@
-<html><header>LOGPRO RESULTS</header><body>
-Summary is <a href="#summary">here</a>
-<br>(processed by logpro version 1.09, tool details at: <a href="http://www.kiatoa.com/fossils/logpro">logpro</a>)
-<hr><pre>
-<a name="key_3_1"></a><a href="#key_3_2" style="background-color: white; color: purple;">// This is a header</a>
-<a name="#f"></a><a href="#f" style="background-color: white; color: blue;"></a>
-<a name="key_17_1"></a><a href="#key_17_2" style="background-color: white; color: green;">// The following is an error, also this comment should be "ignored" and thus green, not red</a>
 
-begin Blah1
-<a name="key_19_1"></a><a href="#key_19_2" style="background-color: white; color: red;">ERROR: This is a real error. It should be red.</a>
+ERROR: Syntax error in your command file!
 
-end Blah1
+ =>  unbound variable
 
-// The following is an expected Error
-<a name="#f"></a><a href="#f" style="background-color: white; color: blue;">begin Blah2</a>
-<a name="key_16_1"></a><a href="#key_16_2" style="background-color: white; color: green;">ERROR: This error is expected, it will be green.</a>
-<a name="#f"></a><a href="#f" style="background-color: white; color: blue;">end Blah2</a>
+	Call history:
 
-
-// The following is an Error that is Waived (i.e. permitted for the moment).
-<a name="#f"></a><a href="#f" style="background-color: white; color: blue;">begin Blah3</a>
-<a name="key_2_1"></a><a href="#key_2_2" style="background-color: white; color: brown;">ERROR: Bad, but allowed for now, should be flagged in brown</a>
-<a name="#f"></a><a href="#f" style="background-color: white; color: blue;">end Blah3</a>
-
-
-// Blah5 tests. Errors are suppressed in section Blah5 but not otherwise
-<a name="#f"></a><a href="#f" style="background-color: white; color: blue;">begin Blah5</a>
-<a name="key_0_1"></a><a href="#key_0_2" style="background-color: white; color: brown;">A BLAH5 message in a BLAH5 section is suppressed</a>
-<a name="#f"></a><a href="#f" style="background-color: white; color: blue;">end Blah5</a>
-
-
-<a name="key_1_1"></a><a href="#key_1_2" style="background-color: white; color: red;">A BLAH5 message outside a BLAH5 section is counted</a>
-
-
-<a name="#f"></a><a href="#f" style="background-color: white; color: blue;">begin Blah5</a>
-<a name="key_0_2"></a><a href="#key_0_3" style="background-color: white; color: brown;">A second BLAH5 message in a BLAH5 section is suppressed</a>
-<a name="#f"></a><a href="#f" style="background-color: white; color: blue;">end Blah5</a>
-
-
-// Expirations:
-// 
-<a name="key_17_2"></a><a href="#key_17_3" style="background-color: white; color: green;">// expired error  - error no longer applied after date</a>
-
-// expired warn   - warn no longer applied after date
-// expired ignore - ignore no longer applied after date
-// I.e. an expired rule is no longer applied, as if it is not even typed into the logpro file
-
-<a name="#f"></a><a href="#f" style="background-color: white; color: blue;">begin Blah4</a>
-
-// The following is an Error that was ignored through 01/01/2002 and thus should now be FAIL (i.e. be red)
-<a name="key_12_1"></a><a href="#key_12_2" style="background-color: white; color: red;">ERROR: An error that was suppressed before 01/01/2002, this should now FAIL</a>
-
-
-// The following is an Error that is ignored through 01/01/2020 and thus should currently PASS (i.e. be green)
-<a name="key_11_1"></a><a href="#key_11_2" style="background-color: white; color: green;">ERROR: This error is waived until 01/01/2020 and thus should PASS</a>
-<a name="#f"></a><a href="#f" style="background-color: white; color: blue;">end Blah4</a>
-
-
-<a name="key_13_1"></a><a href="#key_13_2" style="background-color: white; color: green;">miscellaneous output which doesn't match any expects</a>
-
-more miscellaneous output
-still more miscellaneous output.
-
-// A warning
-<a name="key_18_1"></a><a href="#key_18_2" style="background-color: white; color: orange;">WARNING: This had better be flagged in orange!</a>
-
-
-// This one is expected to be 1.9 +/- 0.1
-<a name="key_5_1"></a><a href="#key_5_2" style="background-color: white; color: green;">Measured voltage output: 1.8v</a>
-
-
-// This one is expected to be 0.5 +/- 0.1
-<a name="key_6_1"></a><a href="#key_6_2" style="background-color: white; color: red;">Measured output current: 0.39mA</a>
-
-
-// This one is expected to be 110GHz +/- 2GHz
-<a name="key_7_1"></a><a href="#key_7_2" style="background-color: white; color: green;">Freq: 1.12e11 Hz</a>
-
-
-<a name="key_8_1"></a><a href="#key_8_2" style="background-color: white; color: red;">Freq: 1.1197e+10Hz</a>
-
-
-// these should trigger the 1.9 +/- 0.1 expect:value check
-<a name="key_14_1"></a><a href="#key_14_2" style="background-color: white; color: red;">An expect:value test; out: 4 2.01 # should fail</a>
-<a name="key_14_2"></a><a href="#key_14_3" style="background-color: white; color: green;">An expect:value test; out: 5 1.99 # should pass</a>
-
-
-// these should trigger the > 1.9 expect:value check
-<a name="key_15_1"></a><a href="#key_15_2" style="background-color: white; color: red;">An expect:value test; cmpout: 6 1.89 # should fail</a>
-<a name="key_15_2"></a><a href="#key_15_3" style="background-color: white; color: green;">An expect:value test; cmpout: 7 1.92 # should pass</a>
-
-
-// A crash is captured as an abort
-<a name="key_22_1"></a><a href="#key_22_2" style="background-color: white; color: crimson;">CRASH!!!</a>
-
-
-// This is nothing
-
-// A case where we are capturing multiple values on a single line and exectuting 
-// multiple calls to load them
-
-<a name="key_20_1"></a><a href="#key_20_2" style="background-color: white; color: purple;">First: 1 Second: 2 Third: 3 Fourth: 4</a>
-
-
-<a name="key_21_1"></a><a href="#key_21_2" style="background-color: white; color: pink;">This is a line to trigger CHECK</a>
-
-
-The End
-
-
-<a name="summary"></a>
-==========================LOGPRO SUMMARY==========================
-Trigger: Blah5End                   OK, count=2
-Trigger: Blah5                      OK, count=2
-Trigger: Blah4End                   OK, count=1
-Trigger: Blah4                      OK, count=1
-Trigger: Blah3End                   OK, count=1
-Trigger: Blah3                      OK, count=1
-Trigger: Blah2End                   OK, count=1
-Trigger: Blah2                      OK, count=1
-Trigger: InitEnd                    OK, count=1
-Trigger: Init                       OK, count=1
-Trigger: LogFileBodyStart              OK, count=1
-<p>Expects for Init section: 
-<font color="purple"><a name="key_3_2"></a><a href="#key_3_1">Expect:</a>  Required in Init           OK, expected = 1 of Header, got 1</font>
-<p>Expects for Blah2 section: 
-<font color="green"><a name="key_16_2"></a><a href="#key_16_1">Expect:</a>  Ignore   in Blah2          OK, expected < 99 of FALSE ERROR, got 1</font>
-<p>Expects for LogFileBody section: 
-<font color="crimson"><a name="key_22_2"></a><a href="#key_22_1">Expect:</a>  Abort    in LogFileBody  FAIL, expected = 0 of If flagged our process failed to run correctly, got 1</font>
-<font color="pink"><a name="key_21_2"></a><a href="#key_21_1">Expect:</a>  Check    in LogFileBody    OK, expected = 1 of If flagged, raise CHECKED flag and exit with error code 3, got 1</font>
-<font color="purple"><a name="key_20_2"></a><a href="#key_20_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Quad values, got 1</font>
-<font color="red"><a name="key_19_2"></a><a href="#key_19_1">Expect:</a>  Error    in LogFileBody  FAIL, expected = 0 of ERROR BLAH, got 1</font>
-<font color="orange"><a name="key_18_2"></a><a href="#key_18_1">Expect:</a>  Warning  in LogFileBody  FAIL, expected = 0 of Any warning, got 1</font>
-<font color="green"><a name="key_17_3"></a><a href="#key_17_1">Expect:</a>  Ignore   in LogFileBody    OK, expected < 99 of Ignore the word error in comments, got 2</font>
-<font color="red"><a name="key_15_3"></a><a href="#key_15_1">Expect:</a>  Value    in LogFileBody  FAIL, expected >  1.9 got 1.92, 1 pass, 1 fail</font>
-<font color="red"><a name="key_14_3"></a><a href="#key_14_1">Expect:</a>  Value    in LogFileBody  FAIL, expected 1.9 +/- 0.1 got 1.99, 1 pass, 1 fail</font>
-<font color="green"><a name="key_13_2"></a><a href="#key_13_1">Expect:</a>  Ignore   in LogFileBody    OK, expected > 0 of Testing substitution, got 1</font>
-<font color="black"><a name="key_9_1"></a>Expect:  Value    in LogFileBody  FAIL, expected 110000000000.0 +/- 1000000000.0 got -, 0 pass, 0 fail</font>
-<font color="red"><a name="key_8_2"></a><a href="#key_8_1">Expect:</a>  Value    in LogFileBody  FAIL, expected 110000000000.0 +/- 1000000000.0 got 11197000000.0, 0 pass, 1 fail</font>
-<font color="green"><a name="key_7_2"></a><a href="#key_7_1">Expect:</a>  Value    in LogFileBody    OK, expected 110000000000.0 +/- 2000000000.0 got 112000000000.0, 1 pass, 0 fail</font>
-<font color="red"><a name="key_6_2"></a><a href="#key_6_1">Expect:</a>  Value    in LogFileBody  FAIL, expected 0.5 +/- 0.1 got 0.39, 0 pass, 1 fail</font>
-<font color="green"><a name="key_5_2"></a><a href="#key_5_1">Expect:</a>  Value    in LogFileBody    OK, expected 1.9 +/- 0.1 got 1.8, 1 pass, 0 fail</font>
-<font color="red"><a name="key_4_1"></a>Expect:  Required in LogFileBody  FAIL, expected > 0 of Something required but not found, got 0</font>
-<font color="red"><a name="key_1_2"></a><a href="#key_1_1">Expect:</a>  Error    in LogFileBody  FAIL, expected < 1 of Only have one BLAH5 error outside of the Blah5 section, got 1</font>
-<p>Expects for Blah3 section: 
-<font color="brown"><a name="key_2_2"></a><a href="#key_2_1">Expect:</a>  Waive    in Blah3          OK, expected = 1 of A real error that has been waived, got 1</font>
-<p>Expects for Blah4 section: 
-<font color="red"><a name="key_12_2"></a><a href="#key_12_1">Expect:</a>  Error    in Blah4        FAIL, expected = 0 of Any ERROR in section blah4, got 1</font>
-<font color="green"><a name="key_11_2"></a><a href="#key_11_1">Expect:</a>  Ignore   in Blah4          OK, expected < 4 of ERROR: ignore applied until 2020, thereafter flagged as error, got 1</font>
-<p>Expects for Blah5 section: 
-<font color="brown"><a name="key_0_3"></a><a href="#key_0_1">Expect:</a>  Waive    in Blah5          OK, expected = 2 of Have exactly two BLAH5 errors to waive inside the two Blah5 sections, got 2</font>
-</pre></body></html>
+	<syntax>	  (regexp "^CRASH" #f #f #f)
+	<eval>	  (expect:abort in logfile = 0 "If flagged our process failed to run correctly" (regexp "^CRASH" #f #f...
+	logprocessor.scm:400: k405	  
+	logprocessor.scm:400: g409	  
+	logprocessor.scm:403: print	  
+	logprocessor.scm:404: condition-property-accessor	  
+	logprocessor.scm:404: g413	  
+	logprocessor.scm:404: print	  
+	logprocessor.scm:405: print-call-chain	  
+	logprocessor.scm:406: html-print	  
+	logprocessor.scm:431: with-output-to-port	  
+	logprocessor.scm:407: condition-property-accessor	  
+	logprocessor.scm:407: g415	  
+	logprocessor.scm:407: html-print	  
+	logprocessor.scm:431: with-output-to-port	  
+	logprocessor.scm:408: print-call-chain	  	<--
