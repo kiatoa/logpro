@@ -1,2 +1,5 @@
 (compile  -X regex -X regex-literals logpro.scm -o logpro)
-(install-program 'logpro "logpro")
+(install-program 'logpro "logpro" 
+ '((version "1.09")
+   (version "1.10")
+   (version "1.11")))
