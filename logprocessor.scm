@@ -729,7 +729,7 @@
 		(begin
 		  (set! status #f)
 		  (cond
-		   ((or (member etype '(error required value abort))) ;; (eq? etype 'error)(eq? etype 'required)(eq? etype 'value)(eq? etype 'waive))
+		   ((or (member etype '(error required value))) ;; (eq? etype 'error)(eq? etype 'required)(eq? etype 'value)(eq? etype 'waive))
 		    (set! toterrcount (+ toterrcount 1)))
 		   ((eq? etype 'warning)
 		    (set! totwarncount (+ totwarncount 1)))
