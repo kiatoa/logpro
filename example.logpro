@@ -84,3 +84,6 @@
 
 ;; Abort check
 (expect:abort in logfile = 0 "If flagged our process failed to run correctly" #/^CRASH/)
+
+;; Skip check
+(expect:skip in logfile = 1 "If flagged we are asking for this to exit with code 6" #/^SKIPME/)
