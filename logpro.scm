@@ -7,7 +7,7 @@
 ;;  implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ;;  PURPOSE.
 
-(define logpro-version 1.11)
+(define logpro-version 1.12)
 
 (require-library chicken-syntax)
 
@@ -19,5 +19,8 @@
        (control-file (cadr args))
        (html-file    (if (> (length args) 2)
 			 (caddr args)
+			 #f))
+       (waiver-file  (if (> (length args) 3)
+			 (list-ref args 3)
 			 #f)))
-  (process-log-file control-file html-file))
+  (process-log-file control-file html-file waiver-file))

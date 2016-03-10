@@ -1,4 +1,4 @@
-;; Copyright 2006-2011, Matthew Welland.
+;; Copyright 2006-2016, Matthew Welland.
 ;; 
 ;;  This program is made available under the GNU GPL version 2.0 or
 ;;  greater. See the accompanying file COPYING for details.
@@ -22,6 +22,7 @@
 	(print "    error code = 3 check condition found,")
 	(print "    error code = 4 waivers found.")
 	(print "    error code = 5 abort signature found.")
+	(print "    error code = 6 skip signature found.")
 	(print "  Version " logpro-version)
 	(print "  License GPL, more info about logpro at http://www.kiatoa.com/fossils/logpro")
 	(exit 1))))
@@ -320,6 +321,10 @@
 (define (expect:abort where section comparison value name patts #!key (expires #f)(type 'abort)(hook #f))
   (expect where section comparison value name patts expires: expires type: type hook: hook))
 
+(define (expect:skip where section comparison value name patts #!key (expires #f)(type 'skip)(hook #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook))
+
+
 ;;======================================================================
 ;; TODO: Compress this in with the expect routine above
 ;;======================================================================
@@ -383,6 +388,7 @@
     ((required) (vector "Required" "purple"))
     ((check)    (vector "Check"    "pink"))
     ((abort)    (vector "Abort"    "crimson"))
+    ((skip)     (vector "Skip"     "#d1db64"))
     ((value)    (vector "Value"    "blue"))
     (else       (vector "Error"    "red"))))
 
@@ -395,15 +401,13 @@
 
 (define *htmlport* #f)
 
-(define (process-log-file cmdfname . htmlfile)
+(define (process-log-file cmdfname html-file waiver-file)
   (cond 
    ((not (file-exists? cmdfname))
     (print:error "ERROR: command file " cmdfname " not found")
     (exit 1))
    (else
-    (let* ((html-file (if (not (null? htmlfile))
-			  (car htmlfile)))
-	   (html-port (if html-file (open-output-file html-file) #f)))
+    (let* ((html-port (if html-file (open-output-file html-file) #f)))
       (set! *htmlport* html-port) ;; sigh, do me right some day...
       (eval '(require-extension regex-literals))
       (eval '(require-extension regex))
@@ -420,8 +424,8 @@
 	 (exit 1))
        (load cmdfname))
       (analyze-logfile (current-output-port))
-      (print-results)
-      ))))
+      (let ((exit-code (print-results)))
+	(exit exit-code))))))
 
 (define (adj-active-sections trigger active-sections)
   (for-each 
@@ -520,8 +524,8 @@
 								   (< vala valb);; (print "car a: " (car a) " car b: " (car b))
 								   (with-output-to-port oup
 								     (lambda ()
-								       (print "WARNING: You have triggered a bug, please report it.\n  vala: " vala " valb: " valb))
-								     #f)))))))
+								       (print "WARNING: You have triggered a bug, please report it.\n  vala: " vala " valb: " valb)
+								       #f))))))))
 			 (expect    (car dat))
 			 (section   (cadr dat))
 			 (match     (if (> (length dat) 2)(caddr dat) #f))
@@ -615,11 +619,12 @@
 
 (define (print-results)
   (let ((status       #t)
-	(toterrcount  0)
-	(totwarncount 0)
+	(toterrcount   0)
+	(totwarncount  0)
 	(totcheckcount 0)
 	(totwaivecount 0)
 	(totabortcount 0)
+	(totskipcount  0)
 	;;           type where section OK/FAIL compsym value name count
 	(valfmt      "  ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
         ;;            type where section OK/FAIL compsym value name count
@@ -661,6 +666,7 @@
 		(typeinfo (expect:get-type-info expect))
 		(etype    (expects:get-type expect))
 		(keyname  (expects:get-keyname expect))
+		;; xstatus is the expected vs. actual count of the item in question
 		(xstatus #f) ;; Jul 08, 2011 - changed to #f - seems safer
 		(compsym "=")
 		(lineout "")
@@ -726,24 +732,26 @@
 			      (if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
 			      lineout "</font>"))
 	    (if (> (string-length lineout) 0)(print "Expect:" lineout))
-	    (if (not xstatus)
+	    (if (not xstatus) ;; 
 		(begin
 		  (set! status #f)
 		  (cond
-		   ((or (member etype '(error required value waive check))) ;; (eq? etype 'error)(eq? etype 'required)(eq? etype 'value)(eq? etype 'waive))
-		    (set! toterrcount (+ toterrcount 1)))
+		   ((or (member etype '(error required value))) ;; (eq? etype 'error)(eq? etype 'required)(eq? etype 'value)(eq? etype 'waive))
+		    (set! toterrcount   (+ toterrcount   1)))
 		   ((eq? etype 'warning)
-		    (set! totwarncount (+ totwarncount 1)))
+		    (set! totwarncount  (+ totwarncount  1)))
 		   ((eq? etype 'abort)
 		    (set! totabortcount (+ totabortcount 1)))
-		   ))
-		(begin
-		  (cond
+		   ((eq? etype 'skip)
+		    (set! totskipcount  (+ totskipcount  1)))
 		   ((eq? etype 'check)
 		    (set! totcheckcount (+ totcheckcount 1)))
 		   ((eq? etype 'waive)
 		    (set! totwaivecount (+ totwaivecount 1)))
 		   )))))
+		;; (begin
+		;;   (cond
+		;;    )))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
     ;; (print "Total errors: " toterrcount)
@@ -753,16 +761,17 @@
     ;; (if (and (not *got-an-error*) status)
     ;;     (exit 0)
     (cond 
-     ((> toterrcount 0)   (exit 1))
-     ((> totcheckcount 0) (exit 3))
-     ((> totwarncount 0)  (exit 2))
-     ((> totwaivecount 0) (exit 4))
-     ((> totabortcount 0) (exit 5))
+     ((> toterrcount   0) 1)
+     ((> totcheckcount 0) 3)
+     ((> totwarncount  0) 2)
+     ((> totwaivecount 0) 4)
+     ((> totabortcount 0) 5)
+     ((> totskipcount  0) 6)
      (*got-an-error*      (begin
 			    (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
-			    (exit 1)))
-     (status             (exit 0))
-     (else               (exit 0)))))
+			    1))
+     (status             0)
+     (else               0))))
 
 (define (setup-logpro)
   (use regex)
