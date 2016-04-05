@@ -297,7 +297,7 @@
 				  (hash-table-ref/default *expects* section '()))))
 	 (if (list? section) section (list section))))
       (print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook))
-      
+
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
 
 (define (expect:warning where section comparison value name patts #!key (expires #f)(type 'warning)(hook #f))
@@ -736,14 +736,14 @@
 		(begin
 		  (set! status #f)
 		  (cond
+		   ((eq? etype 'skip)
+		    (set! totskipcount  (+ totskipcount  1)))
 		   ((or (member etype '(error required value))) ;; (eq? etype 'error)(eq? etype 'required)(eq? etype 'value)(eq? etype 'waive))
 		    (set! toterrcount   (+ toterrcount   1)))
 		   ((eq? etype 'warning)
 		    (set! totwarncount  (+ totwarncount  1)))
 		   ((eq? etype 'abort)
 		    (set! totabortcount (+ totabortcount 1)))
-		   ((eq? etype 'skip)
-		    (set! totskipcount  (+ totskipcount  1)))
 		   ((eq? etype 'check)
 		    (set! totcheckcount (+ totcheckcount 1)))
 		   ((eq? etype 'waive)
@@ -761,12 +761,12 @@
     ;; (if (and (not *got-an-error*) status)
     ;;     (exit 0)
     (cond 
+     ((> totskipcount  0) 6)
      ((> toterrcount   0) 1)
      ((> totcheckcount 0) 3)
      ((> totwarncount  0) 2)
      ((> totwaivecount 0) 4)
      ((> totabortcount 0) 5)
-     ((> totskipcount  0) 6)
      (*got-an-error*      (begin
 			    (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
 			    1))
