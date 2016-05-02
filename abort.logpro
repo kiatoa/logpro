@@ -1,0 +1,4 @@
+(expect:ignore in "LogFileBody" > 0 "Good line"  #/good/)
+(expect:abort  in "LogFileBody" = 0 "Abort line" #/ABORT/)
+(expect:error  in "LogFileBody" = 0 "Fail line"  #/bad/)
+

@@ -58,12 +58,34 @@
    ((eq? op >=) '>=)
    ((eq? op <=) '<=)
    (else 'unk)))
+
+;;======================================================================
+;; Settings
+;;======================================================================
    
+(define *logpro:settings* (make-hash-table))
+
+(define (logpro:set! var val)
+  (hash-table-set! *logpro:settings* var val))
+
+(define (logpro:get var)
+  (hash-table-ref/default *logpro:settings* var #f))
+
+(define (logpro:unset! var)
+  (if (hash-table-exists? *logpro:settings* var)
+      (hash-table-delete! *logpro:settings* var)))
+
+;; some default settings
+(for-each
+ (lambda (datpair)
+   (logpro:set! (car datpair)(cdr datpair)))
+ '(("sumdat" . #t))) ;; <fname>.dat is on by default
+
 ;;======================================================================
 ;; Hooks
 ;;======================================================================
 
-(define *hooks* (make-hash-table))
+(define *logpro:hooks* (make-hash-table))
 
 ;; if command is a string it is executed by system after substituting matches
 ;;    m1, m2, m3, m4 in #{m5} type string targets.
@@ -71,7 +93,7 @@
 ;; if command is a proc it is called with the list of match results
 ;;
 (define (hook:add name command #!key (one-time #f))
-  (hash-table-set! *hooks* name (vector command one-time)))
+  (hash-table-set! *logpro:hooks* name (vector command one-time)))
 
 ;; escape single quotes and surround with single quotes
 (define (hook:command-param-escape val)
@@ -225,16 +247,16 @@
 (define-inline (expects:get-hook-ptr   vec)(vector-ref vec 14))
 (define-inline (expects:get-hook vec)
   (vector-ref 
-     (hash-table-ref/default *hooks* (expects:get-hook-ptr vec)(vector #f #f))
+     (hash-table-ref/default *logpro:hooks* (expects:get-hook-ptr vec)(vector #f #f))
      0))
 ;; returns #t if it is a one-time hook
 (define-inline (expects:get-hook-type vec)
   (vector-ref 
-     (hash-table-ref/default *hooks* (expects:get-hook-ptr vec)(vector #f #f))
+     (hash-table-ref/default *logpro:hooks* (expects:get-hook-ptr vec)(vector #f #f))
      1))
 (define-inline (expects:delete-if-one-time vec)
   (if (expects:get-hook-type vec)
-      (hash-table-delete *hooks* (expects:get-hook-ptr vec))))
+      (hash-table-delete *logpro:hooks* (expects:get-hook-ptr vec))))
 (define-inline (expects:get-matchnum vec)(vector-ref vec 15))
 
 ;; where is 'in, 'before or 'after but only 'in is supported now.
@@ -422,6 +444,17 @@
          (print-call-chain *htmlport*)
 	 (close-output-port *htmlport*)
 	 (exit 1))
+       ;; load the waiver file first if specified
+       (if (and waiver-file
+		(file-exists? waiver-file)
+		(file-readable? waiver-file))
+	   (let ((allowed-rules (logpro:get "allowed-rules")))
+	     (logpro:set "allowed-rules" '(waive))
+	     (load waiver-file)
+	     (if allowed-rules  ;; have prior settings? preserve them
+		 (logpro:set "allowed-rules" allowed-rules)
+		 (logpro:unset "allowed-rules"))))
+       ;; load the command file
        (load cmdfname))
       (analyze-logfile (current-output-port))
       (let ((exit-code (print-results)))
@@ -760,13 +793,13 @@
     (html-print "</pre></body></html>")
     ;; (if (and (not *got-an-error*) status)
     ;;     (exit 0)
-    (cond 
+    (cond ;; ordering here is critical as it sets the precedence of which status "wins"
      ((> totskipcount  0) 6)
-     ((> toterrcount   0) 1)
+     ((> totabortcount 0) 5)
      ((> totcheckcount 0) 3)
+     ((> toterrcount   0) 1)
      ((> totwarncount  0) 2)
      ((> totwaivecount 0) 4)
-     ((> totabortcount 0) 5)
      (*got-an-error*      (begin
 			    (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
 			    1))
