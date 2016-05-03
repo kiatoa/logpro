@@ -14,7 +14,7 @@
 (let ((args (argv)))
   (if (< (length args) 2)
       (begin
-	(print "Usage: logpro cmdfile [htmlfile] > annotated.log < inputfile.log")
+	(print "Usage: logpro cmdfile [htmlfile] [waiverfile] > annotated.log < inputfile.log")
 	(print "  Exits with ")
 	(print "    error code = 0 on success,")
 	(print "    error code = 1 errors found,")
@@ -79,7 +79,7 @@
 (for-each
  (lambda (datpair)
    (logpro:set! (car datpair)(cdr datpair)))
- '(("sumdat" . #t))) ;; <fname>.dat is on by default
+ '(("summdat" . #t))) ;; <fname>.dat is on by default
 
 ;;======================================================================
 ;; Hooks
@@ -422,6 +422,7 @@
 ;;======================================================================
 
 (define *htmlport* #f)
+(define *summport* #f)
 
 (define (process-log-file cmdfname html-file waiver-file)
   (cond 
@@ -429,8 +430,16 @@
     (print:error "ERROR: command file " cmdfname " not found")
     (exit 1))
    (else
-    (let* ((html-port (if html-file (open-output-file html-file) #f)))
+    (let* ((html-port (if html-file (open-output-file html-file) #f))
+	   (summ-port (if (logpro:get "summdat")
+			  (let ((fname (conc (pathname-strip-extension (if html-file
+									   html-file
+									   "summary"))
+					     ".dat")))
+			    (open-output-file fname))
+			  #f)))
       (set! *htmlport* html-port) ;; sigh, do me right some day...
+      (set! *summport* summ-port)
       (eval '(require-extension regex-literals))
       (eval '(require-extension regex))
       (handle-exceptions
@@ -458,6 +467,8 @@
        (load cmdfname))
       (analyze-logfile (current-output-port))
       (let ((exit-code (print-results)))
+	(if *htmlport* (close-output-port *htmlport*))
+	(if *summport* (close-output-port *summport*))	
 	(exit exit-code))))))
 
 (define (adj-active-sections trigger active-sections)
@@ -726,7 +737,9 @@
 		  (set! xstatus #f))
 	      ;(print "xstatus: " xstatus " fail-count: " (expects:get-val-fail-count expect) " pass-count: " (expects:get-val-pass-count expect))
 	      ))
+	    ;; the summary line for this rule
 	    (if is-value
+		;; If a value construct the output line using some kinda complicated logic ...
 		(let ((cmd       (expects:get-hook expect))
 		      (tolerance (expects:get-tol expect))
 		      (measured  (if (null? (expects:get-measured expect)) "-" (car (expects:get-measured expect)))))
@@ -752,7 +765,22 @@
 					"tolerance" (conc (misc:op->symbol tolerance)))))
 			(print "VALUE HOOK CALLED: " valuehook)
 			(system valuehook))))
+		;; If not a value create the output line using the format "fmt"
 		(set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name count)))
+	    (if (and *summport*
+		     (not is-value)) ;; not dumping values for now
+		(with-output-to-port *summport*
+		  (lambda ()
+		    (print "[" name "]")
+		    (print "type "(expect:expect-type-get-type typeinfo))
+		    (print "operator " where)
+		    (print "section " section)
+		    (print "status "  (if xstatus "OK" "FAIL"))
+		    (print "compsym " compsym)
+		    (print "value " value)
+		    (print "name " name)
+		    (print "count " count)
+		    (print))))
 	    (html-print (conc "<font color=\"" 
 			      (if (> count 0)
 				  (if is-value
