@@ -764,23 +764,40 @@
 					 "expected" (conc value))
 					"tolerance" (conc (misc:op->symbol tolerance)))))
 			(print "VALUE HOOK CALLED: " valuehook)
-			(system valuehook))))
+			(system valuehook)))
+		  (if *summport*
+		      (with-output-to-port *summport*
+			(if is-value
+			    (lambda ()
+			      (print "[" name "]")
+			      (print "operator " where )
+			      (print "section " section )
+			      (print "status " (if xstatus "OK" "FAIL"))
+			      (print "expected "  value)
+			      (print "measured "  measured)
+			      (if (number? tolerance)
+				  (begin
+				    (print "type +/-")
+				    (print "tolerance " tolerance))
+				  (begin
+				    (print "type " (misc:op->symbol tolerance))))
+			      (print "pass " (expects:get-val-pass-count expect))
+			      (print "fail " (expects:get-val-fail-count expect))
+			      (print))
+			    (lambda ()
+			      (print "[" name "]")
+			      (print "type "(expect:expect-type-get-type typeinfo))
+			      (print "operator " where)
+			      (print "section " section)
+			      (print "status "  (if xstatus "OK" "FAIL"))
+			      (print "compsym " compsym)
+			      (print "value " value)
+			      (print "name " name)
+			      (print "count " count)
+			      (print))))))
 		;; If not a value create the output line using the format "fmt"
 		(set! lineout (format #f fmt (expect:expect-type-get-type typeinfo) where section (if xstatus "OK" "FAIL") compsym value name count)))
-	    (if (and *summport*
-		     (not is-value)) ;; not dumping values for now
-		(with-output-to-port *summport*
-		  (lambda ()
-		    (print "[" name "]")
-		    (print "type "(expect:expect-type-get-type typeinfo))
-		    (print "operator " where)
-		    (print "section " section)
-		    (print "status "  (if xstatus "OK" "FAIL"))
-		    (print "compsym " compsym)
-		    (print "value " value)
-		    (print "name " name)
-		    (print "count " count)
-		    (print))))
+	    ;; now send lineout to the html file
 	    (html-print (conc "<font color=\"" 
 			      (if (> count 0)
 				  (if is-value
