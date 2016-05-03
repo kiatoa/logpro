@@ -193,6 +193,17 @@
    ((<=)  "<=")
    (else "unk")))
 
+;; for the given ops spit out the right html else return the instring
+(define (text->html indat)
+  (let ((instr (if (string? indat)
+		   indat
+		   (conc indat))))
+    (string-substitute 
+     ">" "&gt;"
+     (string-substitute
+      "<" "&lt;"
+      instr))))
+
 ;;     (cond
 ;;      ((eq? comp =)    "=")
 ;;      ((eq? comp >)    ">")
@@ -281,7 +292,7 @@
 	(<= ex-val (current-seconds))  ;; expire specified
 	#f)))
 
-(define (expect where section comparison value name patts #!key (expires #f)(type 'error)(hook #f))
+(define (expect where section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(color #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
   (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
@@ -307,7 +318,7 @@
 	 (lambda (sect)
 	   (hash-table-set! *expects*;;                                                                                                          11  12  13           14   15 16          
 			    sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail  *curr-expect-num*
-			    (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f *curr-expect-num*)
+			    (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f *curr-expect-num* color)
 				  (hash-table-ref/default *expects* section '()))))
 	 (if (list? section) section (list section))))
       (print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook))
@@ -342,7 +353,7 @@
 ;;======================================================================
 ;; TODO: Compress this in with the expect routine above
 ;;======================================================================
-(define (expect:value where section value tol name patt #!key (expires #f)(type 'value)(matchnum 1)(hook #f))
+(define (expect:value where section value tol name patt #!key (expires #f)(type 'value)(matchnum 1)(hook #f)(color #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
   (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
@@ -367,7 +378,7 @@
        (lambda (sect)
 	 (hash-table-set! *expects* ;; comparison is not used                 matchnum used to pick the match from the regex
 			  sect ;;         0     1       2       3  4   5       6                   7               8      9   10                               11 12  value=pass/fail
-			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0) hook matchnum *curr-expect-num*)
+			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0) hook matchnum *curr-expect-num* color)
 				(hash-table-ref/default *expects* section '()))))
        (if (list? section) section (list section))))
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
@@ -457,10 +468,10 @@
        ;; load the command file
        (load cmdfname))
       ;; if we got this far we can symlink in the css file
-      (if (and cssfile (file-exists? cssfile))
+      (if (and cssfile (file-exists? cssfile)(not (file-exists? "logpro_style.css")))
 	  (create-symbolic-link cssfile "logpro_style.css"))
-      (analyze-logfile (current-output-port))
-      (let ((exit-code (print-results)))
+      (analyze-logfile (current-output-port) cssfile) ;; cssfile is used as a flag
+      (let ((exit-code (print-results cssfile)))
 	(if *htmlport* (close-output-port *htmlport*))
 	(if *summport* (close-output-port *summport*))	
 	(exit exit-code))))))
@@ -485,7 +496,7 @@
 	(lambda ()
 	  (apply print stuff)))))
 
-(define (analyze-logfile oup)
+(define (analyze-logfile oup cssfile)
   (let ((active-sections  (make-hash-table))
 	(found-expects    '())
 	(html-mode        'pre)
@@ -512,7 +523,7 @@
 			  (misc:line-match-regexs line patts))
 		     (begin
 		       (trigger:set-remaining-hits! trigger (- remhits 1))
-		       (set! html-highlight-flag (vector "blue" #f #f (trigger:get-name trigger)))
+		       (set! html-highlight-flag (vector "blue" #f #f (trigger:get-name trigger) #f 'trigger))
 		       (with-output-to-port oup
 			 (lambda ()
 			   (print      "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)))
@@ -567,7 +578,7 @@
 								     (lambda ()
 								       (print "WARNING: You have triggered a bug, please report it.\n  vala: " vala " valb: " valb)
 								       #f))))))))
-			 (expect    (car dat))
+			 (expect    (car dat)) ;;  BUGGG!!!! RENAME ME!!!!!!
 			 (section   (cadr dat))
 			 (match     (if (> (length dat) 2)(caddr dat) #f))
 			 (type-info (expect:get-type-info expect))
@@ -590,10 +601,11 @@
 			      (expects:inc-val-pass-count expect)
 			      (expects:inc-val-fail-count expect))))
 		    (set! html-highlight-flag (vector color 
-						       (conc keyname "_" errnum)
-						       (conc "#" keyname "_" (+ 1 errnum))
-						       #f
-						       errnum))
+						      (conc keyname "_" errnum)
+						      (conc "#" keyname "_" (+ 1 errnum))
+						      #f
+						      errnum
+						      expect-type))
 		    (let ((msg (list
 				(expect:expect-type-get-type type-info) ": " 
 				(expects:get-name expect) " "
@@ -639,13 +651,16 @@
 		(let ((color (vector-ref html-highlight-flag 0))
 		      (label (vector-ref html-highlight-flag 1))
 		      (link  (vector-ref html-highlight-flag 2))
-		      (mesg  (vector-ref html-highlight-flag 3)))
+		      (mesg  (vector-ref html-highlight-flag 3))
+		      (etype (vector-ref html-highlight-flag 5))) ;; the expect
 		  (begin
 		    ;(if (eq? html-mode 'pre)
 		    ;    (html-print "</pre>")
 		    ;    (html-print "<br>"))
 		    (html-print "<a name=\"" label "\"></a>"
-				"<a href=\"" link "\" style=\"background-color: white; color: " color ";\">"
+				"<a href=\"" link "\" " (if cssfile 
+							    (conc "class=\"" etype "\">")
+							    (conc "style=\"background-color: white; color: " color ";\">"))
 				line
 				"</a>")
 		    (set! html-mode 'html)))
@@ -658,7 +673,7 @@
 	    (if html-highlight-flag (set! html-highlight-flag #f))
 	    (loop (read-line)(+ line-num 1)))))))
 
-(define (print-results)
+(define (print-results cssfile) ;; cssfile is used as a flag
   (let ((status       #t)
 	(toterrcount   0)
 	(totwarncount  0)
@@ -832,10 +847,19 @@
 	      ;;   		"\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
 	      ;;   		(if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
 	      ;;   		lineout "</font>")))
-	      (html-print "<tr><td bgcolor=\"" color "\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a><a href=\"#" keyname "_1\">"
-			  (car outvals) "</td><td bgcolor=\"" color "\">" (cadr outvals) "</td><td>" ;; (caddr outvals) "</td>"
+	      (html-print "<tr><td "
+			  (if cssfile
+			      (conc "class=\"" etype "\"")
+			      (conc "bgcolor=\"" color "\""))
+			  "><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a><a href=\"#" keyname "_1\">"
+			  (text->html (car outvals)) "</a></td>"
+			  "<td " (if cssfile 
+				     (conc "class=\"" etype "\"")
+				     (conc "bgcolor=\"" color "\""))
+			  ">"
+			  (text->html (cadr outvals)) "</td><td>" ;; (caddr outvals) "</td>"
 			  (string-intersperse
-			   (map conc (cddr outvals))
+			   (map text->html (cddr outvals))
 			   (conc "</td><td>"))) ;; <a href=\"#" keyname "_1\">")))
 	      (html-print "</td></tr>"))
 	    ;; (html-print "</table>")
@@ -862,6 +886,7 @@
 		;;    )))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
+    (html-print "</table>")
     ;; (print "Total errors: " toterrcount)
     ;; (print "Total warnings: " totwarncount)
     ;; (print "status: " status)
@@ -879,15 +904,16 @@
 				       1))
 		(status             0)
 		(else               0))))
-      (html-print "<p>EXIT CODE: " res ", " (case res
-					      ((1) "FAIL")
-					      ((2) "WARN")
-					      ((3) "CHECK")
-					      ((4) "WAIVE")
-					      ((5) "ABORT")
-					      ((6) "SKIP")
-					      ((0) "PASS")))
-      (html-print "</body></html>")
+      (html-print "<h1 class=\"exitcode\">EXIT CODE: " res " ("
+		  (case res
+		    ((1) "FAIL")
+		    ((2) "WARN")
+		    ((3) "CHECK")
+		    ((4) "WAIVE")
+		    ((5) "ABORT")
+		    ((6) "SKIP")
+		    ((0) "PASS")))
+      (html-print ")</h1></body></html>")
       res)))
 
 (define (setup-logpro)

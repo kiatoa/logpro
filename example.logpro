@@ -56,7 +56,7 @@
 ;; NOTE: this can be a bit confusing. The effect is that after the expire date the rule is disabled.
 ;;
 (expect:ignore   in "Blah4" < 4 "ERROR: ignore applied until 2002, thereafter flagged as error" #/ERROR:.*2002/ expires: "01/01/2002")
-(expect:ignore   in "Blah4" < 4 "ERROR: ignore applied until 2020, thereafter flagged as error" #/ERROR:.*2020/ expires: "01/01/2020")
+(expect:ignore   in "Blah4" <= 4 "ERROR: ignore applied until 2020, thereafter flagged as error" #/ERROR:.*2020/ expires: "01/01/2020")
 (expect:error    in "Blah4" = 0 "Any ERROR in section blah4" #/ERROR/)
 
 ;;                                                          miscellaneous output which doesn't match any expects
@@ -74,7 +74,7 @@
 (expect:error    in "LogFileBody"  = 0 "ERROR BLAH"  (list #/ERROR/ #/error/) hook: "logerr") ;; but disallow any other errors
 
 ;; Use expect:required to extract some values
-(expect:required   in "LogFileBody" = 1 "Quad values" #/First:\s+(\d+)\s+Second:\s+(\d+)\s+Third:\s+(\d+)\s+Fourth:\s+(\d+)/ hook: "quadval")
+(expect:required   in "LogFileBody" >= 1 "Quad values" #/First:\s+(\d+)\s+Second:\s+(\d+)\s+Third:\s+(\d+)\s+Fourth:\s+(\d+)/ hook: "quadval")
 
 ;(expect in "Init"  < 1 "Junk"        #/This is bogus/)
 

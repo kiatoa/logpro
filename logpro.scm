@@ -44,6 +44,8 @@
 			   #f))
 	 (bin-home     (pathname-directory (pathname-directory (car args))))
 	 (css-dir      (if bin-home (conc bin-home "/share/css") #f))
-	 (cssfile      (if css-dir  (conc css-dir "/logpro_style.css") #f)))
+	 (cssfile      (or (getenv "LOGPRO_CSS")
+			   (if (file-exists? "logpro_style.css") "logpro_style.css" #f)
+			   (if css-dir  (conc css-dir "/logpro_style.css") #f))))
     ;; else proceed to process the input files
     (process-log-file control-file html-file waiver-file cssfile)))
