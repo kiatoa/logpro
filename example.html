@@ -2,7 +2,7 @@
 <link rel="stylesheet" type="text/css" href="logpro_style.css">
 <header>LOGPRO RESULTS</header><body>
 Summary is <a href="#summary">here</a>
-<br>(processed by logpro version 1.13, tool details at: <a href="http://www.kiatoa.com/fossils/logpro">logpro</a>)
+<br>(processed by logpro version 1.14, tool details at: <a href="http://www.kiatoa.com/fossils/logpro">logpro</a>)
 <hr><pre>
 <a name="key_3_1"></a><a href="#key_3_2" style="background-color: white; color: purple;">// This is a header</a>
 <a name="#f"></a><a href="#f" style="background-color: white; color: blue;"></a>
@@ -129,15 +129,7 @@ Trigger: Init                       OK, count=1
 Trigger: LogFileBodyStart              OK, count=1
 </pre><p><table>
 <tr><th>RuleNum</th><th>RuleType</th><th></th><th>Section</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>
-<tr><td bgcolor="red"><a name="key_12_2"></a><a href="#key_12_1">rule-12</td><td bgcolor="red">Error</td><td>in</td><td>Blah4</td><td>FAIL</td><td>=</td><td>0</td><td>Any ERROR in section blah4</td><td>1</td><td>
-</td></tr>
-<tr><td bgcolor="green"><a name="key_11_2"></a><a href="#key_11_1">rule-11</td><td bgcolor="green">Ignore</td><td>in</td><td>Blah4</td><td>OK</td><td><</td><td>4</td><td>ERROR: ignore applied until 2020, thereafter flagged as error</td><td>1</td><td>
-</td></tr>
-<tr><td bgcolor="brown"><a name="key_2_2"></a><a href="#key_2_1">rule-2</td><td bgcolor="brown">Waive</td><td>in</td><td>Blah3</td><td>OK</td><td>=</td><td>1</td><td>A real error that has been waived</td><td>1</td><td>
-</td></tr>
-<tr><td bgcolor="green"><a name="key_16_2"></a><a href="#key_16_1">rule-16</td><td bgcolor="green">Ignore</td><td>in</td><td>Blah2</td><td>OK</td><td><</td><td>99</td><td>FALSE ERROR</td><td>1</td><td>
-</td></tr>
-<tr><td bgcolor="brown"><a name="key_0_3"></a><a href="#key_0_1">rule-0</td><td bgcolor="brown">Waive</td><td>in</td><td>Blah5</td><td>OK</td><td>=</td><td>2</td><td>Have exactly two BLAH5 errors to waive inside the two Blah5 sections</td><td>2</td><td>
+<tr><td bgcolor="purple"><a name="key_3_2"></a><a href="#key_3_1">rule-3</td><td bgcolor="purple">Required</td><td>in</td><td>Init</td><td>OK</td><td>=</td><td>1</td><td>Header</td><td>1</td><td>
 </td></tr>
 <tr><td bgcolor="#d1db64"><a name="key_23_2"></a><a href="#key_23_1">rule-23</td><td bgcolor="#d1db64">Skip</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td>=</td><td>0</td><td>If flagged we are asking for this to exit with code 6</td><td>1</td><td>
 </td></tr>
@@ -173,6 +165,15 @@ Trigger: LogFileBodyStart              OK, count=1
 </td></tr>
 <tr><td bgcolor="red"><a name="key_1_2"></a><a href="#key_1_1">rule-1</td><td bgcolor="red">Error</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td><</td><td>1</td><td>Only have one BLAH5 error outside of the Blah5 section</td><td>1</td><td>
 </td></tr>
-<tr><td bgcolor="purple"><a name="key_3_2"></a><a href="#key_3_1">rule-3</td><td bgcolor="purple">Required</td><td>in</td><td>Init</td><td>OK</td><td>=</td><td>1</td><td>Header</td><td>1</td><td>
+<tr><td bgcolor="red"><a name="key_12_2"></a><a href="#key_12_1">rule-12</td><td bgcolor="red">Error</td><td>in</td><td>Blah4</td><td>FAIL</td><td>=</td><td>0</td><td>Any ERROR in section blah4</td><td>1</td><td>
 </td></tr>
-</pre></body></html>
+<tr><td bgcolor="green"><a name="key_11_2"></a><a href="#key_11_1">rule-11</td><td bgcolor="green">Ignore</td><td>in</td><td>Blah4</td><td>OK</td><td><</td><td>4</td><td>ERROR: ignore applied until 2020, thereafter flagged as error</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="brown"><a name="key_2_2"></a><a href="#key_2_1">rule-2</td><td bgcolor="brown">Waive</td><td>in</td><td>Blah3</td><td>OK</td><td>=</td><td>1</td><td>A real error that has been waived</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="green"><a name="key_16_2"></a><a href="#key_16_1">rule-16</td><td bgcolor="green">Ignore</td><td>in</td><td>Blah2</td><td>OK</td><td><</td><td>99</td><td>FALSE ERROR</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="brown"><a name="key_0_3"></a><a href="#key_0_1">rule-0</td><td bgcolor="brown">Waive</td><td>in</td><td>Blah5</td><td>OK</td><td>=</td><td>2</td><td>Have exactly two BLAH5 errors to waive inside the two Blah5 sections</td><td>2</td><td>
+</td></tr>
+<p>EXIT CODE: 6, SKIP
+</body></html>

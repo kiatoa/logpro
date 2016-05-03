@@ -11,22 +11,6 @@
 (use regex regex-literals)
 (define getenv get-environment-variable)
 
-(let ((args (argv)))
-  (if (< (length args) 2)
-      (begin
-	(print "Usage: logpro cmdfile [htmlfile] [waiverfile] > annotated.log < inputfile.log")
-	(print "  Exits with ")
-	(print "    error code = 0 on success,")
-	(print "    error code = 1 errors found,")
-	(print "    error code = 2 warnings found,")
-	(print "    error code = 3 check condition found,")
-	(print "    error code = 4 waivers found.")
-	(print "    error code = 5 abort signature found.")
-	(print "    error code = 6 skip signature found.")
-	(print "  Version " logpro-version)
-	(print "  License GPL, more info about logpro at http://www.kiatoa.com/fossils/logpro")
-	(exit 1))))
-
 ;; NOTES: 
 
 ;;======================================================================
@@ -429,7 +413,7 @@
 ;; Main
 ;;======================================================================
 
-(define (process-log-file cmdfname html-file waiver-file)
+(define (process-log-file cmdfname html-file waiver-file cssfile)
   (cond 
    ((not (file-exists? cmdfname))
     (print:error "ERROR: command file " cmdfname " not found")
@@ -461,15 +445,20 @@
        ;; load the waiver file first if specified
        (if (and waiver-file
 		(file-exists? waiver-file)
-		(file-readable? waiver-file))
-	   (let ((allowed-rules (logpro:get "allowed-rules")))
-	     (logpro:set "allowed-rules" '(waive))
-	     (load waiver-file)
-	     (if allowed-rules  ;; have prior settings? preserve them
-		 (logpro:set "allowed-rules" allowed-rules)
-		 (logpro:unset "allowed-rules"))))
+		(file-read-access? waiver-file))
+	   (load waiver-file))
+       ;; Filter applied rules - defer this feature
+       ;;   (let ((allowed-rules (logpro:get "allowed-rules")))
+       ;;     (logpro:set "allowed-rules" '(waive)) ;; doesn't do anything yet - need to filter rules in waiver file with this.
+       ;;     (load waiver-file)
+       ;;     (if allowed-rules  ;; have prior settings? preserve them
+       ;;         (logpro:set "allowed-rules" allowed-rules)
+       ;;         (logpro:unset! "allowed-rules"))))
        ;; load the command file
        (load cmdfname))
+      ;; if we got this far we can symlink in the css file
+      (if (and cssfile (file-exists? cssfile))
+	  (create-symbolic-link cssfile "logpro_style.css"))
       (analyze-logfile (current-output-port))
       (let ((exit-code (print-results)))
 	(if *htmlport* (close-output-port *htmlport*))
@@ -876,21 +865,30 @@
     ;; (print "Total errors: " toterrcount)
     ;; (print "Total warnings: " totwarncount)
     ;; (print "status: " status)
-    (html-print "</pre></body></html>")
     ;; (if (and (not *got-an-error*) status)
     ;;     (exit 0)
-    (cond ;; ordering here is critical as it sets the precedence of which status "wins"
-     ((> totskipcount  0) 6)
-     ((> totabortcount 0) 5)
-     ((> totcheckcount 0) 3)
-     ((> toterrcount   0) 1)
-     ((> totwarncount  0) 2)
-     ((> totwaivecount 0) 4)
-     (*got-an-error*      (begin
-			    (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
-			    1))
-     (status             0)
-     (else               0))))
+    (let ((res (cond ;; ordering here is critical as it sets the precedence of which status "wins"
+		((> totskipcount  0) 6)
+		((> totabortcount 0) 5)
+		((> totcheckcount 0) 3)
+		((> toterrcount   0) 1)
+		((> totwarncount  0) 2)
+		((> totwaivecount 0) 4)
+		(*got-an-error*      (begin
+				       (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
+				       1))
+		(status             0)
+		(else               0))))
+      (html-print "<p>EXIT CODE: " res ", " (case res
+					      ((1) "FAIL")
+					      ((2) "WARN")
+					      ((3) "CHECK")
+					      ((4) "WAIVE")
+					      ((5) "ABORT")
+					      ((6) "SKIP")
+					      ((0) "PASS")))
+      (html-print "</body></html>")
+      res)))
 
 (define (setup-logpro)
   (use regex)

@@ -11,7 +11,7 @@ logpro.profiled : logprocessor.scm logpro.scm
 
 test : logpro
 	csi -q -b -n tests/run.scm 
-	! ./logpro example.logpro example.html < example.log > example.out
+	! ./logpro example.logpro example.html waivers.logpro < example.log > example.out
 	firefox example.html
 
 examples :
