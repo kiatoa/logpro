@@ -261,6 +261,7 @@
       (hash-table-delete *logpro:hooks* (expects:get-hook-ptr vec))))
 (define-inline (expects:get-matchnum vec)(vector-ref vec 15))
 (define-inline (expects:get-rulenum  vec)(vector-ref vec 16))
+(define-inline (expects:get-html-class vec)(vector-ref vec 17))
 
 ;; where is 'in, 'before or 'after but only 'in is supported now.
 ;; (expect in "Header" > 0 "Copywrite" #/Copywrite/)
@@ -292,7 +293,7 @@
 	(<= ex-val (current-seconds))  ;; expire specified
 	#f)))
 
-(define (expect where section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(color #f))
+(define (expect where section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(class #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
   (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
@@ -318,42 +319,42 @@
 	 (lambda (sect)
 	   (hash-table-set! *expects*;;                                                                                                          11  12  13           14   15 16          
 			    sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail  *curr-expect-num*
-			    (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f *curr-expect-num* color)
+			    (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f *curr-expect-num* class)
 				  (hash-table-ref/default *expects* section '()))))
 	 (if (list? section) section (list section))))
       (print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook))
 
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
 
-(define (expect:warning where section comparison value name patts #!key (expires #f)(type 'warning)(hook #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook))
+(define (expect:warning where section comparison value name patts #!key (expires #f)(type 'warning)(hook #f)(class #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:ignore where section comparison value name patts #!key (expires #f)(type 'ignore)(hook #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook))
+(define (expect:ignore where section comparison value name patts #!key (expires #f)(type 'ignore)(hook #f)(class #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:waive where section comparison value name patts #!key (expires #f)(type 'waive)(hook #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook))
+(define (expect:waive where section comparison value name patts #!key (expires #f)(type 'waive)(hook #f)(class #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:error where section comparison value name patts #!key (expires #f)(type 'error)(hook #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook))
+(define (expect:error where section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(class #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:required where section comparison value name patts #!key (expires #f)(type 'required)(hook #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook))
+(define (expect:required where section comparison value name patts #!key (expires #f)(type 'required)(hook #f)(class #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:check where section comparison value name patts #!key (expires #f)(type 'check)(hook #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook))
+(define (expect:check where section comparison value name patts #!key (expires #f)(type 'check)(hook #f)(class #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:abort where section comparison value name patts #!key (expires #f)(type 'abort)(hook #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook))
+(define (expect:abort where section comparison value name patts #!key (expires #f)(type 'abort)(hook #f)(class #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:skip where section comparison value name patts #!key (expires #f)(type 'skip)(hook #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook))
+(define (expect:skip where section comparison value name patts #!key (expires #f)(type 'skip)(hook #f)(class #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
 
 ;;======================================================================
 ;; TODO: Compress this in with the expect routine above
 ;;======================================================================
-(define (expect:value where section value tol name patt #!key (expires #f)(type 'value)(matchnum 1)(hook #f)(color #f))
+(define (expect:value where section value tol name patt #!key (expires #f)(type 'value)(matchnum 1)(hook #f)(class #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
   (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
@@ -378,7 +379,7 @@
        (lambda (sect)
 	 (hash-table-set! *expects* ;; comparison is not used                 matchnum used to pick the match from the regex
 			  sect ;;         0     1       2       3  4   5       6                   7               8      9   10                               11 12  value=pass/fail
-			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0) hook matchnum *curr-expect-num* color)
+			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0) hook matchnum *curr-expect-num* class)
 				(hash-table-ref/default *expects* section '()))))
        (if (list? section) section (list section))))
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
@@ -732,7 +733,8 @@
 		 (compsym  "=")
 		 (lineout  "")
 		 (is-value (eq? etype 'value))
-		 (rulenum  (expects:get-rulenum expect)))
+		 (rulenum  (expects:get-rulenum expect))
+		 (eclass   (expects:get-html-class expect)))
 	    ;(print "is-value: " is-value)
 	    (cond
 	     ((eq? comp =)
@@ -892,29 +894,55 @@
     ;; (print "status: " status)
     ;; (if (and (not *got-an-error*) status)
     ;;     (exit 0)
-    (let ((res (cond ;; ordering here is critical as it sets the precedence of which status "wins"
-		((> totskipcount  0) 6)
-		((> totabortcount 0) 5)
-		((> totcheckcount 0) 3)
-		((> toterrcount   0) 1)
-		((> totwarncount  0) 2)
-		((> totwaivecount 0) 4)
-		(*got-an-error*      (begin
-				       (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
-				       1))
-		(status             0)
-		(else               0))))
-      (html-print "<h1 class=\"exitcode\">EXIT CODE: " res " ("
-		  (case res
-		    ((1) "FAIL")
-		    ((2) "WARN")
-		    ((3) "CHECK")
-		    ((4) "WAIVE")
-		    ((5) "ABORT")
-		    ((6) "SKIP")
-		    ((0) "PASS")))
+    (let* ((exit-code (cond ;; ordering here is critical as it sets the precedence of which status "wins"
+		       ((> totskipcount  0) 6)
+		       ((> totabortcount 0) 5)
+		       ((> totcheckcount 0) 3)
+		       ((> toterrcount   0) 1)
+		       ((> totwarncount  0) 2)
+		       ((> totwaivecount 0) 4)
+		       (*got-an-error*      (begin
+					      (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
+					      1))
+		       (status             0)
+		       (else               0)))
+	   (exit-status (case exit-code
+			  ((1) "FAIL")
+			  ((2) "WARN")
+			  ((3) "CHECK")
+			  ((4) "WAIVE")
+			  ((5) "ABORT")
+			  ((6) "SKIP")
+			  ((0) "PASS")
+			  (else "FAIL")))
+	   (exit-sym    (case exit-code
+			  ((1) 'error)
+			  ((2) 'warning)
+			  ((5) 'abort)
+			  ((4) 'waive)
+			  ((6) 'skip)
+			  ((3) 'check)
+			  (else 'error))))
+      (html-print "<h1 class=\"exitcode\">EXIT CODE: " exit-code " ("
+		  exit-status)
       (html-print ")</h1></body></html>")
-      res)))
+      ;; add the [final] block to the summary dat
+      (with-output-to-port *summport*
+	(lambda ()
+	  (print "[final]")
+	  (print "exit-code " exit-code)
+	  (print "exit-status " exit-status)
+	  (for-each
+	   (lambda (section)
+	     (for-each
+	      (lambda (xpect)
+		(let* ((etype (expects:get-type xpect))
+		       (emsg  (expects:get-name xpect)))
+		  (if (equal? etype exit-sym)
+		      (print "message " emsg))))
+	      (hash-table-ref *expects* section)))
+	   (hash-table-keys *expects*))))
+      exit-code)))
 
 (define (setup-logpro)
   (use regex)
