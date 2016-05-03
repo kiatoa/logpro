@@ -125,33 +125,52 @@ Trigger: Blah2                      OK, count=1
 Trigger: InitEnd                    OK, count=1
 Trigger: Init                       OK, count=1
 Trigger: LogFileBodyStart              OK, count=1
-<p>Expects for Blah2 section: 
-<font color="green"><a name="key_16_2"></a><a href="#key_16_1">Expect:</a>  Ignore   in Blah2          OK, expected < 99 of FALSE ERROR, got 1</font>
-<p>Expects for Blah5 section: 
-<font color="brown"><a name="key_0_3"></a><a href="#key_0_1">Expect:</a>  Waive    in Blah5          OK, expected = 2 of Have exactly two BLAH5 errors to waive inside the two Blah5 sections, got 2</font>
-<p>Expects for Blah3 section: 
-<font color="brown"><a name="key_2_2"></a><a href="#key_2_1">Expect:</a>  Waive    in Blah3          OK, expected = 1 of A real error that has been waived, got 1</font>
-<p>Expects for Blah4 section: 
-<font color="red"><a name="key_12_2"></a><a href="#key_12_1">Expect:</a>  Error    in Blah4        FAIL, expected = 0 of Any ERROR in section blah4, got 1</font>
-<font color="green"><a name="key_11_2"></a><a href="#key_11_1">Expect:</a>  Ignore   in Blah4          OK, expected < 4 of ERROR: ignore applied until 2020, thereafter flagged as error, got 1</font>
-<p>Expects for LogFileBody section: 
-<font color="#d1db64"><a name="key_23_2"></a><a href="#key_23_1">Expect:</a>  Skip     in LogFileBody  FAIL, expected = 0 of If flagged we are asking for this to exit with code 6, got 1</font>
-<font color="crimson"><a name="key_22_2"></a><a href="#key_22_1">Expect:</a>  Abort    in LogFileBody  FAIL, expected = 0 of If flagged our process failed to run correctly, got 1</font>
-<font color="pink"><a name="key_21_2"></a><a href="#key_21_1">Expect:</a>  Check    in LogFileBody    OK, expected = 1 of If flagged, raise CHECKED flag and exit with error code 3, got 1</font>
-<font color="purple"><a name="key_20_2"></a><a href="#key_20_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Quad values, got 1</font>
-<font color="red"><a name="key_19_2"></a><a href="#key_19_1">Expect:</a>  Error    in LogFileBody  FAIL, expected = 0 of ERROR BLAH, got 1</font>
-<font color="orange"><a name="key_18_2"></a><a href="#key_18_1">Expect:</a>  Warning  in LogFileBody  FAIL, expected = 0 of Any warning, got 1</font>
-<font color="green"><a name="key_17_3"></a><a href="#key_17_1">Expect:</a>  Ignore   in LogFileBody    OK, expected < 99 of Ignore the word error in comments, got 2</font>
-<font color="red"><a name="key_15_3"></a><a href="#key_15_1">Expect:</a>  Value    in LogFileBody  FAIL, expected >  1.9 got 1.92, 1 pass, 1 fail</font>
-<font color="red"><a name="key_14_3"></a><a href="#key_14_1">Expect:</a>  Value    in LogFileBody  FAIL, expected 1.9 +/- 0.1 got 1.99, 1 pass, 1 fail</font>
-<font color="green"><a name="key_13_2"></a><a href="#key_13_1">Expect:</a>  Ignore   in LogFileBody    OK, expected > 0 of Testing substitution, got 1</font>
-<font color="black"><a name="key_9_1"></a>Expect:  Value    in LogFileBody  FAIL, expected 110000000000.0 +/- 1000000000.0 got -, 0 pass, 0 fail</font>
-<font color="red"><a name="key_8_2"></a><a href="#key_8_1">Expect:</a>  Value    in LogFileBody  FAIL, expected 110000000000.0 +/- 1000000000.0 got 11197000000.0, 0 pass, 1 fail</font>
-<font color="green"><a name="key_7_2"></a><a href="#key_7_1">Expect:</a>  Value    in LogFileBody    OK, expected 110000000000.0 +/- 2000000000.0 got 112000000000.0, 1 pass, 0 fail</font>
-<font color="red"><a name="key_6_2"></a><a href="#key_6_1">Expect:</a>  Value    in LogFileBody  FAIL, expected 0.5 +/- 0.1 got 0.39, 0 pass, 1 fail</font>
-<font color="green"><a name="key_5_2"></a><a href="#key_5_1">Expect:</a>  Value    in LogFileBody    OK, expected 1.9 +/- 0.1 got 1.8, 1 pass, 0 fail</font>
-<font color="red"><a name="key_4_1"></a>Expect:  Required in LogFileBody  FAIL, expected > 0 of Something required but not found, got 0</font>
-<font color="red"><a name="key_1_2"></a><a href="#key_1_1">Expect:</a>  Error    in LogFileBody  FAIL, expected < 1 of Only have one BLAH5 error outside of the Blah5 section, got 1</font>
-<p>Expects for Init section: 
-<font color="purple"><a name="key_3_2"></a><a href="#key_3_1">Expect:</a>  Required in Init           OK, expected = 1 of Header, got 1</font>
+</pre><p><table>
+<tr><th>RuleNum</th><th>RuleType</th><th></th><th>Section</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>
+<tr><td bgcolor="brown"><a name="key_2_2"></a><a href="#key_2_1">rule-2</td><td bgcolor="brown">Waive</td><td>in</td><td>Blah3</td><td>OK</td><td>=</td><td>1</td><td>A real error that has been waived</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="red"><a name="key_12_2"></a><a href="#key_12_1">rule-12</td><td bgcolor="red">Error</td><td>in</td><td>Blah4</td><td>FAIL</td><td>=</td><td>0</td><td>Any ERROR in section blah4</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="green"><a name="key_11_2"></a><a href="#key_11_1">rule-11</td><td bgcolor="green">Ignore</td><td>in</td><td>Blah4</td><td>OK</td><td><</td><td>4</td><td>ERROR: ignore applied until 2020, thereafter flagged as error</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="green"><a name="key_16_2"></a><a href="#key_16_1">rule-16</td><td bgcolor="green">Ignore</td><td>in</td><td>Blah2</td><td>OK</td><td><</td><td>99</td><td>FALSE ERROR</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="brown"><a name="key_0_3"></a><a href="#key_0_1">rule-0</td><td bgcolor="brown">Waive</td><td>in</td><td>Blah5</td><td>OK</td><td>=</td><td>2</td><td>Have exactly two BLAH5 errors to waive inside the two Blah5 sections</td><td>2</td><td>
+</td></tr>
+<tr><td bgcolor="purple"><a name="key_3_2"></a><a href="#key_3_1">rule-3</td><td bgcolor="purple">Required</td><td>in</td><td>Init</td><td>OK</td><td>=</td><td>1</td><td>Header</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="#d1db64"><a name="key_23_2"></a><a href="#key_23_1">rule-23</td><td bgcolor="#d1db64">Skip</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td>=</td><td>0</td><td>If flagged we are asking for this to exit with code 6</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="crimson"><a name="key_22_2"></a><a href="#key_22_1">rule-22</td><td bgcolor="crimson">Abort</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td>=</td><td>0</td><td>If flagged our process failed to run correctly</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="pink"><a name="key_21_2"></a><a href="#key_21_1">rule-21</td><td bgcolor="pink">Check</td><td>in</td><td>LogFileBody</td><td>OK</td><td>=</td><td>1</td><td>If flagged, raise CHECKED flag and exit with error code 3</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="purple"><a name="key_20_2"></a><a href="#key_20_1">rule-20</td><td bgcolor="purple">Required</td><td>in</td><td>LogFileBody</td><td>OK</td><td>=</td><td>1</td><td>Quad values</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="red"><a name="key_19_2"></a><a href="#key_19_1">rule-19</td><td bgcolor="red">Error</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td>=</td><td>0</td><td>ERROR BLAH</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="orange"><a name="key_18_2"></a><a href="#key_18_1">rule-18</td><td bgcolor="orange">Warning</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td>=</td><td>0</td><td>Any warning</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="green"><a name="key_17_3"></a><a href="#key_17_1">rule-17</td><td bgcolor="green">Ignore</td><td>in</td><td>LogFileBody</td><td>OK</td><td><</td><td>99</td><td>Ignore the word error in comments</td><td>2</td><td>
+</td></tr>
+<tr><td bgcolor="red"><a name="key_15_3"></a><a href="#key_15_1">rule-17</td><td bgcolor="red">Ignore</td><td>in</td><td>LogFileBody</td><td>OK</td><td><</td><td>99</td><td>Ignore the word error in comments</td><td>2</td><td>
+</td></tr>
+<tr><td bgcolor="red"><a name="key_14_3"></a><a href="#key_14_1">rule-17</td><td bgcolor="red">Ignore</td><td>in</td><td>LogFileBody</td><td>OK</td><td><</td><td>99</td><td>Ignore the word error in comments</td><td>2</td><td>
+</td></tr>
+<tr><td bgcolor="green"><a name="key_13_2"></a><a href="#key_13_1">rule-13</td><td bgcolor="green">Ignore</td><td>in</td><td>LogFileBody</td><td>OK</td><td>></td><td>0</td><td>Testing substitution</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="white"><a name="key_9_1"></a><a href="#key_9_1">rule-13</td><td bgcolor="white">Ignore</td><td>in</td><td>LogFileBody</td><td>OK</td><td>></td><td>0</td><td>Testing substitution</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="red"><a name="key_8_2"></a><a href="#key_8_1">rule-13</td><td bgcolor="red">Ignore</td><td>in</td><td>LogFileBody</td><td>OK</td><td>></td><td>0</td><td>Testing substitution</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="green"><a name="key_7_2"></a><a href="#key_7_1">rule-13</td><td bgcolor="green">Ignore</td><td>in</td><td>LogFileBody</td><td>OK</td><td>></td><td>0</td><td>Testing substitution</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="red"><a name="key_6_2"></a><a href="#key_6_1">rule-13</td><td bgcolor="red">Ignore</td><td>in</td><td>LogFileBody</td><td>OK</td><td>></td><td>0</td><td>Testing substitution</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="green"><a name="key_5_2"></a><a href="#key_5_1">rule-13</td><td bgcolor="green">Ignore</td><td>in</td><td>LogFileBody</td><td>OK</td><td>></td><td>0</td><td>Testing substitution</td><td>1</td><td>
+</td></tr>
+<tr><td bgcolor="red"><a name="key_4_1"></a><a href="#key_4_1">rule-4</td><td bgcolor="red">Required</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td>></td><td>0</td><td>Something required but not found</td><td>0</td><td>
+</td></tr>
+<tr><td bgcolor="red"><a name="key_1_2"></a><a href="#key_1_1">rule-1</td><td bgcolor="red">Error</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td><</td><td>1</td><td>Only have one BLAH5 error outside of the Blah5 section</td><td>1</td><td>
+</td></tr>
 </pre></body></html>
