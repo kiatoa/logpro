@@ -42,10 +42,21 @@
 	 (waiver-file  (if (> (length args) 3)
 			   (list-ref args 3)
 			   #f))
-	 (bin-home     (pathname-directory (pathname-directory (car args))))
-	 (css-dir      (if bin-home (conc bin-home "/share/css") #f))
+
+	 (bin-home     (pathname-directory (readlink-f (car args))))
+	 (tool-home    (if bin-home (pathname-directory bin-home) #f))
+	 (css-dir      (if tool-home (conc tool-home "/share/css") #f))
 	 (cssfile      (or (getenv "LOGPRO_CSS")
 			   (if (file-exists? "logpro_style.css") "logpro_style.css" #f)
-			   (if css-dir  (conc css-dir "/logpro_style.css") #f))))
+			   (let ((cfile (conc css-dir "/logpro_style.css")))
+			     (if (file-exists? cfile)
+				 cfile
+				 #f))
+			   (if bin-home 
+			       (let ((altfile (conc bin-home "/logpro_style.css")))
+				 (if (file-exists? altfile)
+				     altfile
+				     #f))))))
+    ;; (print "\nbin-home: " bin-home "\ncss-dir:  " css-dir "\ncssfile: " cssfile "\ntool-home: " tool-home)
     ;; else proceed to process the input files
     (process-log-file control-file html-file waiver-file cssfile)))

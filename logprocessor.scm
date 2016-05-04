@@ -11,6 +11,12 @@
 (use regex regex-literals)
 (define getenv get-environment-variable)
 
+(define (readlink-f fname)
+  (with-input-from-pipe
+   (conc "/bin/readlink " (if (file-exists? fname) "-f " "-m") fname)
+   (lambda ()
+     (read-line))))
+
 ;; NOTES: 
 
 ;;======================================================================
