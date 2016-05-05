@@ -13,7 +13,7 @@
 
 (define (readlink-f fname)
   (with-input-from-pipe
-   (conc "/bin/readlink " (if (file-exists? fname) "-f " "-m") fname)
+   (conc "/bin/readlink " (if (file-exists? fname) "-f " "-m ") fname)
    (lambda ()
      (read-line))))
 
@@ -674,7 +674,7 @@
 		(begin
 		  (if (not (eq? html-mode 'pre))
 		      (begin
-			(html-print "") ; <pre>")
+			;; (html-print "") ; <pre>")
 			(set! html-mode 'pre)))
 		  (html-print line)))
 	    (if html-highlight-flag (set! html-highlight-flag #f))
