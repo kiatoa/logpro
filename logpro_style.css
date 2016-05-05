@@ -2,24 +2,25 @@
  * Specify colors, font changes, etc here for the different rule classes
  */
 
+.trigger, .required, .abort, .check, .error, .ignore, .warning {
+    font-weight: bold;
+    background-color: whitesmoke;
+}
+
 .trigger {
     color: navy;
-    font-weight: bold;
 }
 
 .required {
     color: darkolivegreen;
-    font-weight: bold;
 }
 
 .check, .abort {
     color: darkred;
-    font-weight: bold;
 }
 
 .error {
     color: crimson;
-    font-weight: bold;
 }
 
 .ignore {
@@ -28,7 +29,6 @@
 
 .warning {
     color: goldenrod;
-    font-weight: bold;
 }
 
 
