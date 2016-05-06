@@ -530,7 +530,7 @@
 			  (misc:line-match-regexs line patts))
 		     (begin
 		       (trigger:set-remaining-hits! trigger (- remhits 1))
-		       (set! html-highlight-flag (vector "blue" #f #f (trigger:get-name trigger) #f 'trigger))
+		       (set! html-highlight-flag (vector "blue" #f #f (trigger:get-name trigger) #f 'trigger #f))
 		       (with-output-to-port oup
 			 (lambda ()
 			   (print      "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)))
@@ -592,6 +592,7 @@
 			 (keyname   (expects:get-keyname   expect))
 			 (errnum    (+ (hash-table-ref/default *expect-link-nums* keyname 0) 1))
 			 (expect-type (expects:get-type expect))
+			 (eclass    (expects:get-html-class expect))
 			 (is-value  (eq? expect-type 'value))
 			 (pass-fail (if is-value
 					(expect:value-compare expect match)
@@ -612,7 +613,8 @@
 						      (conc "#" keyname "_" (+ 1 errnum))
 						      #f
 						      errnum
-						      expect-type))
+						      expect-type
+						      eclass))
 		    (let ((msg (list
 				(expect:expect-type-get-type type-info) ": " 
 				(expects:get-name expect) " "
@@ -659,14 +661,15 @@
 		      (label (vector-ref html-highlight-flag 1))
 		      (link  (vector-ref html-highlight-flag 2))
 		      (mesg  (vector-ref html-highlight-flag 3))
-		      (etype (vector-ref html-highlight-flag 5))) ;; the expect
+		      (etype (vector-ref html-highlight-flag 5))
+		      (eclass (vector-ref html-highlight-flag 6))) ;; the expect
 		  (begin
 		    ;(if (eq? html-mode 'pre)
 		    ;    (html-print "</pre>")
 		    ;    (html-print "<br>"))
 		    (html-print "<a name=\"" label "\"></a>"
 				"<a href=\"" link "\" " (if cssfile 
-							    (conc "class=\"" etype "\">")
+							    (conc "class=\"" etype (if eclass (conc " " eclass) "") "\">") ;; (conc "class=\"" etype "\">")
 							    (conc "style=\"background-color: white; color: " color ";\">"))
 				line
 				"</a>")
@@ -857,12 +860,12 @@
 	      ;;   		lineout "</font>")))
 	      (html-print "<tr><td "
 			  (if cssfile
-			      (conc "class=\"" etype "\"")
+			      (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
 			      (conc "bgcolor=\"" color "\""))
 			  "><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a><a href=\"#" keyname "_1\">"
 			  (text->html (car outvals)) "</a></td>"
 			  "<td " (if cssfile 
-				     (conc "class=\"" etype "\"")
+				     (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
 				     (conc "bgcolor=\"" color "\""))
 			  ">"
 			  (text->html (cadr outvals)) "</td><td>" ;; (caddr outvals) "</td>"
