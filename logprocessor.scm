@@ -477,8 +477,8 @@
       ;; if we got this far we can symlink in the css file
       (let ((full-css-file (conc (or (pathname-directory html-file) ".") "/logpro_style.css")))
 	(if (and cssfile (file-exists? cssfile)(not (file-exists? full-css-file)))
-	  (create-symbolic-link cssfile full-css-file)))
-      (analyze-logfile (current-output-port) cssfile) ;; cssfile is used as a flag
+	  (create-symbolic-link cssfile full-css-file))
+	(analyze-logfile (current-output-port) full-css-file)) ;; cssfile is used as a flag
       (let ((exit-code (print-results cssfile)))
 	(if *htmlport* (close-output-port *htmlport*))
 	(if *summport* (close-output-port *summport*))	
@@ -511,7 +511,7 @@
 	(html-hightlight-flag #f))
     ;; (curr-seconds     (current-seconds)))
     (html-print "<html>")
-    (if (file-exists? "logpro_style.css")
+    (if (file-exists? cssfile)
 	(html-print "<link rel=\"stylesheet\" type=\"text/css\" href=\"logpro_style.css\">"))
     (html-print "<header>LOGPRO RESULTS</header><body>")
     (html-print "Summary is <a href=\"#summary\">here</a>")
