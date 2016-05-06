@@ -475,8 +475,9 @@
        ;; load the command file
        (load cmdfname))
       ;; if we got this far we can symlink in the css file
-      (if (and cssfile (file-exists? cssfile)(not (file-exists? "logpro_style.css")))
-	  (create-symbolic-link cssfile "logpro_style.css"))
+      (let ((full-css-file (conc (or (pathname-directory html-file) ".") "/logpro_style.css")))
+	(if (and cssfile (file-exists? cssfile)(not (file-exists? full-css-file)))
+	  (create-symbolic-link cssfile full-css-file)))
       (analyze-logfile (current-output-port) cssfile) ;; cssfile is used as a flag
       (let ((exit-code (print-results cssfile)))
 	(if *htmlport* (close-output-port *htmlport*))

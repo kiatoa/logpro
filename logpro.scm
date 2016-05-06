@@ -46,8 +46,9 @@
 	 (bin-home     (pathname-directory (readlink-f (car args))))
 	 (tool-home    (if bin-home (pathname-directory bin-home) #f))
 	 (css-dir      (if tool-home (conc tool-home "/share/css") #f))
+	 (full-css-file (conc (or (pathname-directory html-file) (current-directory)) "/logpro_style.css"))
 	 (cssfile      (or (getenv "LOGPRO_CSS")
-			   (if (file-exists? "logpro_style.css") "logpro_style.css" #f)
+			   (if (file-exists? full-css-file) full-css-file #f)
 			   (let ((cfile (conc css-dir "/logpro_style.css")))
 			     (if (file-exists? cfile)
 				 cfile
