@@ -30,6 +30,8 @@
 (trigger "Blah4End" #/^end Blah4/)
 (section "Blah4"   "Blah4" "Blah4End")
 
+(trigger:non-required "NON-REQUIRED trigger" #/FooBazBlat/)
+
 (trigger-with-limit "Blah5"    100 #/^begin Blah5/)
 (trigger-with-limit "Blah5End" 100 #/^end Blah5/)
 (section "Blah5" "Blah5" "Blah5End")
@@ -37,7 +39,7 @@
 (expect:waive in "Blah5"       = 2 "Have exactly two BLAH5 errors to waive inside the two Blah5 sections" #/^A.*BLAH5/)
 (expect:error in "LogFileBody" < 1 "Only have one BLAH5 error outside of the Blah5 section" #/^A.*BLAH5/)
 
-(expect:waive    in "Blah3" = 1 "A real error that has been waived" #/ERROR:/)
+(expect:waive    in "Blah3" = 1 "A real error that has been waived" #/ERROR:/ class: "junk")
 
 ;; Required statements capture elements in your log file that *must* exist or the outcome is FAIL
 ;;
@@ -56,7 +58,7 @@
 ;; NOTE: this can be a bit confusing. The effect is that after the expire date the rule is disabled.
 ;;
 (expect:ignore   in "Blah4" < 4 "ERROR: ignore applied until 2002, thereafter flagged as error" #/ERROR:.*2002/ expires: "01/01/2002")
-(expect:ignore   in "Blah4" < 4 "ERROR: ignore applied until 2020, thereafter flagged as error" #/ERROR:.*2020/ expires: "01/01/2020")
+(expect:ignore   in "Blah4" <= 4 "ERROR: ignore applied until 2020, thereafter flagged as error" #/ERROR:.*2020/ expires: "01/01/2020")
 (expect:error    in "Blah4" = 0 "Any ERROR in section blah4" #/ERROR/)
 
 ;;                                                          miscellaneous output which doesn't match any expects
@@ -74,7 +76,7 @@
 (expect:error    in "LogFileBody"  = 0 "ERROR BLAH"  (list #/ERROR/ #/error/) hook: "logerr") ;; but disallow any other errors
 
 ;; Use expect:required to extract some values
-(expect:required   in "LogFileBody" = 1 "Quad values" #/First:\s+(\d+)\s+Second:\s+(\d+)\s+Third:\s+(\d+)\s+Fourth:\s+(\d+)/ hook: "quadval")
+(expect:required   in "LogFileBody" >= 1 "Quad values" #/First:\s+(\d+)\s+Second:\s+(\d+)\s+Third:\s+(\d+)\s+Fourth:\s+(\d+)/ hook: "quadval")
 
 ;(expect in "Init"  < 1 "Junk"        #/This is bogus/)
 

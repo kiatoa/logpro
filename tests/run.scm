@@ -44,7 +44,7 @@
 
 (test "analyze loaded logfile" #t (with-input-from-file "example.log"
 				    (lambda ()
-				      (analyze-logfile oup) #t)))
+				      (analyze-logfile oup #f) #t)))
 				   
 (close-output-port oup)
 (test-exit)

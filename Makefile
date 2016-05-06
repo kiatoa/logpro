@@ -11,8 +11,8 @@ logpro.profiled : logprocessor.scm logpro.scm
 
 test : logpro
 	csi -q -b -n tests/run.scm 
-	! ./logpro example.logpro example.html < example.log > example.out
-	firefox example.html
+	! ./logpro example.logpro example.html waivers.logpro < example.log > example.out
+	firefox --new-tab example.html
 
 examples :
 	(./logpro example.logpro example.html < example.log > /dev/null; echo "expect error code = 1, got $$?")
