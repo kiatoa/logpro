@@ -1,3 +1,4 @@
+PREFIX ?= /usr/local
 
 logpro : logprocessor.scm logpro.scm
 	csc -X regex -X regex-literals logpro.scm -o logpro
@@ -19,4 +20,6 @@ examples :
 	(./logpro example.logpro example-warn.html < example-warn.log > /dev/null; echo "expect warning code = 2, got $$?")
 
 install : logpro
-	cp logpro /usr/local/bin 
+	install logpro $(PREFIX)/bin
+	mkdir -p $(PREFIX)/share/css
+	install logpro_style.css $(PREFIX)/share/css
