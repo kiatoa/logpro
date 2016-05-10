@@ -338,6 +338,9 @@
 (define (expect:ignore where section comparison value name patts #!key (expires #f)(type 'ignore)(hook #f)(class #f))
   (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
+(define (expect:note where section comparison value name patts #!key (expires #f)(type 'note)(hook #f)(class #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+
 (define (expect:waive where section comparison value name patts #!key (expires #f)(type 'waive)(hook #f)(class #f))
   (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
@@ -422,6 +425,7 @@
     ((abort)    (vector "Abort"    "crimson"))
     ((skip)     (vector "Skip"     "#d1db64"))
     ((value)    (vector "Value"    "blue"))
+    ((note)     (vector "Note"     "darkyellow"))
     (else       (vector "Error"    "red"))))
 
 (define-inline (expect:expect-type-get-type  vec)(vector-ref vec 0))
@@ -474,11 +478,15 @@
        ;;         (logpro:unset! "allowed-rules"))))
        ;; load the command file
        (load cmdfname))
-      ;; if we got this far we can symlink in the css file
+      ;; if we got this far we can symlink in (or create) the css file
       (let ((full-css-file (conc (or (pathname-directory html-file) ".") "/logpro_style.css")))
-	(if (and cssfile (file-exists? cssfile)(not (file-exists? full-css-file)))
-	  (create-symbolic-link cssfile full-css-file))
-	(analyze-logfile (current-output-port) full-css-file)) ;; cssfile is used as a flag
+	(if (not (file-exists? full-css-file))
+	    (if (and cssfile (file-exists? cssfile))
+		(create-symbolic-link cssfile full-css-file)
+		(with-output-to-file full-css-file
+		  (lambda ()
+		    (print *logpro_style.css*)))))
+	(analyze-logfile (current-output-port) (file-exists? full-css-file))) ;; cssfile is used as a flag
       (let ((exit-code (print-results cssfile)))
 	(if *htmlport* (close-output-port *htmlport*))
 	(if *summport* (close-output-port *summport*))	
@@ -511,7 +519,7 @@
 	(html-hightlight-flag #f))
     ;; (curr-seconds     (current-seconds)))
     (html-print "<html>")
-    (if (file-exists? cssfile)
+    (if cssfile
 	(html-print "<link rel=\"stylesheet\" type=\"text/css\" href=\"logpro_style.css\">"))
     (html-print "<header>LOGPRO RESULTS</header><body>")
     (html-print "Summary is <a href=\"#summary\">here</a>")
@@ -531,7 +539,14 @@
 			  (misc:line-match-regexs line patts))
 		     (begin
 		       (trigger:set-remaining-hits! trigger (- remhits 1))
-		       (set! html-highlight-flag (vector "blue" #f #f (trigger:get-name trigger) #f 'trigger #f))
+		       (set! html-highlight-flag (vector "blue"
+							 (trigger:get-name trigger)
+							 (conc "#" (trigger:get-name trigger) "_table")
+							 #f                         ;; msg
+							 #f
+							 (trigger:get-name trigger) ;; etype
+							 'trigger                   ;; eclass
+							 #f))
 		       (with-output-to-port oup
 			 (lambda ()
 			   (print      "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)))
@@ -658,11 +673,12 @@
 	      (lambda ()
 		(print line)))
 	    (if html-highlight-flag
-		(let ((color (vector-ref html-highlight-flag 0))
-		      (label (vector-ref html-highlight-flag 1))
-		      (link  (vector-ref html-highlight-flag 2))
-		      (mesg  (vector-ref html-highlight-flag 3))
-		      (etype (vector-ref html-highlight-flag 5))
+		(let ((color  (vector-ref html-highlight-flag 0))
+		      (label  (vector-ref html-highlight-flag 1))
+		      (link   (vector-ref html-highlight-flag 2))
+		      (mesg   (vector-ref html-highlight-flag 3))
+		      (unkn   (vector-ref html-highlight-flag 4))
+		      (etype  (vector-ref html-highlight-flag 5))
 		      (eclass (vector-ref html-highlight-flag 6))) ;; the expect
 		  (begin
 		    ;(if (eq? html-mode 'pre)
@@ -692,14 +708,15 @@
 	(totwaivecount 0)
 	(totabortcount 0)
 	(totskipcount  0)
-	(tblfmt      (conc "<tr>"
-			   (string-intersperse (map (lambda (x) "<td>~a</td>") '(1 2 3 4 5 6 7 8 9 10)) "")
-			   "</tr>"))
-	;;           type where section OK/FAIL compsym value name count
-	(valfmt      " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
-        ;;            type where section OK/FAIL compsym value name count
-	(fmt         " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
-	(fmt-trg     "Trigger: ~13a ~15@a, count=~a"))
+	(tblfmt       (conc "<tr>"
+			    (string-intersperse (map (lambda (x) "<td>~a</td>") '(1 2 3 4 5 6 7 8 9 10)) "")
+			    "</tr>"))
+	;;            type where section OK/FAIL compsym value name count
+	(valfmt       " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
+        ;;             type where section OK/FAIL compsym value name count
+	(fmt          " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
+	(fmt-trg      "Trigger: ~13a ~15@a, count=~a")
+	(fmt-trg-html "<a name=\"~a_table\" href=\"#~a\">Trigger: ~13a ~15@a, count=~a</a>"))
     ;; first print any triggers that didn't get triggered - these are automatic failures
     (print      "==========================LOGPRO SUMMARY==========================")
     (html-print "<a name=\"summary\"></a>")
@@ -715,10 +732,9 @@
 				    "OK"
 				    (if (trigger:get-required-flag trigger)
 					"FAIL"
-					"OPTIONAL")))
-		(lineout (format #f fmt-trg (trigger:get-name trigger) trigger-status count)))
-	   (html-print lineout)
-	   (print lineout))))
+					"OPTIONAL"))))
+	   (print      (format #f fmt-trg (trigger:get-name trigger) trigger-status count))
+	   (html-print (format #f fmt-trg-html (trigger:get-name trigger) (trigger:get-name trigger) (trigger:get-name trigger) trigger-status count)))))
      *triggers*)
     ;; now print the expects
     (html-print "</pre><p><table>") ;;  style=\"width:100%\">") ;; border=\"1\" 

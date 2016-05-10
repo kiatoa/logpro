@@ -11,6 +11,7 @@
 
 (require-library chicken-syntax)
 
+(include "logpro_style.css.scm")
 (include "logprocessor.scm")
 
 ;; (process-log-file (cadr (argv)))
@@ -29,7 +30,6 @@
  Version " logpro-version "
   License GPL, more info about logpro at http://www.kiatoa.com/fossils/logpro"))
 
-
 (let* ((args         (argv)))
   (if (< (length args) 2)
       (begin
@@ -42,8 +42,8 @@
 	 (waiver-file  (if (> (length args) 3)
 			   (list-ref args 3)
 			   #f))
-
-	 (bin-home     (pathname-directory (readlink-f (car args))))
+	 (bin-file     (car args))
+	 (bin-home     (pathname-directory (readlink-f bin-file))) 
 	 (tool-home    (if bin-home (pathname-directory bin-home) #f))
 	 (css-dir      (if tool-home (conc tool-home "/share/css") #f))
 	 (full-css-file (conc (or (pathname-directory html-file) (current-directory)) "/logpro_style.css"))
@@ -58,6 +58,7 @@
 				 (if (file-exists? altfile)
 				     altfile
 				     #f))))))
-    ;; (print "\nbin-home: " bin-home "\ncss-dir:  " css-dir "\ncssfile: " cssfile "\ntool-home: " tool-home)
+    (print "\nbin-file: " bin-file "\nbin-home: " bin-home "\ncss-dir:  " css-dir "\ncssfile: " cssfile "\ntool-home: " tool-home)
     ;; else proceed to process the input files
     (process-log-file control-file html-file waiver-file cssfile)))
+
