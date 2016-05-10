@@ -544,8 +544,8 @@
 							 (conc "#" (trigger:get-name trigger) "_table")
 							 #f                         ;; msg
 							 #f
-							 (trigger:get-name trigger) ;; etype
-							 'trigger                   ;; eclass
+							 'trigger                   ;; etype
+							 (trigger:get-name trigger) ;; eclass
 							 #f))
 		       (with-output-to-port oup
 			 (lambda ()
