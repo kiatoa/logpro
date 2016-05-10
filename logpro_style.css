@@ -2,20 +2,16 @@
  * Specify colors, font changes, etc here for the different rule classes
  */
 
-.trigger, .required, .abort, .check, .error, .ignore, .warning {
+.required, .abort, .check, .error, .warning, .ignore, .note, .trigger {
     font-weight: bold;
     background-color: whitesmoke;
-}
-
-.trigger {
-    color: navy;
 }
 
 .required {
     color: darkolivegreen;
 }
 
-.check, .abort {
+.abort, .check {
     color: darkred;
 }
 
@@ -23,12 +19,16 @@
     color: crimson;
 }
 
-.ignore {
+.warning {
+    color: goldenrod;
+}
+
+.ignore, .note {
     color: yellowgreen;
 }
 
-.warning {
-    color: goldenrod;
+.trigger {
+    color: navy;
 }
 
 
