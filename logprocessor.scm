@@ -12,10 +12,13 @@
 (define getenv get-environment-variable)
 
 (define (readlink-f fname)
-  (with-input-from-pipe
-   (conc "/bin/readlink " (if (file-exists? fname) "-f " "-m ") fname)
-   (lambda ()
-     (read-line))))
+  (let ((readlink-exes (filter file-exists? '("/bin/readlink" "/usr/bin/readlink"))))
+    (if (null? readlink-exes) ;; no readlink found
+	(read-symbolic-link fname #t) ;; use the posix version
+	(with-input-from-pipe
+	 (conc (car readlink-exes) " " (if (file-exists? fname) "-f " "-m ") fname)
+	 (lambda ()
+	   (read-line))))))
 
 ;; NOTES: 
 
