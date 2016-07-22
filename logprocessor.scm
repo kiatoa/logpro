@@ -347,6 +347,9 @@
 (define (expect:waive where section comparison value name patts #!key (expires #f)(type 'waive)(hook #f)(class #f))
   (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
+(define expect:waived expect:waive)
+(define expect:waiver expect:waive)
+
 (define (expect:error where section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(class #f))
   (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
