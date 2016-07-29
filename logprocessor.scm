@@ -485,14 +485,15 @@
        ;; load the command file
        (load cmdfname))
       ;; if we got this far we can symlink in (or create) the css file
-      (let ((full-css-file (conc (or (pathname-directory html-file) ".") "/logpro_style.css")))
-	(if (not (file-exists? full-css-file))
-	    (if (and cssfile (file-exists? cssfile))
-		(create-symbolic-link cssfile full-css-file)
-		(with-output-to-file full-css-file
-		  (lambda ()
-		    (print *logpro_style.css*)))))
-	(analyze-logfile (current-output-port) (file-exists? full-css-file))) ;; cssfile is used as a flag
+      (if (string? html-file)
+	  (let ((full-css-file (conc (or (pathname-directory html-file) ".") "/logpro_style.css")))
+	    (if (not (file-exists? full-css-file))
+		(if (and cssfile (file-exists? cssfile))
+		    (create-symbolic-link cssfile full-css-file)
+		    (with-output-to-file full-css-file
+		      (lambda ()
+			(print *logpro_style.css*)))))
+	    (analyze-logfile (current-output-port) (file-exists? full-css-file)))) ;; cssfile is used as a flag
       (let ((exit-code (print-results cssfile)))
 	(if *htmlport* (close-output-port *htmlport*))
 	(if *summport* (close-output-port *summport*))	
