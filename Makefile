@@ -17,7 +17,7 @@ logpro.profiled : logprocessor.scm logpro.scm
 	csc -profile -X regex -X regex-literals logpro.scm -o logpro.profiled
 
 test : logpro
-	csi -q -b -n tests/run.scm 
+	cd tests;csi -q -b -n run.scm 
 	! ./logpro example.logpro example.html waivers.logpro < example.log > example.out
 	firefox --new-tab example.html
 

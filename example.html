@@ -2,35 +2,35 @@
 <link rel="stylesheet" type="text/css" href="logpro_style.css">
 <header>LOGPRO RESULTS</header><body>
 Summary is <a href="#summary">here</a>
-<br>(processed by logpro version 1.14, tool details at: <a href="http://www.kiatoa.com/fossils/logpro">logpro</a>)
+<br>(processed by logpro version 1.15, tool details at: <a href="http://www.kiatoa.com/fossils/logpro">logpro</a>)
 <hr><pre>
 <a name="key_3_1"></a><a href="#key_3_2" class="required">// This is a header</a>
-<a name="#f"></a><a href="#f" class="trigger"></a>
+<a name="InitEnd"></a><a href="#InitEnd_table" class="trigger InitEnd"></a>
 <a name="key_17_1"></a><a href="#key_17_2" class="ignore">// The following is an error, also this comment should be "ignored" and thus green, not red</a>
 begin Blah1
 <a name="key_19_1"></a><a href="#key_19_2" class="error">ERROR: This is a real error. It should be red.</a>
 end Blah1
 
 // The following is an expected Error
-<a name="#f"></a><a href="#f" class="trigger">begin Blah2</a>
+<a name="Blah2"></a><a href="#Blah2_table" class="trigger Blah2">begin Blah2</a>
 <a name="key_16_1"></a><a href="#key_16_2" class="ignore">ERROR: This error is expected, it will be green.</a>
-<a name="#f"></a><a href="#f" class="trigger">end Blah2</a>
+<a name="Blah2End"></a><a href="#Blah2End_table" class="trigger Blah2End">end Blah2</a>
 
 // The following is an Error that is Waived (i.e. permitted for the moment).
-<a name="#f"></a><a href="#f" class="trigger">begin Blah3</a>
+<a name="Blah3"></a><a href="#Blah3_table" class="trigger Blah3">begin Blah3</a>
 <a name="key_2_1"></a><a href="#key_2_2" class="waive junk">ERROR: Bad, but allowed for now, should be flagged in brown</a>
-<a name="#f"></a><a href="#f" class="trigger">end Blah3</a>
+<a name="Blah3End"></a><a href="#Blah3End_table" class="trigger Blah3End">end Blah3</a>
 
 // Blah5 tests. Errors are suppressed in section Blah5 but not otherwise
-<a name="#f"></a><a href="#f" class="trigger">begin Blah5</a>
+<a name="Blah5"></a><a href="#Blah5_table" class="trigger Blah5">begin Blah5</a>
 <a name="key_0_1"></a><a href="#key_0_2" class="waive">A BLAH5 message in a BLAH5 section is suppressed</a>
-<a name="#f"></a><a href="#f" class="trigger">end Blah5</a>
+<a name="Blah5End"></a><a href="#Blah5End_table" class="trigger Blah5End">end Blah5</a>
 
 <a name="key_1_1"></a><a href="#key_1_2" class="error">A BLAH5 message outside a BLAH5 section is counted</a>
 
-<a name="#f"></a><a href="#f" class="trigger">begin Blah5</a>
+<a name="Blah5"></a><a href="#Blah5_table" class="trigger Blah5">begin Blah5</a>
 <a name="key_0_2"></a><a href="#key_0_3" class="waive">A second BLAH5 message in a BLAH5 section is suppressed</a>
-<a name="#f"></a><a href="#f" class="trigger">end Blah5</a>
+<a name="Blah5End"></a><a href="#Blah5End_table" class="trigger Blah5End">end Blah5</a>
 
 // Expirations:
 // 
@@ -39,13 +39,13 @@ end Blah1
 // expired ignore - ignore no longer applied after date
 // I.e. an expired rule is no longer applied, as if it is not even typed into the logpro file
 
-<a name="#f"></a><a href="#f" class="trigger">begin Blah4</a>
+<a name="Blah4"></a><a href="#Blah4_table" class="trigger Blah4">begin Blah4</a>
 // The following is an Error that was ignored through 01/01/2002 and thus should now be FAIL (i.e. be red)
 <a name="key_12_1"></a><a href="#key_12_2" class="error">ERROR: An error that was suppressed before 01/01/2002, this should now FAIL</a>
 
 // The following is an Error that is ignored through 01/01/2020 and thus should currently PASS (i.e. be green)
 <a name="key_11_1"></a><a href="#key_11_2" class="ignore">ERROR: This error is waived until 01/01/2020 and thus should PASS</a>
-<a name="#f"></a><a href="#f" class="trigger">end Blah4</a>
+<a name="Blah4End"></a><a href="#Blah4End_table" class="trigger Blah4End">end Blah4</a>
 
 <a name="key_13_1"></a><a href="#key_13_2" class="ignore">miscellaneous output which doesn't match any expects</a>
 more miscellaneous output
@@ -93,20 +93,32 @@ The End
 
 <a name="summary"></a>
 ==========================LOGPRO SUMMARY==========================
-Trigger: Blah5End                   OK, count=2
-Trigger: Blah5                      OK, count=2
-Trigger: NON-REQUIRED trigger        OPTIONAL, count=0
-Trigger: Blah4End                   OK, count=1
-Trigger: Blah4                      OK, count=1
-Trigger: Blah3End                   OK, count=1
-Trigger: Blah3                      OK, count=1
-Trigger: Blah2End                   OK, count=1
-Trigger: Blah2                      OK, count=1
-Trigger: InitEnd                    OK, count=1
-Trigger: Init                       OK, count=1
-Trigger: LogFileBodyStart              OK, count=1
+<a name="Blah5End_table" href="#Blah5End">Trigger: Blah5End                   OK, count=2</a>
+<a name="Blah5_table" href="#Blah5">Trigger: Blah5                      OK, count=2</a>
+<a name="NON-REQUIRED trigger_table" href="#NON-REQUIRED trigger">Trigger: NON-REQUIRED trigger        OPTIONAL, count=0</a>
+<a name="Blah4End_table" href="#Blah4End">Trigger: Blah4End                   OK, count=1</a>
+<a name="Blah4_table" href="#Blah4">Trigger: Blah4                      OK, count=1</a>
+<a name="Blah3End_table" href="#Blah3End">Trigger: Blah3End                   OK, count=1</a>
+<a name="Blah3_table" href="#Blah3">Trigger: Blah3                      OK, count=1</a>
+<a name="Blah2End_table" href="#Blah2End">Trigger: Blah2End                   OK, count=1</a>
+<a name="Blah2_table" href="#Blah2">Trigger: Blah2                      OK, count=1</a>
+<a name="InitEnd_table" href="#InitEnd">Trigger: InitEnd                    OK, count=1</a>
+<a name="Init_table" href="#Init">Trigger: Init                       OK, count=1</a>
+<a name="LogFileBodyStart_table" href="#LogFileBodyStart">Trigger: LogFileBodyStart              OK, count=1</a>
 </pre><p><table>
 <tr><th>RuleNum</th><th>RuleType</th><th></th><th>Section</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>
+<tr><td class="ignore"><a name="key_16_2"></a><a href="#key_16_1">rule-16</a></td><td class="ignore">Ignore</td><td>in</td><td>Blah2</td><td>OK</td><td>&lt;</td><td>99</td><td>FALSE ERROR</td><td>1</td><td>
+</td></tr>
+<tr><td class="error"><a name="key_12_2"></a><a href="#key_12_1">rule-12</a></td><td class="error">Error</td><td>in</td><td>Blah4</td><td>FAIL</td><td>=</td><td>0</td><td>Any ERROR in section blah4</td><td>1</td><td>
+</td></tr>
+<tr><td class="ignore"><a name="key_11_2"></a><a href="#key_11_1">rule-11</a></td><td class="ignore">Ignore</td><td>in</td><td>Blah4</td><td>OK</td><td>=</td><td>4</td><td>ERROR: ignore applied until 2020, thereafter flagged as error</td><td>1</td><td>
+</td></tr>
+<tr><td class="waive junk"><a name="key_2_2"></a><a href="#key_2_1">rule-2</a></td><td class="waive junk">Waive</td><td>in</td><td>Blah3</td><td>OK</td><td>=</td><td>1</td><td>A real error that has been waived</td><td>1</td><td>
+</td></tr>
+<tr><td class="waive"><a name="key_0_3"></a><a href="#key_0_1">rule-0</a></td><td class="waive">Waive</td><td>in</td><td>Blah5</td><td>OK</td><td>=</td><td>2</td><td>Have exactly two BLAH5 errors to waive inside the two Blah5 sections</td><td>2</td><td>
+</td></tr>
+<tr><td class="required"><a name="key_3_2"></a><a href="#key_3_1">rule-3</a></td><td class="required">Required</td><td>in</td><td>Init</td><td>OK</td><td>=</td><td>1</td><td>Header</td><td>1</td><td>
+</td></tr>
 <tr><td class="skip"><a name="key_23_2"></a><a href="#key_23_1">rule-23</a></td><td class="skip">Skip</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td>=</td><td>0</td><td>If flagged we are asking for this to exit with code 6</td><td>1</td><td>
 </td></tr>
 <tr><td class="abort"><a name="key_22_2"></a><a href="#key_22_1">rule-22</a></td><td class="abort">Abort</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td>=</td><td>0</td><td>If flagged our process failed to run correctly</td><td>1</td><td>
@@ -140,18 +152,6 @@ Trigger: LogFileBodyStart              OK, count=1
 <tr><td class="required"><a name="key_4_1"></a><a href="#key_4_1">rule-4</a></td><td class="required">Required</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td>&gt;</td><td>0</td><td>Something required but not found</td><td>0</td><td>
 </td></tr>
 <tr><td class="error"><a name="key_1_2"></a><a href="#key_1_1">rule-1</a></td><td class="error">Error</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td>&lt;</td><td>1</td><td>Only have one BLAH5 error outside of the Blah5 section</td><td>1</td><td>
-</td></tr>
-<tr><td class="required"><a name="key_3_2"></a><a href="#key_3_1">rule-3</a></td><td class="required">Required</td><td>in</td><td>Init</td><td>OK</td><td>=</td><td>1</td><td>Header</td><td>1</td><td>
-</td></tr>
-<tr><td class="ignore"><a name="key_16_2"></a><a href="#key_16_1">rule-16</a></td><td class="ignore">Ignore</td><td>in</td><td>Blah2</td><td>OK</td><td>&lt;</td><td>99</td><td>FALSE ERROR</td><td>1</td><td>
-</td></tr>
-<tr><td class="waive"><a name="key_0_3"></a><a href="#key_0_1">rule-0</a></td><td class="waive">Waive</td><td>in</td><td>Blah5</td><td>OK</td><td>=</td><td>2</td><td>Have exactly two BLAH5 errors to waive inside the two Blah5 sections</td><td>2</td><td>
-</td></tr>
-<tr><td class="waive junk"><a name="key_2_2"></a><a href="#key_2_1">rule-2</a></td><td class="waive junk">Waive</td><td>in</td><td>Blah3</td><td>OK</td><td>=</td><td>1</td><td>A real error that has been waived</td><td>1</td><td>
-</td></tr>
-<tr><td class="error"><a name="key_12_2"></a><a href="#key_12_1">rule-12</a></td><td class="error">Error</td><td>in</td><td>Blah4</td><td>FAIL</td><td>=</td><td>0</td><td>Any ERROR in section blah4</td><td>1</td><td>
-</td></tr>
-<tr><td class="ignore"><a name="key_11_2"></a><a href="#key_11_1">rule-11</a></td><td class="ignore">Ignore</td><td>in</td><td>Blah4</td><td>OK</td><td>=</td><td>4</td><td>ERROR: ignore applied until 2020, thereafter flagged as error</td><td>1</td><td>
 </td></tr>
 </table>
 <h1 class="exitcode">EXIT CODE: 6 (SKIP

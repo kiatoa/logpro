@@ -4,9 +4,9 @@
 
 (use test srfi-69 regex-literals)
 
-(include "logprocessor.scm")
+(include "../logprocessor.scm")
 
-(define oup (open-output-file "test-output.log"))
+(define oup (open-output-file "../test-output.log"))
 (current-error-port oup)
 
 (define regexs (list (regexp "^hello$")(regexp "\\s+goodbye\\s+")))
@@ -34,7 +34,7 @@
 (define logpro-version -1) ;; need to fake it out
 (test "load a command file" #t (with-output-to-port oup
                                  (lambda ()
-				   (load "example.logpro") #t)))
+				   (load "../example.logpro") #t)))
 
 ;; (use trace)
 ;; (trace analyze-logfile)
@@ -42,7 +42,7 @@
 ;; (trace filter)
 ;; (trace sort)
 
-(test "analyze loaded logfile" #t (with-input-from-file "example.log"
+(test "analyze loaded logfile" #t (with-input-from-file "../example.log"
 				    (lambda ()
 				      (analyze-logfile oup #f) #t)))
 				   

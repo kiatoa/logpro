@@ -7,12 +7,15 @@
 ;;  implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ;;  PURPOSE.
 
-(define logpro-version 1.14)
+(define logpro-version 1.15)
 
 (require-library chicken-syntax)
 
 (include "logpro_style.css.scm")
 (include "logprocessor.scm")
+
+;; (use trace)
+;; (trace pathname-directory)
 
 ;; (process-log-file (cadr (argv)))
 
@@ -43,10 +46,14 @@
 			   (list-ref args 3)
 			   #f))
 	 (bin-file     (car args))
-	 (bin-home     (pathname-directory (readlink-f bin-file))) 
+	 (bin-home     (if bin-file (pathname-directory (readlink-f bin-file)) #f) )
 	 (tool-home    (if bin-home (pathname-directory bin-home) #f))
 	 (css-dir      (if tool-home (conc tool-home "/share/css") #f))
-	 (full-css-file (conc (or (pathname-directory html-file) (current-directory)) "/logpro_style.css"))
+	 (full-css-file (conc (or (if html-file 
+				      (pathname-directory html-file)
+				      #f)
+				  (current-directory))
+			      "/logpro_style.css"))
 	 (cssfile      (or (getenv "LOGPRO_CSS")
 			   (if (file-exists? full-css-file) full-css-file #f)
 			   (let ((cfile (conc css-dir "/logpro_style.css")))
