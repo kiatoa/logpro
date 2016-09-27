@@ -41,6 +41,8 @@
 
 (expect:waive    in "Blah3" = 1 "A real error that has been waived" #/ERROR:/ class: "junk")
 
+(expect:ignore in "LogFileBody" = 1 "single quotes" #/'This line is ignored'/)
+
 ;; Required statements capture elements in your log file that *must* exist or the outcome is FAIL
 ;;
 (expect:required in "Init"  = 1 "Header"      #/This is a header/)

@@ -72,6 +72,8 @@ CRASH!!!
 
 // This is nothing
 
+'This line is ignored'
+
 // A case where we are capturing multiple values on a single line and exectuting 
 // multiple calls to load them
 
