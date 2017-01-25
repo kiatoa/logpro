@@ -1,0 +1,52 @@
+;; Rules to check ...
+;;
+
+;; Ignore some lines that would falsely flag an error
+(expect:ignore in "LogFileBody" >= 0 "C strings error mention" #/Good, unrepresentable C strings cause errors/)
+(expect:ignore in "LogFileBody" >= 0 "call to sys#error"       #/\(##sys#error/)
+(expect:ignore in "LogFileBody" >= 0 "error calls"             #/\(error \"/)
+
+;; Catch warnings and errors
+(expect:error in "LogFileBody" = 0 "Errors not allowed" #/error/i)
+(expect:warning in "LogFileBody" = 0 "Warnings not allowed" #/warning/i)
+
+;; ensure that at least *some* stuff ran
+
+(for-each
+ (lambda (test-section)
+   (expect:required in "LogFileBody" >= 1 (conc "Required section: " test-section) (regexp (conc "=== " test-section))))
+ (string-split "arithmetic
+callback
+compiler
+condition
+data-structures
+dynamic-wind
+evaluation
+fixnum
+functor
+hash-table
+import
+library
+lolevel
+meta-syntax
+module
+optionals
+path
+port
+posix
+pretty-printer
+r4rs
+r7rs
+reader
+reexport
+runtime
+scrutiny
+specialization
+srfi\\-13
+srfi\\-14
+srfi\\-18
+srfi\\-45
+srfi\\-4
+string->number
+syntax
+version"))
