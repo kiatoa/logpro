@@ -5,6 +5,10 @@
 (expect:ignore in "LogFileBody" >= 0 "C strings error mention" #/Good, unrepresentable C strings cause errors/)
 (expect:ignore in "LogFileBody" >= 0 "call to sys#error"       #/\(##sys#error/)
 (expect:ignore in "LogFileBody" >= 0 "error calls"             #/\(error \"/)
+(expect:ignore in "LogFileBody" >= 0 "closed string"           #/\(PASS\) writing to a closed string output port is an error/)
+(expect:ignore in "LogFileBody" >= 0 "print-error-message...OK" #/print-error-message...OK/)
+(expect:ignore in "LogFileBody" >= 0 "Everything OK"            #/\-+> Everything OK, no errors!/)
+(expect:ignore in "LogFileBody" >= 0 "Word error on line by itself" #/^error$/)
 
 ;; Catch warnings and errors
 (expect:error in "LogFileBody" = 0 "Errors not allowed" #/error/i)

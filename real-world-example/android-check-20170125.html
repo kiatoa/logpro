@@ -3,15 +3,15 @@ Summary is <a href="#summary">here</a>
 <br>(processed by logpro version 1.12, tool details at: <a href="http://www.kiatoa.com/fossils/logpro">logpro</a>)
 <hr><pre>
 <a name="#f"></a><a href="#f" style="background-color: white; color: blue;">cd tests; sh runtests.sh</a>
-<a name="key_39_1"></a><a href="#key_39_2" style="background-color: white; color: purple;">======================================== version tests ...</a>
+<a name="key_43_1"></a><a href="#key_43_2" style="background-color: white; color: purple;">======================================== version tests ...</a>
 
 Checking major and minor version numbers against chicken-version... ok
 Checking the registered feature chicken-<major>.<minor>... ok
-<a name="key_7_1"></a><a href="#key_7_2" style="background-color: white; color: purple;">======================================== compiler tests ...</a>
+<a name="key_11_1"></a><a href="#key_11_2" style="background-color: white; color: purple;">======================================== compiler tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'compiler-tests.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 
-<a name="key_4_1"></a><a href="#key_4_2" style="background-color: white; color: orange;">Warning: in toplevel procedure `foo':</a>
+<a name="key_8_1"></a><a href="#key_8_2" style="background-color: white; color: orange;">Warning: in toplevel procedure `foo':</a>
 
   (compiler-tests.scm:9) in procedure call to `bar', expected 0 arguments but was given 1 argument
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
@@ -28,15 +28,15 @@ bar
 1 2 3 :1:2:3
 1 2 3 
 <a name="key_0_1"></a><a href="#key_0_2" style="background-color: white; color: green;">Good, unrepresentable C strings cause errors</a>
-<a name="key_7_2"></a><a href="#key_7_3" style="background-color: white; color: purple;">======================================== compiler inlining tests  ...</a>
+<a name="key_11_2"></a><a href="#key_11_3" style="background-color: white; color: purple;">======================================== compiler inlining tests  ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'inlining-tests.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -optimize-level 3
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
 rm a.c
 'gcc' 'a.o' -o 'a.out' -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
-<a name="key_30_1"></a><a href="#key_30_2" style="background-color: white; color: purple;">======================================== scrutiny tests ...</a>
-<a name="key_4_2"></a><a href="#key_4_3" style="background-color: white; color: orange;">/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'typematch-tests.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -specialize -no-warnings</a>
+<a name="key_34_1"></a><a href="#key_34_2" style="background-color: white; color: purple;">======================================== scrutiny tests ...</a>
+<a name="key_8_2"></a><a href="#key_8_3" style="background-color: white; color: orange;">/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'typematch-tests.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -specialize -no-warnings</a>
 
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -w -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
 rm a.c
@@ -281,7 +281,7 @@ rm a.o
 rm a.c
 'gcc' 'a.o' -o 'a.out' -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
-<a name="key_31_1"></a><a href="#key_31_2" style="background-color: white; color: purple;">======================================== specialization tests ...</a>
+<a name="key_35_1"></a><a href="#key_35_2" style="background-color: white; color: purple;">======================================== specialization tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'specialization-test-1.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -emit-type-file foo.types -specialize -debug ox -emit-import-library foo
 hiding nonexported module bindings: foo#spec 
@@ -430,7 +430,7 @@ calls to known targets: 3
 rm a.c
 'gcc' 'a.o' -o 'a.out' -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
-<a name="key_31_2"></a><a href="#key_31_3" style="background-color: white; color: purple;">======================================== specialization benchmark ...</a>
+<a name="key_35_2"></a><a href="#key_35_3" style="background-color: white; color: purple;">======================================== specialization benchmark ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'fft.scm' -output-file 'fft1.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -optimize-level 2 -local -debug-level 0 -disable-interrupts -block
 'gcc' 'fft1.c' -o 'fft1.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
@@ -450,7 +450,7 @@ specialized:
 real	0m 0.35s
 user	0m 0.34s
 sys	0m 0.00s
-<a name="key_6_1"></a><a href="#key_6_2" style="background-color: white; color: purple;">======================================== callback tests ...</a>
+<a name="key_10_1"></a><a href="#key_10_2" style="background-color: white; color: purple;">======================================== callback tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'callback-tests.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
@@ -463,7 +463,7 @@ callbacks ...
 hi!
 hi!
 double-return from callback failed as it should.
-<a name="key_29_1"></a><a href="#key_29_2" style="background-color: white; color: purple;">======================================== runtime tests ...</a>
+<a name="key_33_1"></a><a href="#key_33_2" style="background-color: white; color: purple;">======================================== runtime tests ...</a>
 
 testing 'apply' with 0..2000...
 testing 'apply' with 10000...
@@ -520,7 +520,7 @@ minor gc ...
 >>>>> GC pre hook - mode=2, count=1
 <<<<< GC post hook - mode=2, count=1, ms=0
 <<<<< GC post hook - mode=1, count=0, ms=0
-<a name="key_16_1"></a><a href="#key_16_2" style="background-color: white; color: purple;">======================================== library tests ...</a>
+<a name="key_20_1"></a><a href="#key_20_2" style="background-color: white; color: purple;">======================================== library tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'library-tests.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -specialize
 
@@ -530,97 +530,97 @@ Note: at toplevel:
 <a name="key_1_2"></a><a href="#key_1_3" style="background-color: white; color: green;">(if tmp tmp (##sys#error "(library-tests.scm:12) assertion failed" '(not ...)))</a>
 
 
-<a name="key_4_3"></a><a href="#key_4_4" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_3"></a><a href="#key_8_4" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:27) in procedure call to `finite?', expected argument #1 of type `number' but was given an argument of type `symbol'
 
-<a name="key_4_4"></a><a href="#key_4_5" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_4"></a><a href="#key_8_5" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:51) in procedure call to `exact?', expected argument #1 of type `number' but was given an argument of type `symbol'
 
-<a name="key_4_5"></a><a href="#key_4_6" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_5"></a><a href="#key_8_6" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:55) in procedure call to `inexact?', expected argument #1 of type `number' but was given an argument of type `symbol'
 
-<a name="key_4_6"></a><a href="#key_4_7" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_6"></a><a href="#key_8_7" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:126) in procedure call to `even?', expected argument #1 of type `number' but was given an argument of type `symbol'
 
-<a name="key_4_7"></a><a href="#key_4_8" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_7"></a><a href="#key_8_8" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:127) in procedure call to `odd?', expected argument #1 of type `number' but was given an argument of type `symbol'
 
-<a name="key_4_8"></a><a href="#key_4_9" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_8"></a><a href="#key_8_9" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:198) in procedure call to `min', expected argument #1 of type `number' but was given an argument of type `symbol'
 
-<a name="key_4_9"></a><a href="#key_4_10" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_9"></a><a href="#key_8_10" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:199) in procedure call to `max', expected argument #1 of type `number' but was given an argument of type `symbol'
 
-<a name="key_4_10"></a><a href="#key_4_11" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_10"></a><a href="#key_8_11" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:666) in procedure call to `assq', expected argument #2 of type `(list-of pair)' but was given an argument of type `(list symbol)'
 
-<a name="key_4_11"></a><a href="#key_4_12" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_11"></a><a href="#key_8_12" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:667) in procedure call to `assq', expected argument #2 of type `(list-of pair)' but was given an argument of type `symbol'
 
-<a name="key_4_12"></a><a href="#key_4_13" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_12"></a><a href="#key_8_13" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:672) in procedure call to `assv', expected argument #2 of type `(list-of pair)' but was given an argument of type `(list symbol)'
 
-<a name="key_4_13"></a><a href="#key_4_14" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_13"></a><a href="#key_8_14" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:673) in procedure call to `assv', expected argument #2 of type `(list-of pair)' but was given an argument of type `symbol'
 
-<a name="key_4_14"></a><a href="#key_4_15" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_14"></a><a href="#key_8_15" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:677) in procedure call to `assoc', expected argument #2 of type `(list-of pair)' but was given an argument of type `(list string)'
 
-<a name="key_4_15"></a><a href="#key_4_16" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_15"></a><a href="#key_8_16" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:678) in procedure call to `assoc', expected argument #2 of type `(list-of pair)' but was given an argument of type `string'
 
-<a name="key_4_16"></a><a href="#key_4_17" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_16"></a><a href="#key_8_17" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:685) in procedure call to `memq', expected argument #2 of type `list' but was given an argument of type `symbol'
 
-<a name="key_4_17"></a><a href="#key_4_18" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_17"></a><a href="#key_8_18" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
   (library-tests.scm:690) in procedure call to `memv', expected argument #2 of type `list' but was given an argument of type `symbol'
 
-<a name="key_4_18"></a><a href="#key_4_19" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_18"></a><a href="#key_8_19" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
@@ -634,8 +634,8 @@ rm a.o
 rm a.c
 'gcc' 'a.o' -o 'a.out' -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
-<a name="key_27_1"></a><a href="#key_27_2" style="background-color: white; color: purple;">======================================== reader tests ...</a>
-<a name="key_10_1"></a><a href="#key_10_2" style="background-color: white; color: purple;">======================================== dynamic-wind tests ...</a>
+<a name="key_31_1"></a><a href="#key_31_2" style="background-color: white; color: purple;">======================================== reader tests ...</a>
+<a name="key_14_1"></a><a href="#key_14_2" style="background-color: white; color: purple;">======================================== dynamic-wind tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'dwindtst.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
@@ -643,7 +643,7 @@ rm a.c
 'gcc' 'a.o' -o 'a.out' -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
 *** Skipping "feeley-dynwind" for now ***
-<a name="key_17_1"></a><a href="#key_17_2" style="background-color: white; color: purple;">======================================== lolevel tests ...</a>
+<a name="key_21_1"></a><a href="#key_21_2" style="background-color: white; color: purple;">======================================== lolevel tests ...</a>
 
 
 old: "\x00yoя"
@@ -983,9 +983,9 @@ new: #f32(+inf.0 2.0 1.0 0.0 -1.0 -2.0 -inf.0)
 
 old: #f64(-1e+200 -2.0 -1.0 0.0 1.0 2.0 1e+200)
 new: #f64(1e+200 2.0 1.0 0.0 -1.0 -2.0 -1e+200)
-<a name="key_5_1"></a><a href="#key_5_2" style="background-color: white; color: purple;">======================================== arithmetic tests ...</a>
-<a name="key_24_1"></a><a href="#key_24_2" style="background-color: white; color: purple;">======================================== pretty-printer tests ...</a>
-<a name="key_11_1"></a><a href="#key_11_2" style="background-color: white; color: purple;">======================================== evaluation environment tests ...</a>
+<a name="key_9_1"></a><a href="#key_9_2" style="background-color: white; color: purple;">======================================== arithmetic tests ...</a>
+<a name="key_28_1"></a><a href="#key_28_2" style="background-color: white; color: purple;">======================================== pretty-printer tests ...</a>
+<a name="key_15_1"></a><a href="#key_15_2" style="background-color: white; color: purple;">======================================== evaluation environment tests ...</a>
 
 (PASS) (eval 123)
 (PASS) (eval 123 (interaction-environment))
@@ -1016,7 +1016,7 @@ new: #f64(1e+200 2.0 1.0 0.0 -1.0 -2.0 -1e+200)
   26 tests completed in 0.028 seconds
   26 (100.00%) tests passed
   0 (0.00%) tests failed
-<a name="key_38_1"></a><a href="#key_38_2" style="background-color: white; color: purple;">======================================== syntax tests ...</a>
+<a name="key_42_1"></a><a href="#key_42_2" style="background-color: white; color: purple;">======================================== syntax tests ...</a>
 
 3
 100
@@ -1074,8 +1074,8 @@ caught
 (99)
 10 9 8 7 6 5 4 3 2 1 
 10 9 8 7 6 5 4 3 2 1 
-<a name="key_4_19"></a><a href="#key_4_20" style="background-color: white; color: orange;">Warning: reference to possibly unbound identifier `one#always-one' in:</a>
-<a name="key_4_20"></a><a href="#key_4_21" style="background-color: white; color: orange;">Warning:    always-two</a>
+<a name="key_8_19"></a><a href="#key_8_20" style="background-color: white; color: orange;">Warning: reference to possibly unbound identifier `one#always-one' in:</a>
+<a name="key_8_20"></a><a href="#key_8_21" style="background-color: white; color: orange;">Warning:    always-two</a>
 
 
 #((99))
@@ -1163,7 +1163,7 @@ unquote-splicing
 1
 1
 1
-<a name="key_38_2"></a><a href="#key_38_3" style="background-color: white; color: purple;">======================================== syntax tests (compiled) ...</a>
+<a name="key_42_2"></a><a href="#key_42_3" style="background-color: white; color: purple;">======================================== syntax tests (compiled) ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'syntax-tests.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 
@@ -1177,7 +1177,7 @@ Note: at toplevel:
 
 (if temp temp (let ((temp ...)) (if temp temp (let ... ...))))
 
-<a name="key_4_21"></a><a href="#key_4_22" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
+<a name="key_8_21"></a><a href="#key_8_22" style="background-color: white; color: orange;">Warning: in local unknown procedure,</a>
 
   in local unknown procedure,
   in toplevel unknown procedure:
@@ -1198,7 +1198,7 @@ Note: at toplevel:
 
 (if temp temp (let ((temp ...)) (if temp temp (let ... ...))))
 
-<a name="key_4_22"></a><a href="#key_4_23" style="background-color: white; color: orange;">Warning: in local procedure `f1812',</a>
+<a name="key_8_22"></a><a href="#key_8_23" style="background-color: white; color: orange;">Warning: in local procedure `f1812',</a>
 
   in local unknown procedure,
   in local unknown procedure,
@@ -1206,11 +1206,11 @@ Note: at toplevel:
   in toplevel unknown procedure:
   (syntax-tests.scm:413) in procedure call to `exit', expected argument #1 of type `fixnum' but was given an argument of type `false'
 
-<a name="key_4_23"></a><a href="#key_4_24" style="background-color: white; color: orange;">Warning: at toplevel:</a>
+<a name="key_8_23"></a><a href="#key_8_24" style="background-color: white; color: orange;">Warning: at toplevel:</a>
 
   assignment of value of type `fixnum' to toplevel variable `setter' does not match declared type `(procedure setter (procedure) procedure)'
 
-<a name="key_4_24"></a><a href="#key_4_25" style="background-color: white; color: orange;">Warning: in local procedure `f2489',</a>
+<a name="key_8_24"></a><a href="#key_8_25" style="background-color: white; color: orange;">Warning: in local procedure `f2489',</a>
 
   in local unknown procedure,
   in local unknown procedure,
@@ -1315,7 +1315,7 @@ Note: at toplevel:
 <a name="key_2_2"></a><a href="#key_2_3" style="background-color: white; color: green;">(if a (if (error "not reached 1") (error "not reached 2") #f) #f)</a>
 
 
-<a name="key_4_25"></a><a href="#key_4_26" style="background-color: white; color: orange;">Warning: redefinition of extended binding: setter</a>
+<a name="key_8_25"></a><a href="#key_8_26" style="background-color: white; color: orange;">Warning: redefinition of extended binding: setter</a>
 
 (M1: (m1 n))
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
@@ -1377,8 +1377,8 @@ caught
 (99)
 10 9 8 7 6 5 4 3 2 1 
 10 9 8 7 6 5 4 3 2 1 
-<a name="key_4_26"></a><a href="#key_4_27" style="background-color: white; color: orange;">Warning: reference to possibly unbound identifier `one#always-one' in:</a>
-<a name="key_4_27"></a><a href="#key_4_28" style="background-color: white; color: orange;">Warning:    always-two</a>
+<a name="key_8_26"></a><a href="#key_8_27" style="background-color: white; color: orange;">Warning: reference to possibly unbound identifier `one#always-one' in:</a>
+<a name="key_8_27"></a><a href="#key_8_28" style="background-color: white; color: orange;">Warning:    always-two</a>
 
 
 #((99))
@@ -1466,14 +1466,14 @@ unquote-splicing
 1
 1
 1
-<a name="key_38_3"></a><a href="#key_38_4" style="background-color: white; color: purple;">======================================== syntax tests (v2, compiled) ...</a>
+<a name="key_42_3"></a><a href="#key_42_4" style="background-color: white; color: purple;">======================================== syntax tests (v2, compiled) ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'syntax-tests-2.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
 rm a.c
 'gcc' 'a.o' -o 'a.out' -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
-<a name="key_18_1"></a><a href="#key_18_2" style="background-color: white; color: purple;">======================================== meta-syntax tests ...</a>
+<a name="key_22_1"></a><a href="#key_22_2" style="background-color: white; color: purple;">======================================== meta-syntax tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'meta-syntax-test.scm' -output-file 'meta-syntax-test.c' -dynamic -feature chicken-compile-shared -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -emit-import-library foo
 generating import library `foo.import.scm' for module `foo' ...
@@ -1486,10 +1486,10 @@ rm meta-syntax-test.o
 rm foo.import.c
 'gcc' 'foo.import.o' -o 'foo.import.so' -shared -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm foo.import.o
-<a name="key_28_1"></a><a href="#key_28_2" style="background-color: white; color: purple;">======================================== reexport tests ...</a>
+<a name="key_32_1"></a><a href="#key_32_2" style="background-color: white; color: purple;">======================================== reexport tests ...</a>
 
 
-<a name="key_4_28"></a><a href="#key_4_29" style="background-color: white; color: orange;">Warning: reference to possibly unbound identifier `values'</a>
+<a name="key_8_28"></a><a href="#key_8_29" style="background-color: white; color: orange;">Warning: reference to possibly unbound identifier `values'</a>
 
 7
 "abc-def-ghi"
@@ -1550,7 +1550,7 @@ rm a.c
 'gcc' 'a.o' -o 'a.out' -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
 1
-<a name="key_13_1"></a><a href="#key_13_2" style="background-color: white; color: purple;">11======================================== functor tests ...</a>
+<a name="key_17_1"></a><a href="#key_17_2" style="background-color: white; color: purple;">11======================================== functor tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'simple-functors-test.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
@@ -1626,7 +1626,7 @@ generating import library `sf2.import.scm' for module `sf2' ...
 rm a.c
 'gcc' 'a.o' -o 'a.out' -shared -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
-<a name="key_7_3"></a><a href="#key_7_4" style="background-color: white; color: purple;">======================================== compiler syntax tests ...</a>
+<a name="key_11_3"></a><a href="#key_11_4" style="background-color: white; color: purple;">======================================== compiler syntax tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'compiler-syntax-tests.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
@@ -1637,12 +1637,12 @@ rm a.o
 7
 (cs-goo 2)
 zzz
-<a name="key_15_1"></a><a href="#key_15_2" style="background-color: white; color: purple;">======================================== import tests ...</a>
+<a name="key_19_1"></a><a href="#key_19_2" style="background-color: white; color: purple;">======================================== import tests ...</a>
 
 
-<a name="key_4_29"></a><a href="#key_4_30" style="background-color: white; color: orange;">Warning: reference to possibly unbound identifier `s8vector?'</a>
-<a name="key_4_30"></a><a href="#key_4_31" style="background-color: white; color: orange;">expect warning ...</a>
-<a name="key_15_2"></a><a href="#key_15_3" style="background-color: white; color: purple;">======================================== import library tests ...</a>
+<a name="key_8_29"></a><a href="#key_8_30" style="background-color: white; color: orange;">Warning: reference to possibly unbound identifier `s8vector?'</a>
+<a name="key_8_30"></a><a href="#key_8_31" style="background-color: white; color: orange;">expect warning ...</a>
+<a name="key_19_2"></a><a href="#key_19_3" style="background-color: white; color: purple;">======================================== import library tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'import-library-test1.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -emit-import-library foo
 generating import library `foo.import.scm' for module `foo' ...
@@ -1660,14 +1660,14 @@ rm foo.import.o
 rm a.c
 'gcc' 'a.o' -o 'a.out' -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
-<a name="key_20_1"></a><a href="#key_20_2" style="background-color: white; color: purple;">======================================== optionals test ...</a>
+<a name="key_24_1"></a><a href="#key_24_2" style="background-color: white; color: purple;">======================================== optionals test ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'test-optional.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
 rm a.c
 'gcc' 'a.o' -o 'a.out' -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
-<a name="key_38_4"></a><a href="#key_38_5" style="background-color: white; color: purple;">======================================== syntax tests (matchable) ...</a>
+<a name="key_42_4"></a><a href="#key_42_5" style="background-color: white; color: purple;">======================================== syntax tests (matchable) ...</a>
 
 (PASS) any
 (PASS) symbol
@@ -1710,7 +1710,7 @@ rm a.o
   38 tests completed in 0.168 seconds
   38 (100.00%) tests passed
   0 (0.00%) tests failed
-<a name="key_38_5"></a><a href="#key_38_6" style="background-color: white; color: purple;">======================================== syntax tests (loopy-loop) ...</a>
+<a name="key_42_5"></a><a href="#key_42_6" style="background-color: white; color: purple;">======================================== syntax tests (loopy-loop) ...</a>
 
 (PASS) stepping
 (PASS) basic in-list
@@ -1732,10 +1732,10 @@ rm a.o
   17 tests completed in 0.330 seconds
   17 (100.00%) tests passed
   0 (0.00%) tests failed
-<a name="key_25_1"></a><a href="#key_25_2" style="background-color: white; color: purple;">======================================== r4rstest ...</a>
+<a name="key_29_1"></a><a href="#key_29_2" style="background-color: white; color: purple;">======================================== r4rstest ...</a>
 
 (expect mult-float-print-test to fail)
-<a name="key_38_6"></a><a href="#key_38_7" style="background-color: white; color: purple;">======================================== syntax tests (r5rs_pitfalls) ...</a>
+<a name="key_42_6"></a><a href="#key_42_7" style="background-color: white; color: purple;">======================================== syntax tests (r5rs_pitfalls) ...</a>
 
 (expect two failures)
 Passed: 1.1
@@ -1761,7 +1761,7 @@ Passed: 8.1
 Passed: 8.2
 Passed: 8.3
 Map is not call/cc safe, but probably tail recursive and efficient.
-<a name="key_26_1"></a><a href="#key_26_2" style="background-color: white; color: purple;">======================================== r7rs tests ...</a>
+<a name="key_30_1"></a><a href="#key_30_2" style="background-color: white; color: purple;">======================================== r7rs tests ...</a>
 
 
 (section 4 2 1)
@@ -1851,7 +1851,7 @@ Map is not call/cc safe, but probably tail recursive and efficient.
 (#f #(0 (a b) c d #(1 2 (e) f) g))  ==> #(0 (a b) c d #(1 2 (e) f) g)
 
 Passed all tests
-<a name="key_19_1"></a><a href="#key_19_2" style="background-color: white; color: purple;">======================================== module tests ...</a>
+<a name="key_23_1"></a><a href="#key_23_2" style="background-color: white; color: purple;">======================================== module tests ...</a>
 
 (PASS) internal/variable
 (PASS) external/unimported variable (fail)
@@ -1890,7 +1890,7 @@ f1
 ()
 f1
 oinkoink
-<a name="key_19_2"></a><a href="#key_19_3" style="background-color: white; color: purple;">======================================== module tests (compiled) ...</a>
+<a name="key_23_2"></a><a href="#key_23_3" style="background-color: white; color: purple;">======================================== module tests (compiled) ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'module-tests-compiled.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
@@ -1902,7 +1902,7 @@ rm a.o
   2 tests completed in 0.000 seconds
   2 (100.00%) tests passed
   0 (0.00%) tests failed
-<a name="key_19_3"></a><a href="#key_19_4" style="background-color: white; color: purple;">======================================== module tests (chained) ...</a>
+<a name="key_23_3"></a><a href="#key_23_4" style="background-color: white; color: purple;">======================================== module tests (chained) ...</a>
 
 f1
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'test-chained-modules.scm' -output-file 'test-chained-modules.c' -dynamic -feature chicken-compile-shared -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -emit-import-library m3
@@ -1929,7 +1929,7 @@ compiled 2017-01-22 on waldrop (Linux)
 f1
 f1
 f1
-<a name="key_19_4"></a><a href="#key_19_5" style="background-color: white; color: purple;">======================================== module tests (ec) ...</a>
+<a name="key_23_4"></a><a href="#key_23_5" style="background-color: white; color: purple;">======================================== module tests (ec) ...</a>
 
 
 (let ((x 0)) (do-ec (set! x (+ x 1))) x)
@@ -2952,7 +2952,7 @@ rm ec.import.o
 correct examples : 163
 wrong examples   : 0
 
-<a name="key_14_1"></a><a href="#key_14_2" style="background-color: white; color: purple;">======================================== hash-table tests ...</a>
+<a name="key_18_1"></a><a href="#key_18_2" style="background-color: white; color: purple;">======================================== hash-table tests ...</a>
 
 SRFI 69 procedures
 HT - No Parameters
@@ -2985,12 +2985,12 @@ HT - copy
 HT - recursive depth/length
 414580994 <?> 111869694
 56715518 <?> 188147105
-<a name="key_22_1"></a><a href="#key_22_2" style="background-color: white; color: purple;">======================================== port tests ...</a>
+<a name="key_26_1"></a><a href="#key_26_2" style="background-color: white; color: purple;">======================================== port tests ...</a>
 
 (PASS) Initially, output string is empty
 (PASS) output can be extracted from output string
 (PASS) closing a string output port has no effect on the returned data
-<a name="key_3_1"></a><a href="#key_3_2" style="background-color: white; color: red;">(PASS) writing to a closed string output port is an error</a>
+<a name="key_3_1"></a><a href="#key_3_2" style="background-color: white; color: green;">(PASS) writing to a closed string output port is an error</a>
 
 slow...
 0.26s CPU time, 15924/2656 mutations (total/tracked), 1/1190 GCs (major/minor), maximum live heap: 603.25 KiB
@@ -3010,7 +3010,7 @@ Procedures check on output ports being closed
 write...OK
 fprintf...OK
 print-call-chain...OK
-<a name="key_3_2"></a><a href="#key_3_3" style="background-color: white; color: red;">print-error-message...OK</a>
+<a name="key_4_1"></a><a href="#key_4_2" style="background-color: white; color: green;">print-error-message...OK</a>
 
 print...OK
 print*...OK
@@ -3101,14 +3101,14 @@ custom port:
   36 tests completed in 0.572 seconds
   36 (100.00%) tests passed
   0 (0.00%) tests failed
-<a name="key_12_1"></a><a href="#key_12_2" style="background-color: white; color: purple;">======================================== fixnum tests ...</a>
+<a name="key_16_1"></a><a href="#key_16_2" style="background-color: white; color: purple;">======================================== fixnum tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'fixnum-tests.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
 rm a.c
 'gcc' 'a.o' -o 'a.out' -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
-<a name="key_37_1"></a><a href="#key_37_2" style="background-color: white; color: purple;">======================================== string->number tests ...</a>
+<a name="key_41_1"></a><a href="#key_41_2" style="background-color: white; color: purple;">======================================== string->number tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'numbers-string-conversion-tests.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
@@ -3360,8 +3360,8 @@ OK                  ("#o1#/2" 4.0 6.0 "4.0" "4." "6.0" "6.")
 OK                  ("#b1#/2" #f)
 OK                  ("#b1#/10" 1.0 1.5 "1.0" "1." "1.5")
 
-<a name="key_3_3"></a><a href="#key_3_4" style="background-color: white; color: red;">-----> Everything OK, no errors!</a>
-<a name="key_36_1"></a><a href="#key_36_2" style="background-color: white; color: purple;">======================================== srfi-4 tests ...</a>
+<a name="key_5_1"></a><a href="#key_5_2" style="background-color: white; color: green;">-----> Everything OK, no errors!</a>
+<a name="key_40_1"></a><a href="#key_40_2" style="background-color: white; color: purple;">======================================== srfi-4 tests ...</a>
 
 #u8(100 101)
 #u16(100 101)
@@ -3371,7 +3371,7 @@ OK                  ("#b1#/10" 1.0 1.5 "1.0" "1." "1.5")
 #s32(100 101)
 #f32(100.0 101.0)
 #f64(100.0 101.0)
-<a name="key_32_1"></a><a href="#key_32_2" style="background-color: white; color: purple;">======================================== srfi-13 tests ...</a>
+<a name="key_36_1"></a><a href="#key_36_2" style="background-color: white; color: purple;">======================================== srfi-13 tests ...</a>
 
 string-null?..........................................................[ok]
 string-null?..........................................................[ok]
@@ -3679,7 +3679,7 @@ string-trim-right.....................................................[ok]
 string-trim-right.....................................................[ok]
 string-trim-right.....................................................[ok]
 string-trim-right.....................................................[ok]
-<a name="key_33_1"></a><a href="#key_33_2" style="background-color: white; color: purple;">======================================== srfi-14 tests ...</a>
+<a name="key_37_1"></a><a href="#key_37_2" style="background-color: white; color: purple;">======================================== srfi-14 tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'srfi-14-tests.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 
@@ -3692,8 +3692,8 @@ Note: at toplevel:
 rm a.c
 'gcc' 'a.o' -o 'a.out' -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
-<a name="key_8_1"></a><a href="#key_8_2" style="background-color: white; color: purple;">======================================== condition tests ...</a>
-<a name="key_34_1"></a><a href="#key_34_2" style="background-color: white; color: purple;">======================================== srfi-18 tests ...</a>
+<a name="key_12_1"></a><a href="#key_12_2" style="background-color: white; color: purple;">======================================== condition tests ...</a>
+<a name="key_38_1"></a><a href="#key_38_2" style="background-color: white; color: purple;">======================================== srfi-18 tests ...</a>
 
 #<thread: primordial> sleeps ...
 #<thread: thread9> sleeps ...
@@ -3737,8 +3737,8 @@ rm a.o
 Testing correct handling of thread-join! with external signals:.... thread terminated gracefully, this is good
 thread-join with timeout: ....timeout exception as expected
 thread-join with return value:.... done.
-<a name="key_9_1"></a><a href="#key_9_2" style="background-color: white; color: purple;">======================================== data-structures tests ...</a>
-<a name="key_21_1"></a><a href="#key_21_2" style="background-color: white; color: purple;">======================================== path tests ...</a>
+<a name="key_13_1"></a><a href="#key_13_2" style="background-color: white; color: purple;">======================================== data-structures tests ...</a>
+<a name="key_25_1"></a><a href="#key_25_2" style="background-color: white; color: purple;">======================================== path tests ...</a>
 
 /
 /
@@ -3850,7 +3850,7 @@ x/y/z.q
 x/y\/z.q
 x//y/z.q
 x\y/z.q
-<a name="key_3_4"></a><a href="#key_3_5" style="background-color: white; color: red;">error</a>
+<a name="key_6_1"></a><a href="#key_6_2" style="background-color: white; color: green;">error</a>
 
 /x/y/z
 /x/y/z
@@ -3859,7 +3859,7 @@ x\y/z.q
 /x/y/z
 /x/y/z
 /x/y/z/
-<a name="key_35_1"></a><a href="#key_35_2" style="background-color: white; color: purple;">======================================== srfi-45 tests ...</a>
+<a name="key_39_1"></a><a href="#key_39_2" style="background-color: white; color: purple;">======================================== srfi-45 tests ...</a>
 
 (PASS) Memoization test 1
 (PASS) Memoization test 2
@@ -3871,7 +3871,7 @@ x\y/z.q
 (PASS) Reentrancy test 3 (1)
 (PASS) Reentrancy test 3 (2)
 (PASS) Reentrancy test 3 (3)
-<a name="key_23_1"></a><a href="#key_23_2" style="background-color: white; color: purple;">======================================== posix tests ...</a>
+<a name="key_27_1"></a><a href="#key_27_2" style="background-color: white; color: purple;">======================================== posix tests ...</a>
 
 /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/../chicken 'posix-tests.scm' -output-file 'a.c' -types ../types.db -ignore-repository -verbose -include-path /data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/..
 'gcc' 'a.c' -o 'a.o' -c  -fno-strict-aliasing -fwrapv -DHAVE_CHICKEN_CONFIG_H -DC_ENABLE_PTABLES -Os -fomit-frame-pointer -I/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -I/data/data/com.termux/files/home/chickens/4.12.0RC1//include/chicken
@@ -3879,7 +3879,7 @@ rm a.c
 'gcc' 'a.o' -o 'a.out' -L/data/data/com.termux/files/home/sources/packages/chicken-4.12.0rc1/tests/.. -L/data/data/com.termux/files/home/chickens/4.12.0RC1//lib -lchicken -lm -ldl -llog
 rm a.o
 err
-<a name="key_3_5"></a><a href="#key_3_6" style="background-color: white; color: red;">Error: (posix-tests.scm:71) assertion failed: (not (get-environment-variable "FOO"))</a>
+<a name="key_7_1"></a><a href="#key_7_2" style="background-color: white; color: red;">Error: (posix-tests.scm:71) assertion failed: (not (get-environment-variable "FOO"))</a>
 
 
 	Call history:
@@ -3899,49 +3899,53 @@ err
 	posix-tests.scm:69: get-environment-variable	  
 	posix-tests.scm:70: unsetenv	  
 	posix-tests.scm:71: get-environment-variable	  
-<a name="key_3_6"></a><a href="#key_3_7" style="background-color: white; color: red;">	posix-tests.scm:71: ##sys#error	  	<--</a>
-<a name="key_3_7"></a><a href="#key_3_8" style="background-color: white; color: red;">make: *** [rules.make:663: check] Error 70</a>
+<a name="key_7_2"></a><a href="#key_7_3" style="background-color: white; color: red;">	posix-tests.scm:71: ##sys#error	  	<--</a>
+<a name="key_7_3"></a><a href="#key_7_4" style="background-color: white; color: red;">make: *** [rules.make:663: check] Error 70</a>
 <a name="summary"></a>
 ==========================LOGPRO SUMMARY==========================
 Trigger: LogFileBodyStart              OK, count=1
 <p>Expects for LogFileBody section: 
-<font color="purple"><a name="key_39_2"></a><a href="#key_39_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: version, got 1</font>
-<font color="purple"><a name="key_38_7"></a><a href="#key_38_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: syntax, got 6</font>
-<font color="purple"><a name="key_37_2"></a><a href="#key_37_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: string->number, got 1</font>
-<font color="purple"><a name="key_36_2"></a><a href="#key_36_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: srfi\-4, got 1</font>
-<font color="purple"><a name="key_35_2"></a><a href="#key_35_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: srfi\-45, got 1</font>
-<font color="purple"><a name="key_34_2"></a><a href="#key_34_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: srfi\-18, got 1</font>
-<font color="purple"><a name="key_33_2"></a><a href="#key_33_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: srfi\-14, got 1</font>
-<font color="purple"><a name="key_32_2"></a><a href="#key_32_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: srfi\-13, got 1</font>
-<font color="purple"><a name="key_31_3"></a><a href="#key_31_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: specialization, got 2</font>
-<font color="purple"><a name="key_30_2"></a><a href="#key_30_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: scrutiny, got 1</font>
-<font color="purple"><a name="key_29_2"></a><a href="#key_29_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: runtime, got 1</font>
-<font color="purple"><a name="key_28_2"></a><a href="#key_28_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: reexport, got 1</font>
-<font color="purple"><a name="key_27_2"></a><a href="#key_27_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: reader, got 1</font>
-<font color="purple"><a name="key_26_2"></a><a href="#key_26_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: r7rs, got 1</font>
-<font color="purple"><a name="key_25_2"></a><a href="#key_25_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: r4rs, got 1</font>
-<font color="purple"><a name="key_24_2"></a><a href="#key_24_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: pretty-printer, got 1</font>
-<font color="purple"><a name="key_23_2"></a><a href="#key_23_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: posix, got 1</font>
-<font color="purple"><a name="key_22_2"></a><a href="#key_22_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: port, got 1</font>
-<font color="purple"><a name="key_21_2"></a><a href="#key_21_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: path, got 1</font>
-<font color="purple"><a name="key_20_2"></a><a href="#key_20_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: optionals, got 1</font>
-<font color="purple"><a name="key_19_5"></a><a href="#key_19_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: module, got 4</font>
-<font color="purple"><a name="key_18_2"></a><a href="#key_18_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: meta-syntax, got 1</font>
-<font color="purple"><a name="key_17_2"></a><a href="#key_17_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: lolevel, got 1</font>
-<font color="purple"><a name="key_16_2"></a><a href="#key_16_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: library, got 1</font>
-<font color="purple"><a name="key_15_3"></a><a href="#key_15_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: import, got 2</font>
-<font color="purple"><a name="key_14_2"></a><a href="#key_14_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: hash-table, got 1</font>
-<font color="purple"><a name="key_13_2"></a><a href="#key_13_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: functor, got 1</font>
-<font color="purple"><a name="key_12_2"></a><a href="#key_12_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: fixnum, got 1</font>
-<font color="purple"><a name="key_11_2"></a><a href="#key_11_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: evaluation, got 1</font>
-<font color="purple"><a name="key_10_2"></a><a href="#key_10_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: dynamic-wind, got 1</font>
-<font color="purple"><a name="key_9_2"></a><a href="#key_9_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: data-structures, got 1</font>
-<font color="purple"><a name="key_8_2"></a><a href="#key_8_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: condition, got 1</font>
-<font color="purple"><a name="key_7_4"></a><a href="#key_7_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: compiler, got 3</font>
-<font color="purple"><a name="key_6_2"></a><a href="#key_6_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: callback, got 1</font>
-<font color="purple"><a name="key_5_2"></a><a href="#key_5_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: arithmetic, got 1</font>
-<font color="orange"><a name="key_4_31"></a><a href="#key_4_1">Expect:</a>  Warning  in LogFileBody  FAIL, expected = 0 of Warnings not allowed, got 30</font>
-<font color="red"><a name="key_3_8"></a><a href="#key_3_1">Expect:</a>  Error    in LogFileBody  FAIL, expected = 0 of Errors not allowed, got 7</font>
+<font color="purple"><a name="key_43_2"></a><a href="#key_43_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: version, got 1</font>
+<font color="purple"><a name="key_42_7"></a><a href="#key_42_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: syntax, got 6</font>
+<font color="purple"><a name="key_41_2"></a><a href="#key_41_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: string->number, got 1</font>
+<font color="purple"><a name="key_40_2"></a><a href="#key_40_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: srfi\-4, got 1</font>
+<font color="purple"><a name="key_39_2"></a><a href="#key_39_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: srfi\-45, got 1</font>
+<font color="purple"><a name="key_38_2"></a><a href="#key_38_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: srfi\-18, got 1</font>
+<font color="purple"><a name="key_37_2"></a><a href="#key_37_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: srfi\-14, got 1</font>
+<font color="purple"><a name="key_36_2"></a><a href="#key_36_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: srfi\-13, got 1</font>
+<font color="purple"><a name="key_35_3"></a><a href="#key_35_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: specialization, got 2</font>
+<font color="purple"><a name="key_34_2"></a><a href="#key_34_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: scrutiny, got 1</font>
+<font color="purple"><a name="key_33_2"></a><a href="#key_33_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: runtime, got 1</font>
+<font color="purple"><a name="key_32_2"></a><a href="#key_32_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: reexport, got 1</font>
+<font color="purple"><a name="key_31_2"></a><a href="#key_31_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: reader, got 1</font>
+<font color="purple"><a name="key_30_2"></a><a href="#key_30_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: r7rs, got 1</font>
+<font color="purple"><a name="key_29_2"></a><a href="#key_29_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: r4rs, got 1</font>
+<font color="purple"><a name="key_28_2"></a><a href="#key_28_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: pretty-printer, got 1</font>
+<font color="purple"><a name="key_27_2"></a><a href="#key_27_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: posix, got 1</font>
+<font color="purple"><a name="key_26_2"></a><a href="#key_26_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: port, got 1</font>
+<font color="purple"><a name="key_25_2"></a><a href="#key_25_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: path, got 1</font>
+<font color="purple"><a name="key_24_2"></a><a href="#key_24_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: optionals, got 1</font>
+<font color="purple"><a name="key_23_5"></a><a href="#key_23_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: module, got 4</font>
+<font color="purple"><a name="key_22_2"></a><a href="#key_22_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: meta-syntax, got 1</font>
+<font color="purple"><a name="key_21_2"></a><a href="#key_21_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: lolevel, got 1</font>
+<font color="purple"><a name="key_20_2"></a><a href="#key_20_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: library, got 1</font>
+<font color="purple"><a name="key_19_3"></a><a href="#key_19_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: import, got 2</font>
+<font color="purple"><a name="key_18_2"></a><a href="#key_18_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: hash-table, got 1</font>
+<font color="purple"><a name="key_17_2"></a><a href="#key_17_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: functor, got 1</font>
+<font color="purple"><a name="key_16_2"></a><a href="#key_16_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: fixnum, got 1</font>
+<font color="purple"><a name="key_15_2"></a><a href="#key_15_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: evaluation, got 1</font>
+<font color="purple"><a name="key_14_2"></a><a href="#key_14_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: dynamic-wind, got 1</font>
+<font color="purple"><a name="key_13_2"></a><a href="#key_13_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: data-structures, got 1</font>
+<font color="purple"><a name="key_12_2"></a><a href="#key_12_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: condition, got 1</font>
+<font color="purple"><a name="key_11_4"></a><a href="#key_11_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: compiler, got 3</font>
+<font color="purple"><a name="key_10_2"></a><a href="#key_10_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: callback, got 1</font>
+<font color="purple"><a name="key_9_2"></a><a href="#key_9_1">Expect:</a>  Required in LogFileBody    OK, expected = 1 of Required section: arithmetic, got 1</font>
+<font color="orange"><a name="key_8_31"></a><a href="#key_8_1">Expect:</a>  Warning  in LogFileBody  FAIL, expected = 0 of Warnings not allowed, got 30</font>
+<font color="red"><a name="key_7_4"></a><a href="#key_7_1">Expect:</a>  Error    in LogFileBody  FAIL, expected = 0 of Errors not allowed, got 3</font>
+<font color="green"><a name="key_6_2"></a><a href="#key_6_1">Expect:</a>  Ignore   in LogFileBody    OK, expected = 0 of Word error on line by itself, got 1</font>
+<font color="green"><a name="key_5_2"></a><a href="#key_5_1">Expect:</a>  Ignore   in LogFileBody    OK, expected = 0 of Everything OK, got 1</font>
+<font color="green"><a name="key_4_2"></a><a href="#key_4_1">Expect:</a>  Ignore   in LogFileBody    OK, expected = 0 of print-error-message...OK, got 1</font>
+<font color="green"><a name="key_3_2"></a><a href="#key_3_1">Expect:</a>  Ignore   in LogFileBody    OK, expected = 0 of closed string, got 1</font>
 <font color="green"><a name="key_2_5"></a><a href="#key_2_1">Expect:</a>  Ignore   in LogFileBody    OK, expected = 0 of error calls, got 4</font>
 <font color="green"><a name="key_1_24"></a><a href="#key_1_1">Expect:</a>  Ignore   in LogFileBody    OK, expected = 0 of call to sys#error, got 23</font>
 <font color="green"><a name="key_0_2"></a><a href="#key_0_1">Expect:</a>  Ignore   in LogFileBody    OK, expected = 0 of C strings error mention, got 1</font>
