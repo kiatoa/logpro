@@ -29,6 +29,8 @@
 (define *htmlport* #f)
 (define *summport* #f)
 (define *curr-expect-num* 0)
+(define *section-ports*   (make-hash-table)) ;; open output files per section and put the port here section => port
+(define *html-ports*      (make-hash-table))
 
 ;;======================================================================
 ;; Misc
@@ -166,12 +168,19 @@
 ;; (list (1 "Header" (patt1 patt2 patt3 ...)) (2 ...))
 (define *sections*  '()) ;; (make-hash-table))
 
-(define-inline (section:get-name vec)(vector-ref vec 0))
-(define-inline (section:get-start-trigger vec)(vector-ref vec 1))
-(define-inline (section:get-end-trigger vec)(vector-ref vec 2))
+(define-inline (section:get-name vec)          (vector-ref vec 0))
+(define-inline (section:get-start-trigger vec) (vector-ref vec 1))
+(define-inline (section:get-end-trigger vec)   (vector-ref vec 2))
+(define-inline (section:get-mode vec)          (vector-ref vec 3))
 
-(define (section name start-trigger end-trigger)
-  (set! *sections* (cons (vector name start-trigger end-trigger) *sections*)))
+;; Section modes (not yet implemented)
+;;   'auto      => put section output into a file by name <section>.log
+;;   'discard   => discard the output from section
+;;   'compress  => put and compress data into section.log.gz
+;;   "some.log" => put section output into a file "some.log"
+;;
+(define (section name start-trigger end-trigger #!key (mode #f))
+  (set! *sections* (cons (vector name start-trigger end-trigger mode) *sections*)))
 
 ;; Add the default section "LogFileBody"
 (trigger "LogFileBodyStart" #/.*/)
@@ -505,18 +514,40 @@
 	(if *summport* (close-output-port *summport*))	
 	(exit exit-code))))))
 
-(define (adj-active-sections trigger active-sections)
-  (for-each 
-   (lambda (section)
-     (let ((section-name  (section:get-name section))
-	   (start-trigger (section:get-start-trigger section))
-	   (end-trigger   (section:get-end-trigger section)))
-       (cond
-	((string=? start-trigger (trigger:get-name trigger))
-	 (hash-table-set! active-sections section-name section))
-	((string=? end-trigger (trigger:get-name trigger))
-	 (hash-table-delete! active-sections section-name)))))
-   *sections*))
+(define (adj-active-sections trigger active-sections curr-port port-push port-pop)
+  (let ((res-port #f))
+    (for-each 
+     (lambda (section)
+       (let ((section-name  (section:get-name section))
+	     (start-trigger (section:get-start-trigger section))
+	     (end-trigger   (section:get-end-trigger section))
+	     (mode          (section:get-mode section)))
+	 (cond
+	  ((string=? start-trigger (trigger:get-name trigger))
+	   (hash-table-set! active-sections section-name section)
+	   (if mode
+	       (if (not (hash-table-exists? *section-ports* section-name)) ;; no port yet
+		   (hash-table-set! *section-ports*
+				    section-name
+				    (handle-exceptions
+				     exn
+				     #f
+				     (open-output-file
+				      (if (string? mode)
+					  mode
+					  (case mode
+					    ((auto compress)(conc section-name ".log"))
+					    ((discard) "/dev/null")
+					    (else (conc "invalid-mode-" section-name ".log")))))))))
+	   (if (hash-table-exists? *section-ports* section-name)
+	       (port-push curr-port)))
+	  ((string=? end-trigger (trigger:get-name trigger))
+	   (hash-table-delete! active-sections section-name)
+	   (if (hash-table-exists? *section-ports* section-name)
+	       (set! res-port (port-pop))))
+	   )))
+     *sections*)
+    res-port))
 
 (define (html-print . stuff)
   (if *htmlport*
@@ -526,10 +557,21 @@
 	  (apply print stuff)))))
 
 (define (analyze-logfile oup cssfile)
-  (let ((active-sections  (make-hash-table))
-	(found-expects    '())
-	(html-mode        'pre)
-	(html-hightlight-flag #f))
+  (let* ((active-sections  (make-hash-table))
+	 (found-expects    '())
+	 (html-mode        'pre)
+	 (html-hightlight-flag #f)
+	 (port-stack       (list oup))
+	 (port-push        (lambda (p)
+			     (set! port-stack (cons p port-stack))
+			     p))
+	 (port-pop         (lambda ()
+			     (if (null? port-stack)
+				 #f
+				 (let ((res (car port-stack)))
+				   (set! port-stack (cdr port-stack))
+				   res))))
+	 (active-port      oup))
     ;; (curr-seconds     (current-seconds)))
     (html-print "<html>")
     (if cssfile
@@ -560,11 +602,13 @@
 							 'trigger                   ;; etype
 							 (trigger:get-name trigger) ;; eclass
 							 #f))
-		       (with-output-to-port oup
+		       (with-output-to-port active-port
 			 (lambda ()
 			   (print      "LOGPRO: hit trigger " (trigger:get-name trigger) " on line " line-num)))
 		       (trigger:inc-total-hits trigger)
-		       (adj-active-sections trigger active-sections)))))
+		       (let ((new-port (adj-active-sections trigger active-sections active-port port-push port-pop)))
+			 (if new-port (set! active-port new-port)))
+		       ))))
 	     *triggers*)
 
 	    ;; now look for any expect "in" fails
@@ -610,7 +654,7 @@
 								   (valb (expects:get-num (car b))))
 							       (if (and (number? vala)(number? valb))
 								   (< vala valb);; (print "car a: " (car a) " car b: " (car b))
-								   (with-output-to-port oup
+								   (with-output-to-port active-port
 								     (lambda ()
 								       (print "WARNING: You have triggered a bug, please report it.\n  vala: " vala " valb: " valb)
 								       #f))))))))
@@ -658,7 +702,7 @@
 				" " 
 				(expects:get-value expect)
 				" in section " section " on line " line-num)))
-		      (with-output-to-port oup
+		      (with-output-to-port active-port
 			(lambda ()
 			  (apply print (cons "LOGPRO " msg))))
 		      (if (and (not pass-fail)
@@ -667,7 +711,7 @@
 			  (let ((cmd    (expects:get-hook expect)))
 			    (if cmd
 				(let ((errhook (hook:process-line cmd line match)))
-				  (with-output-to-port oup
+				  (with-output-to-port active-port
 				    (lambda ()
 				      (print "ERRMSG HOOK CALLED: " errhook)))
 				  (system errhook)
@@ -675,14 +719,14 @@
 			  (let ((cmd    (expects:get-hook expect)))
 			    (if cmd
 				(let ((hookcmd (hook:process-line cmd line match)))
-				  (with-output-to-port oup
+				  (with-output-to-port active-port
 				    (lambda ()
 				      (print "NONERR HOOK CALLED: " hookcmd)))
 				  (system hookcmd)
 				  (expects:delete-if-one-time expect))))))
 		    (expects:inc-count expect)
 		    (set! found-expects '()))))
-	    (with-output-to-port oup
+	    (with-output-to-port active-port
 	      (lambda ()
 		(print line)))
 	    (if html-highlight-flag
