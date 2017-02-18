@@ -30,7 +30,6 @@
 (define *summport* #f)
 (define *curr-expect-num* 0)
 (define *section-ports*   (make-hash-table)) ;; open output files per section and put the port here section => port
-(define *html-ports*      (make-hash-table))
 
 ;;======================================================================
 ;; Misc
@@ -527,18 +526,26 @@
 	   (hash-table-set! active-sections section-name section)
 	   (if mode
 	       (if (not (hash-table-exists? *section-ports* section-name)) ;; no port yet
-		   (hash-table-set! *section-ports*
-				    section-name
-				    (handle-exceptions
-				     exn
-				     #f
-				     (open-output-file
-				      (if (string? mode)
-					  mode
-					  (case mode
-					    ((auto compress)(conc section-name ".log"))
-					    ((discard) "/dev/null")
-					    (else (conc "invalid-mode-" section-name ".log")))))))))
+		   (let-values (((log-name html-name)
+				 (if (string? mode)
+				     (values mode (conc mode ".html"))
+				     (case mode
+				       ((auto compress)
+					(values (conc section-name ".log")(conc section-name ".html")))
+				       ((discard)(values "/dev/null" "/dev/null"))
+				       ((discard-html)(values (conc section-name ".log") "/dev/null"))
+				       (else
+					(values (conc "invalid-mode-" section-name ".log")
+						(conc "invalid-mode-" section-name ".html")))))))
+		     (hash-table-set! *section-ports*
+				      section-name
+				      (handle-exceptions
+					  exn
+					'(#f . #f)
+					`((open-output-file log-name)
+					  (if *htmlport*
+					      (open-output-file html-name)
+					      #f)))))))
 	   (if (hash-table-exists? *section-ports* section-name)
 	       (port-push curr-port)))
 	  ((string=? end-trigger (trigger:get-name trigger))
@@ -561,10 +568,14 @@
 	 (found-expects    '())
 	 (html-mode        'pre)
 	 (html-hightlight-flag #f)
-	 (port-stack       (list oup))
-	 (port-push        (lambda (p)
-			     (set! port-stack (cons p port-stack))
-			     p))
+	 (port-stack       '())
+	 ;;
+	 ;; keep track of both html and normal ports
+	 ;;
+	 (port-push        (lambda (p h)
+			     (let ((ports `(p . h)))
+			       (set! port-stack (cons ports port-stack))
+			       ports)))
 	 (port-pop         (lambda ()
 			     (if (null? port-stack)
 				 #f
