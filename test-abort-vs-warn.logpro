@@ -1,0 +1,7 @@
+(expect:abort in logfile = 0 "This should beat out a warn" #/Abort me/)
+(expect:warn  in logfile = 0 "This should not override abort" #/Warn me/)
+
+(trigger "start junk" #/start junk/)
+(trigger "end junk"   #/end junk/)
+
+(section "junk" "start junk" "end junk" mode: 'discard)

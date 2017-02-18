@@ -7,7 +7,7 @@
 ;;  implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ;;  PURPOSE.
 
-(define logpro-version 1.15)
+(define logpro-version 1.16)
 
 (require-library chicken-syntax)
 

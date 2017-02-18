@@ -1,0 +1,13 @@
+
+start junk
+I should not be in the output
+I should not be in the output
+I should not be in the output
+I should not be in the output
+I should not be in the output
+I should not be in the output
+end junk
+
+This line should trigger an abort: Abort me!
+This line should trigger a warn: Warn me!
+
