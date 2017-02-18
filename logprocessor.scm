@@ -338,6 +338,8 @@
 (define (expect:warning where section comparison value name patts #!key (expires #f)(type 'warning)(hook #f)(class #f))
   (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
+(define expect:warn expect:warning) ;; this one trips up so many people, just create the alias and be done with it.
+
 (define (expect:ignore where section comparison value name patts #!key (expires #f)(type 'ignore)(hook #f)(class #f))
   (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
@@ -453,7 +455,10 @@
 									   html-file
 									   "summary"))
 					     ".dat")))
-			    (open-output-file fname))
+			    (handle-exceptions
+			     exn
+			     #f ;; any problems creating output file, just move on
+			     (open-output-file fname)))
 			  #f)))
       (set! *htmlport* html-port) ;; sigh, do me right some day...
       (set! *summport* summ-port)
@@ -493,7 +498,8 @@
 		    (with-output-to-file full-css-file
 		      (lambda ()
 			(print *logpro_style.css*)))))
-	    (analyze-logfile (current-output-port) (file-exists? full-css-file)))) ;; cssfile is used as a flag
+	    (analyze-logfile (current-output-port) (file-exists? full-css-file))) ;; cssfile is used as a flag
+	  (analyze-logfile (current-output-port) #f))
       (let ((exit-code (print-results cssfile)))
 	(if *htmlport* (close-output-port *htmlport*))
 	(if *summport* (close-output-port *summport*))	
@@ -960,21 +966,22 @@
 		  exit-status)
       (html-print ")</h1></body></html>")
       ;; add the [final] block to the summary dat
-      (with-output-to-port *summport*
-	(lambda ()
-	  (print "[final]")
-	  (print "exit-code " exit-code)
-	  (print "exit-status " exit-status)
-	  (for-each
-	   (lambda (section)
-	     (for-each
-	      (lambda (xpect)
-		(let* ((etype (expects:get-type xpect))
-		       (emsg  (expects:get-name xpect)))
-		  (if (equal? etype exit-sym)
-		      (print "message " emsg))))
-	      (hash-table-ref *expects* section)))
-	   (hash-table-keys *expects*))))
+      (if *summport*
+	  (with-output-to-port *summport*
+	    (lambda ()
+	      (print "[final]")
+	      (print "exit-code " exit-code)
+	      (print "exit-status " exit-status)
+	      (for-each
+	       (lambda (section)
+		 (for-each
+		  (lambda (xpect)
+		    (let* ((etype (expects:get-type xpect))
+			   (emsg  (expects:get-name xpect)))
+		      (if (equal? etype exit-sym)
+			  (print "message " emsg))))
+		  (hash-table-ref *expects* section)))
+	       (hash-table-keys *expects*)))))
       exit-code)))
 
 (define (setup-logpro)
