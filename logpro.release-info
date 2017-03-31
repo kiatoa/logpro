@@ -1,5 +1,6 @@
 (repo fossil "http://www.kiatoa.com/fossils/{egg-name}")
 (uri zip "http://www.kiatoa.com/fossils/{egg-name}/zip/{egg-name}.zip?uuid=v{egg-release}")
+(release "1.17")
 (release "1.16")
 (release "1.15")
 (release "1.14")

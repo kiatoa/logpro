@@ -773,7 +773,8 @@
 		 (lineout  "")
 		 (is-value (eq? etype 'value))
 		 (rulenum  (expects:get-rulenum expect))
-		 (eclass   (expects:get-html-class expect)))
+		 (eclass   (expects:get-html-class expect))
+                 (outvals  #f))
 	    ;(print "is-value: " is-value)
 	    (cond
 	     ((eq? comp =)
@@ -801,8 +802,7 @@
 		;; If a value construct the output line using some kinda complicated logic ...
 		(let* ((cmd       (expects:get-hook expect))
 		       (tolerance (expects:get-tol expect))
-		       (measured  (if (null? (expects:get-measured expect)) "-" (car (expects:get-measured expect))))
-		       (outvals   #f))
+		       (measured  (if (null? (expects:get-measured expect)) "-" (car (expects:get-measured expect)))))
 		  (set! outvals (list  
 				 (conc "rule-" rulenum)
 				 (expect:expect-type-get-type typeinfo) 

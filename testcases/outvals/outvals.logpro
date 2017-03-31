@@ -1,0 +1,10 @@
+; Compiled logpro rules 
+
+(expect:value in "LogFileBody" 3 < "Total cap mean" #/Total cap mean.*?([\d\.]+)\%\s*$/)
+(expect:value in "LogFileBody" 3 < "Coupling cap mean" #/Coupling cap mean.*?([\d\.]+)\%\s*$/)
+(expect:value in "LogFileBody" 3 < "Pin-pin res mean" #/Pin\-Pin res mean.*?([\d\.]+)\%\s*$/)
+
+(expect:value in "LogFileBody" 4 < "Total cap sd" #/Total cap std.*?([\d\.]+)\%\s*$/)
+(expect:value in "LogFileBody" 4 < "Coupling cap sd" #/Coupling cap std.*?([\d\.]+)\%\s*$/)
+(expect:value in "LogFileBody" 4 < "Pin to pin res sd" #/Pin\-Pin res std.*?([\d\.]+)\%\s*$/)
+
