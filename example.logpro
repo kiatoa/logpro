@@ -80,6 +80,9 @@
 ;; Use expect:required to extract some values
 (expect:required   in "LogFileBody" >= 1 "Quad values" #/First:\s+(\d+)\s+Second:\s+(\d+)\s+Third:\s+(\d+)\s+Fourth:\s+(\d+)/ hook: "quadval")
 
+;; An expect required that will WARN but not FAIL
+(expect:required-warn in "LogFileBody" = 1 "I'm gonna warn you once..." #/I'm gonna warn you once/)
+
 ;(expect in "Init"  < 1 "Junk"        #/This is bogus/)
 
 ;; A convience variable "logfile" was defined to make the common case of applying rules to the 

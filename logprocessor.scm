@@ -358,6 +358,9 @@
 (define (expect:required where section comparison value name patts #!key (expires #f)(type 'required)(hook #f)(class #f))
   (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
+(define (expect:required-warn where section comparison value name patts #!key (expires #f)(type 'required-warn)(hook #f)(class #f))
+  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+
 (define (expect:check where section comparison value name patts #!key (expires #f)(type 'check)(hook #f)(class #f))
   (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
 
@@ -429,6 +432,7 @@
     ((error)    (vector "Error"    "red"))
     ((warning)  (vector "Warning"  "orange"))
     ((required) (vector "Required" "purple"))
+    ((required-warn)(vector "Required-warn" "orange"))
     ((check)    (vector "Check"    "pink"))
     ((abort)    (vector "Abort"    "crimson"))
     ((skip)     (vector "Skip"     "#d1db64"))
@@ -880,7 +884,7 @@
 			     (if is-value
 				 (if xstatus "green" "red")
 				 (expect:expect-type-get-color typeinfo))
-			     (if (eq? etype 'required)
+			     (if (member etype '(required required-warn))
 				 (if xstatus (expect:expect-type-get-color typeinfo) "red")
 				 "white"))))
 	      ;; (html-print (conc "<font color=\"" 
@@ -911,9 +915,9 @@
 		  (cond
 		   ((eq? etype 'skip)
 		    (set! totskipcount  (+ totskipcount  1)))
-		   ((or (member etype '(error required value))) ;; (eq? etype 'error)(eq? etype 'required)(eq? etype 'value)(eq? etype 'waive))
+		   ((member etype '(error required value))   
 		    (set! toterrcount   (+ toterrcount   1)))
-		   ((eq? etype 'warning)
+		   ((member etype '(warning required-warn))
 		    (set! totwarncount  (+ totwarncount  1)))
 		   ((eq? etype 'abort)
 		    (set! totabortcount (+ totabortcount 1)))
@@ -922,17 +926,9 @@
 		   ((eq? etype 'waive)
 		    (set! totwaivecount (+ totwaivecount 1)))
 		   )))))
-		;; (begin
-		;;   (cond
-		;;    )))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
     (html-print "</table>")
-    ;; (print "Total errors: " toterrcount)
-    ;; (print "Total warnings: " totwarncount)
-    ;; (print "status: " status)
-    ;; (if (and (not *got-an-error*) status)
-    ;;     (exit 0)
     (let* ((exit-code (cond ;; ordering here is critical as it sets the precedence of which status "wins"
 		       ((> totskipcount  0) 6)
 		       ((> totabortcount 0) 5)
