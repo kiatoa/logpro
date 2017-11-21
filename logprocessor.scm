@@ -717,6 +717,89 @@
 	    (if html-highlight-flag (set! html-highlight-flag #f))
 	    (loop (read-line)(+ line-num 1)))))))
 
+;; factored out of print-results
+;;
+(define (value-print expect rulenum typeinfo is-value xstatus name value compsym where fmt) 
+  ;; If a value construct the output line using some kinda complicated logic ...
+  (let ((outvals #f)
+        (lineout #f))
+    (if is-value
+        (let* ((cmd       (expects:get-hook expect))
+               (tolerance (expects:get-tol expect))
+               (measured  (if (null? (expects:get-measured expect)) "-" (car (expects:get-measured expect)))))
+          (set! outvals (list  
+                         (conc "rule-" rulenum)
+                         (expect:expect-type-get-type typeinfo) 
+                         where 
+                         section 
+                         (if xstatus "OK" "FAIL") 
+                         (if (number? tolerance) value (misc:op->symbol tolerance))
+                         (if (number? tolerance) "+/-" "")
+                         (if (number? tolerance) (misc:op->symbol tolerance) value)
+                         measured
+                         (expects:get-val-pass-count expect) 
+                         (expects:get-val-fail-count expect)
+                         ))
+          (set! lineout (apply format #f valfmt outvals));; valfmt
+          ;; have a hook to process for "value" items, do not call if nothing found
+          (if (and cmd (number? measured))
+              (let ((valuehook (hook:subst-var
+                                (hook:subst-var 
+                                 (hook:subst-var 
+                                  (hook:subst-var cmd "measured" (conc measured))
+                                  "message" name)
+                                 "expected" (conc value))
+                                "tolerance" (conc (misc:op->symbol tolerance)))))
+                (print "VALUE HOOK CALLED: " valuehook)
+                (system valuehook)))
+          (if *summport*
+              (with-output-to-port *summport*
+                (if is-value
+                    (lambda ()
+                      (print "[" (conc "rule-" rulenum) "]")
+                      (print "operator " where )
+                      (print "section " section )
+                      (print "desc " name)
+                      (print "status " (if xstatus "OK" "FAIL"))
+                      (print "expected "  value)
+                      (print "measured "  measured)
+                      (if (number? tolerance)
+                          (begin
+                            (print "type +/-")
+                            (print "tolerance " tolerance))
+                          (begin
+                            (print "type " (misc:op->symbol tolerance))))
+                      (print "pass " (expects:get-val-pass-count expect))
+                      (print "fail " (expects:get-val-fail-count expect))
+                      (print))
+                    (lambda ()
+                      (print "[" (conc "rule-" rulenum) "]")
+                      (print "type "(expect:expect-type-get-type typeinfo))
+                      (print "operator " where)
+                      (print "section " section)
+                      (print "status "  (if xstatus "OK" "FAIL"))
+                      (print "compsym " compsym)
+                      (print "value " value)
+                      (print "desc " name)
+                      (print "count " count)
+                      (print))))))
+        ;; If not a value create the output line using the format "fmt"
+        (begin
+          (set! outvals (list
+                         (conc "rule-" rulenum)
+                         (expect:expect-type-get-type typeinfo)
+                         where
+                         section
+                         (if xstatus "OK" "FAIL")
+                         compsym 
+                         value
+                         name
+                         count
+                         ""
+                         ))
+          (set! lineout (apply format #f fmt outvals))))
+    (values outvals lineout)))
+
 (define (print-results cssfile) ;; cssfile is used as a flag
   (let ((status       #t)
 	(toterrcount   0)
@@ -771,161 +854,71 @@
 		 (typeinfo (expect:get-type-info expect))
 		 (etype    (expects:get-type expect))
 		 (keyname  (expects:get-keyname expect))
-		 ;; xstatus is the expected vs. actual count of the item in question
-		 (xstatus  #f) ;; Jul 08, 2011 - changed to #f - seems safer
-		 (compsym  "=")
-		 (lineout  "")
 		 (is-value (eq? etype 'value))
 		 (rulenum  (expects:get-rulenum expect))
 		 (eclass   (expects:get-html-class expect))
                  (outvals  #f))
-	    ;(print "is-value: " is-value)
-	    (cond
-	     ((eq? comp =)
-	      (set! xstatus (eq? count value))
-	      (set! compsym "="))
-	     ((eq? comp >)
-	      (set! xstatus (> count value))
-	      (set! compsym ">"))
-	     ((eq? comp <)
-	      (set! xstatus (< count value))
-	      (set! compsym "<"))
-	     ((eq? comp >=)
-	      (set! xstatus (>= count value)))
-	     ((eq? comp <=)
-	      (set! xstatus (<= count value)))
-	     (is-value
-	      (if (and (< (expects:get-val-fail-count expect) 1)
-		       (> (expects:get-val-pass-count expect) 0))
-		  (set! xstatus #t)
-		  (set! xstatus #f))
-	      ;(print "xstatus: " xstatus " fail-count: " (expects:get-val-fail-count expect) " pass-count: " (expects:get-val-pass-count expect))
-	      ))
-	    ;; the summary line for this rule
-	    (if is-value
-		;; If a value construct the output line using some kinda complicated logic ...
-		(let* ((cmd       (expects:get-hook expect))
-		       (tolerance (expects:get-tol expect))
-		       (measured  (if (null? (expects:get-measured expect)) "-" (car (expects:get-measured expect)))))
-		  (set! outvals (list  
-				 (conc "rule-" rulenum)
-				 (expect:expect-type-get-type typeinfo) 
-				 where 
-				 section 
-				 (if xstatus "OK" "FAIL") 
-				 (if (number? tolerance) value (misc:op->symbol tolerance))
-				 (if (number? tolerance) "+/-" "")
-				 (if (number? tolerance) (misc:op->symbol tolerance) value)
-				 measured
-				 (expects:get-val-pass-count expect) 
-				 (expects:get-val-fail-count expect)
-				 ))
-		  (set! lineout (apply format #f valfmt outvals));; valfmt
-		  ;; have a hook to process for "value" items, do not call if nothing found
-		  (if (and cmd (number? measured))
-		      (let ((valuehook (hook:subst-var
-					(hook:subst-var 
-					 (hook:subst-var 
-					  (hook:subst-var cmd "measured" (conc measured))
-					  "message" name)
-					 "expected" (conc value))
-					"tolerance" (conc (misc:op->symbol tolerance)))))
-			(print "VALUE HOOK CALLED: " valuehook)
-			(system valuehook)))
-		  (if *summport*
-		      (with-output-to-port *summport*
-			(if is-value
-			    (lambda ()
-			      (print "[" (conc "rule-" rulenum) "]")
-			      (print "operator " where )
-			      (print "section " section )
-			      (print "desc " name)
-			      (print "status " (if xstatus "OK" "FAIL"))
-			      (print "expected "  value)
-			      (print "measured "  measured)
-			      (if (number? tolerance)
-				  (begin
-				    (print "type +/-")
-				    (print "tolerance " tolerance))
-				  (begin
-				    (print "type " (misc:op->symbol tolerance))))
-			      (print "pass " (expects:get-val-pass-count expect))
-			      (print "fail " (expects:get-val-fail-count expect))
-			      (print))
-			    (lambda ()
-			      (print "[" (conc "rule-" rulenum) "]")
-			      (print "type "(expect:expect-type-get-type typeinfo))
-			      (print "operator " where)
-			      (print "section " section)
-			      (print "status "  (if xstatus "OK" "FAIL"))
-			      (print "compsym " compsym)
-			      (print "value " value)
-			      (print "desc " name)
-			      (print "count " count)
-			      (print))))))
-		;; If not a value create the output line using the format "fmt"
-		(begin
-		  (set! outvals (list
-				 (conc "rule-" rulenum)
-				 (expect:expect-type-get-type typeinfo)
-				 where
-				 section
-				 (if xstatus "OK" "FAIL")
-				 compsym 
-				 value
-				 name
-				 count
-				 ""
-				 ))
-		  (set! lineout (apply format #f fmt outvals));;  fmt 
-		  ))
-	    ;; now send lineout to the html file
-	    (let ((color (if (> count 0)
-			     (if is-value
-				 (if xstatus "green" "red")
-				 (expect:expect-type-get-color typeinfo))
-			     (if (member etype '(required required-warn))
-				 (if xstatus (expect:expect-type-get-color typeinfo) "red")
-				 "white"))))
-	      ;; (html-print (conc "<font color=\"" 
-	      ;;   		color
-	      ;;   		"\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
-	      ;;   		(if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
-	      ;;   		lineout "</font>")))
-	      (html-print "<tr><td "
-			  (if cssfile
-			      (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
-			      (conc "bgcolor=\"" color "\""))
-			  "><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a><a href=\"#" keyname "_1\">"
-			  (text->html (car outvals)) "</a></td>"
-			  "<td " (if cssfile 
-				     (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
-				     (conc "bgcolor=\"" color "\""))
-			  ">"
-			  (text->html (cadr outvals)) "</td><td>" ;; (caddr outvals) "</td>"
-			  (string-intersperse
-			   (map text->html (cddr outvals))
-			   (conc "</td><td>"))) ;; <a href=\"#" keyname "_1\">")))
-	      (html-print "</td></tr>"))
-	    ;; (html-print "</table>")
-	    (if (> (string-length lineout) 0)(print "Expect:" lineout))
-	    (if (not xstatus) ;; 
-		(begin
-		  (set! status #f)
-		  (cond
-		   ((eq? etype 'skip)
-		    (set! totskipcount  (+ totskipcount  1)))
-		   ((member etype '(error required value))   
-		    (set! toterrcount   (+ toterrcount   1)))
-		   ((member etype '(warning required-warn))
-		    (set! totwarncount  (+ totwarncount  1)))
-		   ((eq? etype 'abort)
-		    (set! totabortcount (+ totabortcount 1)))
-		   ((eq? etype 'check)
-		    (set! totcheckcount (+ totcheckcount 1)))
-		   ((eq? etype 'waive)
-		    (set! totwaivecount (+ totwaivecount 1)))
-		   )))))
+            (let*-values (((xstatus compsym) ;; xstatus is the expected vs. actual count of the item in question
+                          (cond
+                           ((eq? comp =)  (values (eq? count value) "="))
+                           ((eq? comp >)  (values (> count value)   ">"))
+                           ((eq? comp <)  (values (< count value)   "<"))
+                           ((eq? comp >=) (values (>= count value)  "<="))
+                           ((eq? comp <=) (values (<= count value)  ">="))
+                           (is-value      (if (and (< (expects:get-val-fail-count expect) 1)
+                                                   (> (expects:get-val-pass-count expect) 0))
+                                              (values #t "=")
+                                              (values #f "=")))
+                           (else (values #f "="))))
+                         ((outvals lineout)(value-print expect rulenum typeinfo is-value xstatus name value compsym where fmt)))
+              
+              ;; now send lineout to the html file
+              (let ((color (if (> count 0)
+                               (if is-value
+                                   (if xstatus "green" "red")
+                                   (expect:expect-type-get-color typeinfo))
+                               (if (member etype '(required required-warn))
+                                   (if xstatus (expect:expect-type-get-color typeinfo) "red")
+                                   "white"))))
+                ;; (html-print (conc "<font color=\"" 
+                ;;   		color
+                ;;   		"\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
+                ;;   		(if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
+                ;;   		lineout "</font>")))
+                (html-print "<tr><td "
+                            (if cssfile
+                                (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
+                                (conc "bgcolor=\"" color "\""))
+                            "><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a><a href=\"#" keyname "_1\">"
+                            (text->html (car outvals)) "</a></td>"
+                            "<td " (if cssfile 
+                                       (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
+                                       (conc "bgcolor=\"" color "\""))
+                            ">"
+                            (text->html (cadr outvals)) "</td><td>" ;; (caddr outvals) "</td>"
+                            (string-intersperse
+                             (map text->html (cddr outvals))
+                             (conc "</td><td>"))) ;; <a href=\"#" keyname "_1\">")))
+                (html-print "</td></tr>"))
+              ;; (html-print "</table>")
+              (if (> (string-length lineout) 0)(print "Expect:" lineout))
+              (if (not xstatus) ;; 
+                  (begin
+                    (set! status #f)
+                    (cond
+                     ((eq? etype 'skip)
+                      (set! totskipcount  (+ totskipcount  1)))
+                     ((member etype '(error required value))   
+                      (set! toterrcount   (+ toterrcount   1)))
+                     ((member etype '(warning required-warn))
+                      (set! totwarncount  (+ totwarncount  1)))
+                     ((eq? etype 'abort)
+                      (set! totabortcount (+ totabortcount 1)))
+                     ((eq? etype 'check)
+                      (set! totcheckcount (+ totcheckcount 1)))
+                     ((eq? etype 'waive)
+                      (set! totwaivecount (+ totwaivecount 1)))
+                     ))))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
     (html-print "</table>")
@@ -974,8 +967,10 @@
 		  (lambda (xpect)
 		    (let* ((etype (expects:get-type xpect))
 			   (emsg  (expects:get-name xpect)))
+                      (print "etype: " etype " emsg: " emsg " exit-sym: " exit-sym)
 		      (if (equal? etype exit-sym)
-			  (print "message " emsg))))
+			  (print "message " emsg)
+                          (print "nonmsg " emsg))))
 		  (hash-table-ref *expects* section)))
 	       (hash-table-keys *expects*)))))
       exit-code)))
