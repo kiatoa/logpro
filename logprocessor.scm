@@ -302,9 +302,9 @@
 	(<= ex-val (current-seconds))  ;; expire specified
 	#f)))
 
-(define (expect where section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(class #f))
+(define (expect where-op section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(class #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
-  (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
+  (if (not (symbol? where-op))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
 	       (list? section)))   (print:error "ERROR: section must be a string or a list of strings"))
   (if (not (procedure? comparison))(print:error "ERROR: comparison must be one of > < >= <= or ="))
@@ -328,55 +328,55 @@
 	 (lambda (sect)
 	   (hash-table-set! *expects*;;                                                                                                          11  12  13           14   15 16          
 			    sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail  *curr-expect-num*
-			    (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f *curr-expect-num* class)
+			    (cons (vector where-op sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f *curr-expect-num* class)
 				  (hash-table-ref/default *expects* section '()))))
 	 (if (list? section) section (list section))))
       (print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook))
 
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
 
-(define (expect:warning where section comparison value name patts #!key (expires #f)(type 'warning)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:warning where-op section comparison value name patts #!key (expires #f)(type 'warning)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
 (define expect:warn expect:warning) ;; this one trips up so many people, just create the alias and be done with it.
 
-(define (expect:ignore where section comparison value name patts #!key (expires #f)(type 'ignore)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:ignore where-op section comparison value name patts #!key (expires #f)(type 'ignore)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:note where section comparison value name patts #!key (expires #f)(type 'note)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:note where-op section comparison value name patts #!key (expires #f)(type 'note)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:waive where section comparison value name patts #!key (expires #f)(type 'waive)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:waive where-op section comparison value name patts #!key (expires #f)(type 'waive)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
 (define expect:waived expect:waive)
 (define expect:waiver expect:waive)
 
-(define (expect:error where section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:error where-op section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:required where section comparison value name patts #!key (expires #f)(type 'required)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:required where-op section comparison value name patts #!key (expires #f)(type 'required)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:required-warn where section comparison value name patts #!key (expires #f)(type 'required-warn)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:required-warn where-op section comparison value name patts #!key (expires #f)(type 'required-warn)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:check where section comparison value name patts #!key (expires #f)(type 'check)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:check where-op section comparison value name patts #!key (expires #f)(type 'check)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:abort where section comparison value name patts #!key (expires #f)(type 'abort)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:abort where-op section comparison value name patts #!key (expires #f)(type 'abort)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:skip where section comparison value name patts #!key (expires #f)(type 'skip)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:skip where-op section comparison value name patts #!key (expires #f)(type 'skip)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
 
 ;;======================================================================
 ;; TODO: Compress this in with the expect routine above
 ;;======================================================================
-(define (expect:value where section value tol name patt #!key (expires #f)(type 'value)(matchnum 1)(hook #f)(class #f))
+(define (expect:value where-op section value tol name patt #!key (expires #f)(type 'value)(matchnum 1)(hook #f)(class #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
-  (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
+  (if (not (symbol? where-op))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
 	       (list? section)))   (print:error "ERROR: section must be a string or list of strings"))
   (if (not (number? value))        (print:error "ERROR: value must be a number"))
@@ -399,7 +399,7 @@
        (lambda (sect)
 	 (hash-table-set! *expects* ;; comparison is not used                 matchnum used to pick the match from the regex
 			  sect ;;         0     1       2       3  4   5       6                   7               8      9   10                               11 12  value=pass/fail
-			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0) hook matchnum *curr-expect-num* class)
+			  (cons (vector where-op sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0) hook matchnum *curr-expect-num* class)
 				(hash-table-ref/default *expects* section '()))))
        (if (list? section) section (list section))))
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
@@ -719,7 +719,7 @@
 
 ;; factored out of print-results
 ;;
-(define (value-print expect rulenum typeinfo is-value xstatus name value compsym where fmt) 
+(define (value-print expect rulenum typeinfo is-value xstatus name value compsym where-op fmt) 
   ;; If a value construct the output line using some kinda complicated logic ...
   (let ((outvals #f)
         (lineout #f))
@@ -730,7 +730,7 @@
           (set! outvals (list  
                          (conc "rule-" rulenum)
                          (expect:expect-type-get-type typeinfo) 
-                         where 
+                         where-op 
                          section 
                          (if xstatus "OK" "FAIL") 
                          (if (number? tolerance) value (misc:op->symbol tolerance))
@@ -757,7 +757,7 @@
                 (if is-value
                     (lambda ()
                       (print "[" (conc "rule-" rulenum) "]")
-                      (print "operator " where )
+                      (print "operator " where-op )
                       (print "section " section )
                       (print "desc " name)
                       (print "status " (if xstatus "OK" "FAIL"))
@@ -775,7 +775,7 @@
                     (lambda ()
                       (print "[" (conc "rule-" rulenum) "]")
                       (print "type "(expect:expect-type-get-type typeinfo))
-                      (print "operator " where)
+                      (print "operator " where-op)
                       (print "section " section)
                       (print "status "  (if xstatus "OK" "FAIL"))
                       (print "compsym " compsym)
@@ -788,7 +788,7 @@
           (set! outvals (list
                          (conc "rule-" rulenum)
                          (expect:expect-type-get-type typeinfo)
-                         where
+                         where-op
                          section
                          (if xstatus "OK" "FAIL")
                          compsym 
@@ -845,7 +845,7 @@
        ;; (html-print "<tr><td colspan=\"11\">Expects for " section " section: </td></tr>")
        (for-each 
 	(lambda (expect)
-	  (let* ((where   (expects:get-where expect)) ;; not used yet, "in" is only option
+	  (let* ((where-op   (expects:get-where expect)) ;; not used yet, "in" is only option
 		 ;; (section (expects:get-section expect))
 		 (comp     (expects:get-comparison expect))
 		 (value    (expects:get-value expect))
@@ -870,7 +870,7 @@
                                               (values #t "=")
                                               (values #f "=")))
                            (else (values #f "="))))
-                         ((outvals lineout)(value-print expect rulenum typeinfo is-value xstatus name value compsym where fmt)))
+                         ((outvals lineout)(value-print expect rulenum typeinfo is-value xstatus name value compsym where-op fmt)))
               
               ;; now send lineout to the html file
               (let ((color (if (> count 0)
