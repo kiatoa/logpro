@@ -31,6 +31,47 @@
 (define *curr-expect-num* 0)
 
 ;;======================================================================
+;; Specs, stuff that defines how things are
+;;======================================================================
+
+;; given the counts and a couple flags return the apropriate exit-code
+;;
+(define (counts->exit-code skipcount abortcount checkcount errcount warncount waivecount status code-error)
+  (cond ;; ordering here is critical as it sets the precedence of which status "wins"
+   ((> skipcount  0) 6)
+   ((> abortcount 0) 5)
+   ((> checkcount 0) 3)
+   ((> errcount   0) 1)
+   ((> warncount  0) 2)
+   ((> waivecount 0) 4)
+   (code-error*      (begin
+                       (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
+                       1))
+   (status             0)
+   (else               0)))
+
+(define (exit-code->exit-status exit-code)
+  (case exit-code
+    ((1) "FAIL")
+    ((2) "WARN")
+    ((3) "CHECK")
+    ((4) "WAIVE")
+    ((5) "ABORT")
+    ((6) "SKIP")
+    ((0) "PASS")
+    (else "FAIL")))
+
+(define (exit-code->exit-sym exit-code)
+  (case exit-code
+    ((1) 'error)
+    ((2) 'warning)
+    ((5) 'abort)
+    ((4) 'waive)
+    ((6) 'skip)
+    ((3) 'check)
+    (else 'error)))
+
+;;======================================================================
 ;; Misc
 ;;======================================================================
 
@@ -717,8 +758,29 @@
 	    (if html-highlight-flag (set! html-highlight-flag #f))
 	    (loop (read-line)(+ line-num 1)))))))
 
+;; given an expect return the xstatus (#t or #f) and the appropriate symbol mapped to a string
+;;
+(define (get-xstatus-compsym expect)
+  (let* ((comp     (expects:get-comparison expect))
+         (value    (expects:get-value expect))
+         (count    (expects:get-count expect))
+         (etype    (expects:get-type expect))
+         (is-value (eq? etype 'value))
+         )
+    (cond
+     ((eq? comp =)  (values (eq? count value) "="))
+     ((eq? comp >)  (values (> count value)   ">"))
+     ((eq? comp <)  (values (< count value)   "<"))
+     ((eq? comp >=) (values (>= count value)  "<="))
+     ((eq? comp <=) (values (<= count value)  ">="))
+     (is-value      (if (and (< (expects:get-val-fail-count expect) 1)
+                             (> (expects:get-val-pass-count expect) 0))
+                        (values #t "=")
+                        (values #f "=")))
+     (else (values #f "=")))))
+
 ;; print one line of html
-(define (html-print-one-line count xstatus typeinfo etype cssfile eclass keyname outvals)
+(define (html-print-one-line count xstatus typeinfo etype cssfile eclass keyname outvals is-value)
   (let ((color (if (> count 0)
                    (if is-value
                        (if xstatus "green" "red")
@@ -744,10 +806,15 @@
 
 ;; factored out of print-results
 ;;
-(define (value-print expect rulenum typeinfo is-value xstatus name value compsym where-op fmt section count) 
+(define (value-print expect rulenum typeinfo is-value xstatus name value compsym section count) 
   ;; If a value construct the output line using some kinda complicated logic ...
-  (let ((outvals #f)
-        (lineout #f))
+  (let ((outvals  #f)
+        (lineout  #f)
+        (where-op (expects:get-where expect)) ;; not used yet, "in" is only option
+        (fmt      " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
+	;;            type where section OK/FAIL compsym value name count
+	(valfmt   " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
+        )
     (if is-value
         (let* ((cmd       (expects:get-hook expect))
                (tolerance (expects:get-tol expect))
@@ -836,10 +903,7 @@
 	(tblfmt       (conc "<tr>"
 			    (string-intersperse (map (lambda (x) "<td>~a</td>") '(1 2 3 4 5 6 7 8 9 10)) "")
 			    "</tr>"))
-	;;            type where section OK/FAIL compsym value name count
-	(valfmt       " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
         ;;             type where section OK/FAIL compsym value name count
-	(fmt          " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
 	(fmt-trg      "Trigger: ~13a ~15@a, count=~a")
 	(fmt-trg-html "<a name=\"~a_table\" href=\"#~a\">Trigger: ~13a ~15@a, count=~a</a>"))
     ;; first print any triggers that didn't get triggered - these are automatic failures
@@ -870,10 +934,7 @@
        ;; (html-print "<tr><td colspan=\"11\">Expects for " section " section: </td></tr>")
        (for-each 
 	(lambda (expect)
-	  (let* ((where-op   (expects:get-where expect)) ;; not used yet, "in" is only option
-		 ;; (section (expects:get-section expect))
-		 (comp     (expects:get-comparison expect))
-		 (value    (expects:get-value expect))
+	  (let* ((value    (expects:get-value expect))
 		 (count    (expects:get-count expect))
 		 (name     (expects:get-name expect))
 		 (typeinfo (expect:get-type-info expect))
@@ -883,22 +944,12 @@
 		 (rulenum  (expects:get-rulenum expect))
 		 (eclass   (expects:get-html-class expect))
                  (outvals  #f))
-            (let*-values (((xstatus compsym) ;; xstatus is the expected vs. actual count of the item in question
-                          (cond
-                           ((eq? comp =)  (values (eq? count value) "="))
-                           ((eq? comp >)  (values (> count value)   ">"))
-                           ((eq? comp <)  (values (< count value)   "<"))
-                           ((eq? comp >=) (values (>= count value)  "<="))
-                           ((eq? comp <=) (values (<= count value)  ">="))
-                           (is-value      (if (and (< (expects:get-val-fail-count expect) 1)
-                                                   (> (expects:get-val-pass-count expect) 0))
-                                              (values #t "=")
-                                              (values #f "=")))
-                           (else (values #f "="))))
-                         ((outvals lineout)(value-print expect rulenum typeinfo is-value xstatus name value compsym where-op fmt section count)))
+            ;;              xstatus is the expected vs. actual count of the item in question
+            (let*-values (((xstatus compsym)(get-xstatus-compsym expect))
+                          ((outvals lineout)(value-print expect rulenum typeinfo is-value xstatus name value compsym section count)))
               
               ;; now send lineout to the html file
-              (html-print-one-line count xstatus typeinfo etype cssfile eclass keyname outvals)
+              (html-print-one-line count xstatus typeinfo etype cssfile eclass keyname outvals is-value)
 
               (if (> (string-length lineout) 0)(print "Expect:" lineout))
               (if (not xstatus) ;; 
@@ -921,35 +972,9 @@
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
     (html-print "</table>")
-    (let* ((exit-code (cond ;; ordering here is critical as it sets the precedence of which status "wins"
-		       ((> totskipcount  0) 6)
-		       ((> totabortcount 0) 5)
-		       ((> totcheckcount 0) 3)
-		       ((> toterrcount   0) 1)
-		       ((> totwarncount  0) 2)
-		       ((> totwaivecount 0) 4)
-		       (*got-an-error*      (begin
-					      (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
-					      1))
-		       (status             0)
-		       (else               0)))
-	   (exit-status (case exit-code
-			  ((1) "FAIL")
-			  ((2) "WARN")
-			  ((3) "CHECK")
-			  ((4) "WAIVE")
-			  ((5) "ABORT")
-			  ((6) "SKIP")
-			  ((0) "PASS")
-			  (else "FAIL")))
-	   (exit-sym    (case exit-code
-			  ((1) 'error)
-			  ((2) 'warning)
-			  ((5) 'abort)
-			  ((4) 'waive)
-			  ((6) 'skip)
-			  ((3) 'check)
-			  (else 'error))))
+    (let* ((exit-code   (counts->exit-code totskipcount totabortcount totcheckcount toterrcount totwarncount totwaivecount status *got-an-error*))
+	   (exit-status (exit-code->exit-status exit-code))
+	   (exit-sym    (exit-code->exit-sym    exit-code)))
       (html-print "<h1 class=\"exitcode\">EXIT CODE: " exit-code " ("
 		  exit-status)
       (html-print ")</h1></body></html>")
