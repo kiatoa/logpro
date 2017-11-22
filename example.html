@@ -109,6 +109,8 @@ The End
 <a name="LogFileBodyStart_table" href="#LogFileBodyStart">Trigger: LogFileBodyStart              OK, count=1</a>
 </pre><p><table>
 <tr><th>RuleNum</th><th>RuleType</th><th></th><th>Section</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>
+<tr><td class="waive"><a name="key_0_3"></a><a href="#key_0_1">rule-0</a></td><td class="waive">Waive</td><td>in</td><td>Blah5</td><td>OK</td><td>=</td><td>2</td><td>Have exactly two BLAH5 errors to waive inside the two Blah5 sections</td><td>2</td><td>
+</td></tr>
 <tr><td class="required"><a name="key_4_2"></a><a href="#key_4_1">rule-4</a></td><td class="required">Required</td><td>in</td><td>Init</td><td>OK</td><td>=</td><td>1</td><td>Header</td><td>1</td><td>
 </td></tr>
 <tr><td class="skip"><a name="key_25_2"></a><a href="#key_25_1">rule-25</a></td><td class="skip">Skip</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td>=</td><td>0</td><td>If flagged we are asking for this to exit with code 6</td><td>1</td><td>
@@ -149,15 +151,13 @@ The End
 </td></tr>
 <tr><td class="error"><a name="key_1_2"></a><a href="#key_1_1">rule-1</a></td><td class="error">Error</td><td>in</td><td>LogFileBody</td><td>FAIL</td><td>&lt;</td><td>1</td><td>Only have one BLAH5 error outside of the Blah5 section</td><td>1</td><td>
 </td></tr>
-<tr><td class="waive"><a name="key_0_3"></a><a href="#key_0_1">rule-0</a></td><td class="waive">Waive</td><td>in</td><td>Blah5</td><td>OK</td><td>=</td><td>2</td><td>Have exactly two BLAH5 errors to waive inside the two Blah5 sections</td><td>2</td><td>
+<tr><td class="ignore"><a name="key_17_2"></a><a href="#key_17_1">rule-17</a></td><td class="ignore">Ignore</td><td>in</td><td>Blah2</td><td>OK</td><td>&lt;</td><td>99</td><td>FALSE ERROR</td><td>1</td><td>
+</td></tr>
+<tr><td class="waive junk"><a name="key_2_2"></a><a href="#key_2_1">rule-2</a></td><td class="waive junk">Waive</td><td>in</td><td>Blah3</td><td>OK</td><td>=</td><td>1</td><td>A real error that has been waived</td><td>1</td><td>
 </td></tr>
 <tr><td class="error"><a name="key_13_2"></a><a href="#key_13_1">rule-13</a></td><td class="error">Error</td><td>in</td><td>Blah4</td><td>FAIL</td><td>=</td><td>0</td><td>Any ERROR in section blah4</td><td>1</td><td>
 </td></tr>
 <tr><td class="ignore"><a name="key_12_2"></a><a href="#key_12_1">rule-12</a></td><td class="ignore">Ignore</td><td>in</td><td>Blah4</td><td>OK</td><td>&gt;=</td><td>4</td><td>ERROR: ignore applied until 2020, thereafter flagged as error</td><td>1</td><td>
-</td></tr>
-<tr><td class="waive junk"><a name="key_2_2"></a><a href="#key_2_1">rule-2</a></td><td class="waive junk">Waive</td><td>in</td><td>Blah3</td><td>OK</td><td>=</td><td>1</td><td>A real error that has been waived</td><td>1</td><td>
-</td></tr>
-<tr><td class="ignore"><a name="key_17_2"></a><a href="#key_17_1">rule-17</a></td><td class="ignore">Ignore</td><td>in</td><td>Blah2</td><td>OK</td><td>&lt;</td><td>99</td><td>FALSE ERROR</td><td>1</td><td>
 </td></tr>
 </table>
 <h1 class="exitcode">EXIT CODE: 6 (SKIP

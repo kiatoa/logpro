@@ -7,7 +7,7 @@
 ;;  implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ;;  PURPOSE.
 
-(use format srfi-69 srfi-1 posix) ;; sqlite3)
+(use format srfi-69 srfi-1 posix typed-records) ;; sqlite3)
 (use regex regex-literals)
 (define getenv get-environment-variable)
 
@@ -31,19 +31,40 @@
 (define *curr-expect-num* 0)
 
 ;;======================================================================
+;; error count struct
+;;======================================================================
+
+(defstruct tally
+  (skips  0)
+  (errs   0)
+  (warns  0)
+  (aborts 0)
+  (waives 0)
+  (checks 0))
+
+(define (increment-tally t etype)
+  (case etype
+   ((skip)                  (tally-skips-set!  t (+ 1 (tally-skips  t))))
+   ((error required value)  (tally-errs-set!   t (+ 1 (tally-errs   t))))
+   ((warning required-warn) (tally-warns-set!  t (+ 1 (tally-warns  t))))
+   ((abort)                 (tally-aborts-set! t (+ 1 (tally-aborts t))))
+   ((check)                 (tally-checks-set! t (+ 1 (tally-checks t))))
+   ((waive)                 (tally-waives-set! t (+ 1 (tally-waives t))))))
+  
+;;======================================================================
 ;; Specs, stuff that defines how things are
 ;;======================================================================
 
 ;; given the counts and a couple flags return the apropriate exit-code
 ;;
-(define (counts->exit-code skipcount abortcount checkcount errcount warncount waivecount status code-error)
+(define (counts->exit-code tallys status code-error)
   (cond ;; ordering here is critical as it sets the precedence of which status "wins"
-   ((> skipcount  0) 6)
-   ((> abortcount 0) 5)
-   ((> checkcount 0) 3)
-   ((> errcount   0) 1)
-   ((> warncount  0) 2)
-   ((> waivecount 0) 4)
+   ((> (tally-skips  tallys) 0) 6)
+   ((> (tally-aborts tallys) 0) 5)
+   ((> (tally-checks tallys) 0) 3)
+   ((> (tally-errs   tallys) 0) 1)
+   ((> (tally-warns  tallys) 0) 2)
+   ((> (tally-waives tallys) 0) 4)
    (code-error*      (begin
                        (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
                        1))
@@ -738,18 +759,14 @@
 		      (unkn   (vector-ref html-highlight-flag 4))
 		      (etype  (vector-ref html-highlight-flag 5))
 		      (eclass (vector-ref html-highlight-flag 6))) ;; the expect
-		  (begin
-		    ;(if (eq? html-mode 'pre)
-		    ;    (html-print "</pre>")
-		    ;    (html-print "<br>"))
-		    (html-print "<a name=\"" label "\"></a>"
-				"<a href=\"" link "\" " (if cssfile 
-							    (conc "class=\"" etype (if eclass (conc " " eclass) "") "\">") ;; (conc "class=\"" etype "\">")
-							    (conc "style=\"background-color: white; color: " color ";\">"))
-				line
-				"</a>")
-		    (set! html-mode 'html)))
-		(begin
+                  (html-print "<a name=\"" label "\"></a>"
+                              "<a href=\"" link "\" " (if cssfile 
+                                                          (conc "class=\"" etype (if eclass (conc " " eclass) "") "\">") ;; (conc "class=\"" etype "\">")
+                                                          (conc "style=\"background-color: white; color: " color ";\">"))
+                              line
+                              "</a>")
+                  (set! html-mode 'html))
+                (begin
 		  (if (not (eq? html-mode 'pre))
 		      (begin
 			;; (html-print "") ; <pre>")
@@ -806,7 +823,7 @@
 
 ;; factored out of print-results
 ;;
-(define (value-print expect rulenum typeinfo is-value xstatus name value compsym section count) 
+(define (value-print expect rulenum typeinfo is-value xstatus name compsym section count) 
   ;; If a value construct the output line using some kinda complicated logic ...
   (let ((outvals  #f)
         (lineout  #f)
@@ -814,6 +831,7 @@
         (fmt      " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
 	;;            type where section OK/FAIL compsym value name count
 	(valfmt   " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
+        (value    (expects:get-value expect))
         )
     (if is-value
         (let* ((cmd       (expects:get-hook expect))
@@ -894,15 +912,10 @@
 
 (define (print-results cssfile) ;; cssfile is used as a flag
   (let ((status       #t)
-	(toterrcount   0)
-	(totwarncount  0)
-	(totcheckcount 0)
-	(totwaivecount 0)
-	(totabortcount 0)
-	(totskipcount  0)
-	(tblfmt       (conc "<tr>"
-			    (string-intersperse (map (lambda (x) "<td>~a</td>") '(1 2 3 4 5 6 7 8 9 10)) "")
-			    "</tr>"))
+        (etallys       (make-tally))
+	(tblfmt        (conc "<tr>"
+                             (string-intersperse (map (lambda (x) "<td>~a</td>") '(1 2 3 4 5 6 7 8 9 10)) "")
+                             "</tr>"))
         ;;             type where section OK/FAIL compsym value name count
 	(fmt-trg      "Trigger: ~13a ~15@a, count=~a")
 	(fmt-trg-html "<a name=\"~a_table\" href=\"#~a\">Trigger: ~13a ~15@a, count=~a</a>"))
@@ -934,8 +947,7 @@
        ;; (html-print "<tr><td colspan=\"11\">Expects for " section " section: </td></tr>")
        (for-each 
 	(lambda (expect)
-	  (let* ((value    (expects:get-value expect))
-		 (count    (expects:get-count expect))
+	  (let* ((count    (expects:get-count expect))
 		 (name     (expects:get-name expect))
 		 (typeinfo (expect:get-type-info expect))
 		 (etype    (expects:get-type expect))
@@ -946,7 +958,7 @@
                  (outvals  #f))
             ;;              xstatus is the expected vs. actual count of the item in question
             (let*-values (((xstatus compsym)(get-xstatus-compsym expect))
-                          ((outvals lineout)(value-print expect rulenum typeinfo is-value xstatus name value compsym section count)))
+                          ((outvals lineout)(value-print expect rulenum typeinfo is-value xstatus name compsym section count)))
               
               ;; now send lineout to the html file
               (html-print-one-line count xstatus typeinfo etype cssfile eclass keyname outvals is-value)
@@ -955,24 +967,11 @@
               (if (not xstatus) ;; 
                   (begin
                     (set! status #f)
-                    (cond
-                     ((eq? etype 'skip)
-                      (set! totskipcount  (+ totskipcount  1)))
-                     ((member etype '(error required value))   
-                      (set! toterrcount   (+ toterrcount   1)))
-                     ((member etype '(warning required-warn))
-                      (set! totwarncount  (+ totwarncount  1)))
-                     ((eq? etype 'abort)
-                      (set! totabortcount (+ totabortcount 1)))
-                     ((eq? etype 'check)
-                      (set! totcheckcount (+ totcheckcount 1)))
-                     ((eq? etype 'waive)
-                      (set! totwaivecount (+ totwaivecount 1)))
-                     ))))))
+                    (increment-tally etallys etype))))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
     (html-print "</table>")
-    (let* ((exit-code   (counts->exit-code totskipcount totabortcount totcheckcount toterrcount totwarncount totwaivecount status *got-an-error*))
+    (let* ((exit-code   (counts->exit-code etallys status *got-an-error*))
 	   (exit-status (exit-code->exit-status exit-code))
 	   (exit-sym    (exit-code->exit-sym    exit-code)))
       (html-print "<h1 class=\"exitcode\">EXIT CODE: " exit-code " ("
