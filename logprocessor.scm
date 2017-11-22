@@ -717,9 +717,34 @@
 	    (if html-highlight-flag (set! html-highlight-flag #f))
 	    (loop (read-line)(+ line-num 1)))))))
 
+;; print one line of html
+(define (html-print-one-line count xstatus typeinfo etype cssfile eclass keyname outvals)
+  (let ((color (if (> count 0)
+                   (if is-value
+                       (if xstatus "green" "red")
+                       (expect:expect-type-get-color typeinfo))
+                   (if (member etype '(required required-warn))
+                       (if xstatus (expect:expect-type-get-color typeinfo) "red")
+                       "white"))))
+    (html-print "<tr><td "
+                (if cssfile
+                    (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
+                    (conc "bgcolor=\"" color "\""))
+                "><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a><a href=\"#" keyname "_1\">"
+                (text->html (car outvals)) "</a></td>"
+                "<td " (if cssfile 
+                           (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
+                           (conc "bgcolor=\"" color "\""))
+                ">"
+                (text->html (cadr outvals)) "</td><td>" ;; (caddr outvals) "</td>"
+                (string-intersperse
+                 (map text->html (cddr outvals))
+                 (conc "</td><td>"))) ;; <a href=\"#" keyname "_1\">")))
+    (html-print "</td></tr>")))
+
 ;; factored out of print-results
 ;;
-(define (value-print expect rulenum typeinfo is-value xstatus name value compsym where-op fmt) 
+(define (value-print expect rulenum typeinfo is-value xstatus name value compsym where-op fmt section count) 
   ;; If a value construct the output line using some kinda complicated logic ...
   (let ((outvals #f)
         (lineout #f))
@@ -870,37 +895,11 @@
                                               (values #t "=")
                                               (values #f "=")))
                            (else (values #f "="))))
-                         ((outvals lineout)(value-print expect rulenum typeinfo is-value xstatus name value compsym where-op fmt)))
+                         ((outvals lineout)(value-print expect rulenum typeinfo is-value xstatus name value compsym where-op fmt section count)))
               
               ;; now send lineout to the html file
-              (let ((color (if (> count 0)
-                               (if is-value
-                                   (if xstatus "green" "red")
-                                   (expect:expect-type-get-color typeinfo))
-                               (if (member etype '(required required-warn))
-                                   (if xstatus (expect:expect-type-get-color typeinfo) "red")
-                                   "white"))))
-                ;; (html-print (conc "<font color=\"" 
-                ;;   		color
-                ;;   		"\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
-                ;;   		(if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
-                ;;   		lineout "</font>")))
-                (html-print "<tr><td "
-                            (if cssfile
-                                (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
-                                (conc "bgcolor=\"" color "\""))
-                            "><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a><a href=\"#" keyname "_1\">"
-                            (text->html (car outvals)) "</a></td>"
-                            "<td " (if cssfile 
-                                       (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
-                                       (conc "bgcolor=\"" color "\""))
-                            ">"
-                            (text->html (cadr outvals)) "</td><td>" ;; (caddr outvals) "</td>"
-                            (string-intersperse
-                             (map text->html (cddr outvals))
-                             (conc "</td><td>"))) ;; <a href=\"#" keyname "_1\">")))
-                (html-print "</td></tr>"))
-              ;; (html-print "</table>")
+              (html-print-one-line count xstatus typeinfo etype cssfile eclass keyname outvals)
+
               (if (> (string-length lineout) 0)(print "Expect:" lineout))
               (if (not xstatus) ;; 
                   (begin
