@@ -67,6 +67,7 @@
    ((> (tally-waives tallys) 0) 4)
    (code-error*      (begin
                        (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
+                       unless you want to try?
                        1))
    (status             0)
    (else               0)))
@@ -275,15 +276,6 @@
       "<" "&lt;"
       instr))))
 
-;;     (cond
-;;      ((eq? comp =)    "=")
-;;      ((eq? comp >)    ">")
-;;      ((eq? comp <)    "<")
-;;      ((eq? comp >=)  ">=")
-;;      ((eq? comp <=)  "<=")
-;;      ((string? comp) comp)
-;;      (else "unk"))))
-
 (define-inline (expects:get-where      vec)(vector-ref vec 0))
 (define-inline (expects:get-section    vec)(vector-ref vec 1))
 (define-inline (expects:get-comparison vec)(vector-ref vec 2))
@@ -333,6 +325,8 @@
 (define-inline (expects:get-matchnum vec)(vector-ref vec 15))
 (define-inline (expects:get-rulenum  vec)(vector-ref vec 16))
 (define-inline (expects:get-html-class vec)(vector-ref vec 17))
+(define-inline (expects:get-failed-flag vec)(vector-ref vec 17))
+(define-inline (expects:set-failed-flag! vec val)(vector-set! vec 17 val))
 
 ;; where is 'in, 'before or 'after but only 'in is supported now.
 ;; (expect in "Header" > 0 "Copywrite" #/Copywrite/)
@@ -389,8 +383,8 @@
 	(for-each
 	 (lambda (sect)
 	   (hash-table-set! *expects*;;                                                                                                          11  12  13           14   15 16          
-			    sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail  *curr-expect-num*
-			    (cons (vector where-op sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f *curr-expect-num* class)
+			    sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail  *curr-expect-num*   html-class failed-flag
+			    (cons (vector where-op sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f *curr-expect-num* class #f)
 				  (hash-table-ref/default *expects* section '()))))
 	 (if (list? section) section (list section))))
       (print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook))
@@ -959,7 +953,7 @@
             ;;              xstatus is the expected vs. actual count of the item in question
             (let*-values (((xstatus compsym)(get-xstatus-compsym expect))
                           ((outvals lineout)(value-print expect rulenum typeinfo is-value xstatus name compsym section count)))
-              
+              (if (not xstatus)(expects:set-failed-flag! expect #t))
               ;; now send lineout to the html file
               (html-print-one-line count xstatus typeinfo etype cssfile eclass keyname outvals is-value)
 
@@ -990,10 +984,11 @@
 		  (lambda (xpect)
 		    (let* ((etype (expects:get-type xpect))
 			   (emsg  (expects:get-name xpect)))
-                      (print "etype: " etype " emsg: " emsg " exit-sym: " exit-sym)
-		      (if (equal? etype exit-sym)
+                      ;; (print "etype: " etype " emsg: " emsg " exit-sym: " exit-sym)
+		      (if (expects:get-failed-flag xpect) ;; (equal? etype exit-sym)
 			  (print "message " emsg)
-                          (print "nonmsg " emsg))))
+                          ;; (print "nonmsg " emsg)
+                          )))
 		  (hash-table-ref *expects* section)))
 	       (hash-table-keys *expects*)))))
       exit-code)))
