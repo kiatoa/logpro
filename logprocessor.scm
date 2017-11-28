@@ -7,7 +7,7 @@
 ;;  implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ;;  PURPOSE.
 
-(use format srfi-69 srfi-1 posix) ;; sqlite3)
+(use format srfi-69 srfi-1 posix typed-records) ;; sqlite3)
 (use regex regex-literals)
 (define getenv get-environment-variable)
 
@@ -29,6 +29,69 @@
 (define *htmlport* #f)
 (define *summport* #f)
 (define *curr-expect-num* 0)
+
+;;======================================================================
+;; error count struct
+;;======================================================================
+
+(defstruct tally
+  (skips  0)
+  (errs   0)
+  (warns  0)
+  (aborts 0)
+  (waives 0)
+  (checks 0))
+
+(define (increment-tally t etype)
+  (case etype
+   ((skip)                  (tally-skips-set!  t (+ 1 (tally-skips  t))))
+   ((error required value)  (tally-errs-set!   t (+ 1 (tally-errs   t))))
+   ((warning required-warn) (tally-warns-set!  t (+ 1 (tally-warns  t))))
+   ((abort)                 (tally-aborts-set! t (+ 1 (tally-aborts t))))
+   ((check)                 (tally-checks-set! t (+ 1 (tally-checks t))))
+   ((waive)                 (tally-waives-set! t (+ 1 (tally-waives t))))))
+  
+;;======================================================================
+;; Specs, stuff that defines how things are
+;;======================================================================
+
+;; given the counts and a couple flags return the apropriate exit-code
+;;
+(define (counts->exit-code tallys status code-error)
+  (cond ;; ordering here is critical as it sets the precedence of which status "wins"
+   ((> (tally-skips  tallys) 0) 6)
+   ((> (tally-aborts tallys) 0) 5)
+   ((> (tally-checks tallys) 0) 3)
+   ((> (tally-errs   tallys) 0) 1)
+   ((> (tally-warns  tallys) 0) 2)
+   ((> (tally-waives tallys) 0) 4)
+   (code-error*      (begin
+                       (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
+                       unless you want to try?
+                       1))
+   (status             0)
+   (else               0)))
+
+(define (exit-code->exit-status exit-code)
+  (case exit-code
+    ((1) "FAIL")
+    ((2) "WARN")
+    ((3) "CHECK")
+    ((4) "WAIVE")
+    ((5) "ABORT")
+    ((6) "SKIP")
+    ((0) "PASS")
+    (else "FAIL")))
+
+(define (exit-code->exit-sym exit-code)
+  (case exit-code
+    ((1) 'error)
+    ((2) 'warning)
+    ((5) 'abort)
+    ((4) 'waive)
+    ((6) 'skip)
+    ((3) 'check)
+    (else 'error)))
 
 ;;======================================================================
 ;; Misc
@@ -213,15 +276,6 @@
       "<" "&lt;"
       instr))))
 
-;;     (cond
-;;      ((eq? comp =)    "=")
-;;      ((eq? comp >)    ">")
-;;      ((eq? comp <)    "<")
-;;      ((eq? comp >=)  ">=")
-;;      ((eq? comp <=)  "<=")
-;;      ((string? comp) comp)
-;;      (else "unk"))))
-
 (define-inline (expects:get-where      vec)(vector-ref vec 0))
 (define-inline (expects:get-section    vec)(vector-ref vec 1))
 (define-inline (expects:get-comparison vec)(vector-ref vec 2))
@@ -271,6 +325,8 @@
 (define-inline (expects:get-matchnum vec)(vector-ref vec 15))
 (define-inline (expects:get-rulenum  vec)(vector-ref vec 16))
 (define-inline (expects:get-html-class vec)(vector-ref vec 17))
+(define-inline (expects:get-failed-flag vec)(vector-ref vec 17))
+(define-inline (expects:set-failed-flag! vec val)(vector-set! vec 17 val))
 
 ;; where is 'in, 'before or 'after but only 'in is supported now.
 ;; (expect in "Header" > 0 "Copywrite" #/Copywrite/)
@@ -302,9 +358,9 @@
 	(<= ex-val (current-seconds))  ;; expire specified
 	#f)))
 
-(define (expect where section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(class #f))
+(define (expect where-op section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(class #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
-  (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
+  (if (not (symbol? where-op))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
 	       (list? section)))   (print:error "ERROR: section must be a string or a list of strings"))
   (if (not (procedure? comparison))(print:error "ERROR: comparison must be one of > < >= <= or ="))
@@ -327,56 +383,56 @@
 	(for-each
 	 (lambda (sect)
 	   (hash-table-set! *expects*;;                                                                                                          11  12  13           14   15 16          
-			    sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail  *curr-expect-num*
-			    (cons (vector where sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f *curr-expect-num* class)
+			    sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail  *curr-expect-num*   html-class failed-flag
+			    (cons (vector where-op sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f *curr-expect-num* class #f)
 				  (hash-table-ref/default *expects* section '()))))
 	 (if (list? section) section (list section))))
       (print "expect:" type " " section " " (comp->text comparison) " " value " " patts " expires=" expires " hook=" hook))
 
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
 
-(define (expect:warning where section comparison value name patts #!key (expires #f)(type 'warning)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:warning where-op section comparison value name patts #!key (expires #f)(type 'warning)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
 (define expect:warn expect:warning) ;; this one trips up so many people, just create the alias and be done with it.
 
-(define (expect:ignore where section comparison value name patts #!key (expires #f)(type 'ignore)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:ignore where-op section comparison value name patts #!key (expires #f)(type 'ignore)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:note where section comparison value name patts #!key (expires #f)(type 'note)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:note where-op section comparison value name patts #!key (expires #f)(type 'note)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:waive where section comparison value name patts #!key (expires #f)(type 'waive)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:waive where-op section comparison value name patts #!key (expires #f)(type 'waive)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
 (define expect:waived expect:waive)
 (define expect:waiver expect:waive)
 
-(define (expect:error where section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:error where-op section comparison value name patts #!key (expires #f)(type 'error)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:required where section comparison value name patts #!key (expires #f)(type 'required)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:required where-op section comparison value name patts #!key (expires #f)(type 'required)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:required-warn where section comparison value name patts #!key (expires #f)(type 'required-warn)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:required-warn where-op section comparison value name patts #!key (expires #f)(type 'required-warn)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:check where section comparison value name patts #!key (expires #f)(type 'check)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:check where-op section comparison value name patts #!key (expires #f)(type 'check)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:abort where section comparison value name patts #!key (expires #f)(type 'abort)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:abort where-op section comparison value name patts #!key (expires #f)(type 'abort)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(define (expect:skip where section comparison value name patts #!key (expires #f)(type 'skip)(hook #f)(class #f))
-  (expect where section comparison value name patts expires: expires type: type hook: hook class: class))
+(define (expect:skip where-op section comparison value name patts #!key (expires #f)(type 'skip)(hook #f)(class #f))
+  (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
 
 ;;======================================================================
 ;; TODO: Compress this in with the expect routine above
 ;;======================================================================
-(define (expect:value where section value tol name patt #!key (expires #f)(type 'value)(matchnum 1)(hook #f)(class #f))
+(define (expect:value where-op section value tol name patt #!key (expires #f)(type 'value)(matchnum 1)(hook #f)(class #f))
   ;; note: (hier-hash-set! value key1 key2 key3 ...)
-  (if (not (symbol? where))        (print:error "ERROR: where must be a symbol"))
+  (if (not (symbol? where-op))        (print:error "ERROR: where must be a symbol"))
   (if (not (or (string? section)
 	       (list? section)))   (print:error "ERROR: section must be a string or list of strings"))
   (if (not (number? value))        (print:error "ERROR: value must be a number"))
@@ -399,7 +455,7 @@
        (lambda (sect)
 	 (hash-table-set! *expects* ;; comparison is not used                 matchnum used to pick the match from the regex
 			  sect ;;         0     1       2       3  4   5       6                   7               8      9   10                               11 12  value=pass/fail
-			  (cons (vector where sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0) hook matchnum *curr-expect-num* class)
+			  (cons (vector where-op sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0) hook matchnum *curr-expect-num* class)
 				(hash-table-ref/default *expects* section '()))))
        (if (list? section) section (list section))))
   (set! *curr-expect-num* (+ *curr-expect-num* 1)))
@@ -474,8 +530,8 @@
 	 (print "\nERROR: Syntax error in your command file!\n")
 	 (print " =>  " ((condition-property-accessor 'exn 'message) exn))
          (print-call-chain)
-         (html-print "\nERROR: Syntax error in your command file!\n")
-         (html-print " =>  " ((condition-property-accessor 'exn 'message) exn))
+         (html-print #f "\nERROR: Syntax error in your command file!\n")
+         (html-print #f " =>  " ((condition-property-accessor 'exn 'message) exn))
          (print-call-chain *htmlport*)
 	 (close-output-port *htmlport*)
 	 (exit 1))
@@ -522,7 +578,7 @@
 	 (hash-table-delete! active-sections section-name)))))
    *sections*))
 
-(define (html-print . stuff)
+(define (html-print destport . stuff)
   (if *htmlport*
       (with-output-to-port
 	  *htmlport*
@@ -535,13 +591,13 @@
 	(html-mode        'pre)
 	(html-hightlight-flag #f))
     ;; (curr-seconds     (current-seconds)))
-    (html-print "<html>")
+    (html-print #f "<html>")
     (if cssfile
-	(html-print "<link rel=\"stylesheet\" type=\"text/css\" href=\"logpro_style.css\">"))
-    (html-print "<header>LOGPRO RESULTS</header><body>")
-    (html-print "Summary is <a href=\"#summary\">here</a>")
-    (html-print "<br>(processed by logpro version " logpro-version ", tool details at: <a href=\"http://www.kiatoa.com/fossils/logpro\">logpro</a>)")
-    (html-print "<hr><pre>")
+	(html-print #f "<link rel=\"stylesheet\" type=\"text/css\" href=\"logpro_style.css\">"))
+    (html-print #f "<header>LOGPRO RESULTS</header><body>")
+    (html-print #f "Summary is <a href=\"#summary\">here</a>")
+    (html-print #f "<br>(processed by logpro version " logpro-version ", tool details at: <a href=\"http://www.kiatoa.com/fossils/logpro\">logpro</a>)")
+    (html-print #f "<hr><pre>")
     (let loop ((line (read-line))
 	       (line-num  0))
       (if (not (eof-object? line))
@@ -697,47 +753,179 @@
 		      (unkn   (vector-ref html-highlight-flag 4))
 		      (etype  (vector-ref html-highlight-flag 5))
 		      (eclass (vector-ref html-highlight-flag 6))) ;; the expect
-		  (begin
-		    ;(if (eq? html-mode 'pre)
-		    ;    (html-print "</pre>")
-		    ;    (html-print "<br>"))
-		    (html-print "<a name=\"" label "\"></a>"
-				"<a href=\"" link "\" " (if cssfile 
-							    (conc "class=\"" etype (if eclass (conc " " eclass) "") "\">") ;; (conc "class=\"" etype "\">")
-							    (conc "style=\"background-color: white; color: " color ";\">"))
-				line
-				"</a>")
-		    (set! html-mode 'html)))
-		(begin
+                  (html-print #f "<a name=\"" label "\"></a>"
+                              "<a href=\"" link "\" " (if cssfile 
+                                                          (conc "class=\"" etype (if eclass (conc " " eclass) "") "\">") ;; (conc "class=\"" etype "\">")
+                                                          (conc "style=\"background-color: white; color: " color ";\">"))
+                              line
+                              "</a>")
+                  (set! html-mode 'html))
+                (begin
 		  (if (not (eq? html-mode 'pre))
 		      (begin
-			;; (html-print "") ; <pre>")
+			;; (html-print #f "") ; <pre>")
 			(set! html-mode 'pre)))
-		  (html-print line)))
+		  (html-print #f line)))
 	    (if html-highlight-flag (set! html-highlight-flag #f))
 	    (loop (read-line)(+ line-num 1)))))))
 
-(define (print-results cssfile) ;; cssfile is used as a flag
-  (let ((status       #t)
-	(toterrcount   0)
-	(totwarncount  0)
-	(totcheckcount 0)
-	(totwaivecount 0)
-	(totabortcount 0)
-	(totskipcount  0)
-	(tblfmt       (conc "<tr>"
-			    (string-intersperse (map (lambda (x) "<td>~a</td>") '(1 2 3 4 5 6 7 8 9 10)) "")
-			    "</tr>"))
+;; given an expect return the xstatus (#t or #f) and the appropriate symbol mapped to a string
+;;
+(define (get-xstatus-compsym expect)
+  (let* ((comp     (expects:get-comparison expect))
+         (value    (expects:get-value expect))
+         (count    (expects:get-count expect))
+         (etype    (expects:get-type expect))
+         (is-value (eq? etype 'value))
+         )
+    (cond
+     ((eq? comp =)  (values (eq? count value) "="))
+     ((eq? comp >)  (values (> count value)   ">"))
+     ((eq? comp <)  (values (< count value)   "<"))
+     ((eq? comp >=) (values (>= count value)  "<="))
+     ((eq? comp <=) (values (<= count value)  ">="))
+     (is-value      (if (and (< (expects:get-val-fail-count expect) 1)
+                             (> (expects:get-val-pass-count expect) 0))
+                        (values #t "=")
+                        (values #f "=")))
+     (else (values #f "=")))))
+
+;; print one line of html
+(define (html-print-one-line destport count xstatus typeinfo etype cssfile eclass keyname outvals is-value)
+  (let ((color (if (> count 0)
+                   (if is-value
+                       (if xstatus "green" "red")
+                       (expect:expect-type-get-color typeinfo))
+                   (if (member etype '(required required-warn))
+                       (if xstatus (expect:expect-type-get-color typeinfo) "red")
+                       "white")))
+        (first-item  (car outvals))
+        (second-item (cadr outvals))
+        (third-item  (list-ref outvals 3))
+        (fourth-item (list-ref outvals 4))
+        (remaining   (drop outvals 4)))
+    (html-print destport "<tr><td "
+                (if cssfile
+                    (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
+                    (conc "bgcolor=\"" color "\""))
+                "><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a><a href=\"#" keyname "_1\">"
+                (text->html first-item) "</a></td>"
+                "<td " (if cssfile 
+                           (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
+                           (conc "bgcolor=\"" color "\""))
+                ">"
+                (text->html second-item) "</td><td>"
+                (text->html third-item) "</td><td>"
+                "<td " (conc "bgcolor=\"" (if xstatus "white" "red") "\"")
+                ">" fourth-item "</td>"
+                (string-intersperse
+                 (map text->html remaining)
+                 (conc "</td><td>"))) ;; <a href=\"#" keyname "_1\">")))
+    (html-print destport "</td></tr>")))
+
+;; factored out of print-results
+;;
+(define (value-print expect rulenum typeinfo is-value xstatus name compsym section count) 
+  ;; If a value construct the output line using some kinda complicated logic ...
+  (let ((outvals  #f)
+        (lineout  #f)
+        (where-op (expects:get-where expect)) ;; not used yet, "in" is only option
+        (fmt      " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
 	;;            type where section OK/FAIL compsym value name count
-	(valfmt       " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
+	(valfmt   " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
+        (value    (expects:get-value expect))
+        )
+    (if is-value
+        (let* ((cmd       (expects:get-hook expect))
+               (tolerance (expects:get-tol expect))
+               (measured  (if (null? (expects:get-measured expect)) "-" (car (expects:get-measured expect)))))
+          (set! outvals (list  
+                         (conc "rule-" rulenum)
+                         (expect:expect-type-get-type typeinfo) 
+                         where-op 
+                         section 
+                         (if xstatus "OK" "FAIL") 
+                         (if (number? tolerance) value (misc:op->symbol tolerance))
+                         (if (number? tolerance) "+/-" "")
+                         (if (number? tolerance) (misc:op->symbol tolerance) value)
+                         measured
+                         (expects:get-val-pass-count expect) 
+                         (expects:get-val-fail-count expect)
+                         ))
+          (set! lineout (apply format #f valfmt outvals));; valfmt
+          ;; have a hook to process for "value" items, do not call if nothing found
+          (if (and cmd (number? measured))
+              (let ((valuehook (hook:subst-var
+                                (hook:subst-var 
+                                 (hook:subst-var 
+                                  (hook:subst-var cmd "measured" (conc measured))
+                                  "message" name)
+                                 "expected" (conc value))
+                                "tolerance" (conc (misc:op->symbol tolerance)))))
+                (print "VALUE HOOK CALLED: " valuehook)
+                (system valuehook)))
+          (if *summport*
+              (with-output-to-port *summport*
+                (if is-value
+                    (lambda ()
+                      (print "[" (conc "rule-" rulenum) "]")
+                      (print "operator " where-op )
+                      (print "section " section )
+                      (print "desc " name)
+                      (print "status " (if xstatus "OK" "FAIL"))
+                      (print "expected "  value)
+                      (print "measured "  measured)
+                      (if (number? tolerance)
+                          (begin
+                            (print "type +/-")
+                            (print "tolerance " tolerance))
+                          (begin
+                            (print "type " (misc:op->symbol tolerance))))
+                      (print "pass " (expects:get-val-pass-count expect))
+                      (print "fail " (expects:get-val-fail-count expect))
+                      (print))
+                    (lambda ()
+                      (print "[" (conc "rule-" rulenum) "]")
+                      (print "type "(expect:expect-type-get-type typeinfo))
+                      (print "operator " where-op)
+                      (print "section " section)
+                      (print "status "  (if xstatus "OK" "FAIL"))
+                      (print "compsym " compsym)
+                      (print "value " value)
+                      (print "desc " name)
+                      (print "count " count)
+                      (print))))))
+        ;; If not a value create the output line using the format "fmt"
+        (begin
+          (set! outvals (list
+                         (conc "rule-" rulenum)
+                         (expect:expect-type-get-type typeinfo)
+                         where-op
+                         section
+                         (if xstatus "OK" "FAIL")
+                         compsym 
+                         value
+                         name
+                         count
+                         ""
+                         ))
+          (set! lineout (apply format #f fmt outvals))))
+    (values outvals lineout)))
+
+(define (print-results cssfile) ;; cssfile is used as a flag
+  (let ((status        #t)
+        (found-error   #f)
+        (etallys       (make-tally))
+	(tblfmt        (conc "<tr>"
+                             (string-intersperse (map (lambda (x) "<td>~a</td>") '(1 2 3 4 5 6 7 8 9 10)) "")
+                             "</tr>"))
         ;;             type where section OK/FAIL compsym value name count
-	(fmt          " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
 	(fmt-trg      "Trigger: ~13a ~15@a, count=~a")
 	(fmt-trg-html "<a name=\"~a_table\" href=\"#~a\">Trigger: ~13a ~15@a, count=~a</a>"))
     ;; first print any triggers that didn't get triggered - these are automatic failures
     (print      "==========================LOGPRO SUMMARY==========================")
-    (html-print "<a name=\"summary\"></a>")
-    (html-print "==========================LOGPRO SUMMARY==========================")
+    (html-print #f "<a name=\"summary\"></a>")
+    (html-print #f "==========================LOGPRO SUMMARY==========================")
     (for-each
      (lambda (trigger)
        (let ((count (trigger:get-total-hits trigger)))
@@ -751,216 +939,48 @@
 					"FAIL"
 					"OPTIONAL"))))
 	   (print      (format #f fmt-trg (trigger:get-name trigger) trigger-status count))
-	   (html-print (format #f fmt-trg-html (trigger:get-name trigger) (trigger:get-name trigger) (trigger:get-name trigger) trigger-status count)))))
+	   (html-print #f (format #f fmt-trg-html (trigger:get-name trigger) (trigger:get-name trigger) (trigger:get-name trigger) trigger-status count)))))
      *triggers*)
     ;; now print the expects
-    (html-print "</pre><p><table>") ;;  style=\"width:100%\">") ;; border=\"1\" 
-    (html-print "<tr><th>RuleNum</th><th>RuleType</th><th></th><th>Section</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>")
+    (html-print #f "</pre><p><table>") ;;  style=\"width:100%\">") ;; border=\"1\" 
+    (html-print #f "<tr><th>RuleNum</th><th>RuleType</th><th></th><th>Section</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>")
     (for-each 
      (lambda (section)
        (print "\nExpects for " section " section: ")
-       ;; (html-print "<tr><td colspan=\"11\">Expects for " section " section: </td></tr>")
+       ;; (html-print #f "<tr><td colspan=\"11\">Expects for " section " section: </td></tr>")
        (for-each 
 	(lambda (expect)
-	  (let* ((where   (expects:get-where expect)) ;; not used yet, "in" is only option
-		 ;; (section (expects:get-section expect))
-		 (comp     (expects:get-comparison expect))
-		 (value    (expects:get-value expect))
-		 (count    (expects:get-count expect))
+	  (let* ((count    (expects:get-count expect))
 		 (name     (expects:get-name expect))
 		 (typeinfo (expect:get-type-info expect))
 		 (etype    (expects:get-type expect))
 		 (keyname  (expects:get-keyname expect))
-		 ;; xstatus is the expected vs. actual count of the item in question
-		 (xstatus  #f) ;; Jul 08, 2011 - changed to #f - seems safer
-		 (compsym  "=")
-		 (lineout  "")
 		 (is-value (eq? etype 'value))
 		 (rulenum  (expects:get-rulenum expect))
 		 (eclass   (expects:get-html-class expect))
                  (outvals  #f))
-	    ;(print "is-value: " is-value)
-	    (cond
-	     ((eq? comp =)
-	      (set! xstatus (eq? count value))
-	      (set! compsym "="))
-	     ((eq? comp >)
-	      (set! xstatus (> count value))
-	      (set! compsym ">"))
-	     ((eq? comp <)
-	      (set! xstatus (< count value))
-	      (set! compsym "<"))
-	     ((eq? comp >=)
-	      (set! xstatus (>= count value)))
-	     ((eq? comp <=)
-	      (set! xstatus (<= count value)))
-	     (is-value
-	      (if (and (< (expects:get-val-fail-count expect) 1)
-		       (> (expects:get-val-pass-count expect) 0))
-		  (set! xstatus #t)
-		  (set! xstatus #f))
-	      ;(print "xstatus: " xstatus " fail-count: " (expects:get-val-fail-count expect) " pass-count: " (expects:get-val-pass-count expect))
-	      ))
-	    ;; the summary line for this rule
-	    (if is-value
-		;; If a value construct the output line using some kinda complicated logic ...
-		(let* ((cmd       (expects:get-hook expect))
-		       (tolerance (expects:get-tol expect))
-		       (measured  (if (null? (expects:get-measured expect)) "-" (car (expects:get-measured expect)))))
-		  (set! outvals (list  
-				 (conc "rule-" rulenum)
-				 (expect:expect-type-get-type typeinfo) 
-				 where 
-				 section 
-				 (if xstatus "OK" "FAIL") 
-				 (if (number? tolerance) value (misc:op->symbol tolerance))
-				 (if (number? tolerance) "+/-" "")
-				 (if (number? tolerance) (misc:op->symbol tolerance) value)
-				 measured
-				 (expects:get-val-pass-count expect) 
-				 (expects:get-val-fail-count expect)
-				 ))
-		  (set! lineout (apply format #f valfmt outvals));; valfmt
-		  ;; have a hook to process for "value" items, do not call if nothing found
-		  (if (and cmd (number? measured))
-		      (let ((valuehook (hook:subst-var
-					(hook:subst-var 
-					 (hook:subst-var 
-					  (hook:subst-var cmd "measured" (conc measured))
-					  "message" name)
-					 "expected" (conc value))
-					"tolerance" (conc (misc:op->symbol tolerance)))))
-			(print "VALUE HOOK CALLED: " valuehook)
-			(system valuehook)))
-		  (if *summport*
-		      (with-output-to-port *summport*
-			(if is-value
-			    (lambda ()
-			      (print "[" (conc "rule-" rulenum) "]")
-			      (print "operator " where )
-			      (print "section " section )
-			      (print "desc " name)
-			      (print "status " (if xstatus "OK" "FAIL"))
-			      (print "expected "  value)
-			      (print "measured "  measured)
-			      (if (number? tolerance)
-				  (begin
-				    (print "type +/-")
-				    (print "tolerance " tolerance))
-				  (begin
-				    (print "type " (misc:op->symbol tolerance))))
-			      (print "pass " (expects:get-val-pass-count expect))
-			      (print "fail " (expects:get-val-fail-count expect))
-			      (print))
-			    (lambda ()
-			      (print "[" (conc "rule-" rulenum) "]")
-			      (print "type "(expect:expect-type-get-type typeinfo))
-			      (print "operator " where)
-			      (print "section " section)
-			      (print "status "  (if xstatus "OK" "FAIL"))
-			      (print "compsym " compsym)
-			      (print "value " value)
-			      (print "desc " name)
-			      (print "count " count)
-			      (print))))))
-		;; If not a value create the output line using the format "fmt"
-		(begin
-		  (set! outvals (list
-				 (conc "rule-" rulenum)
-				 (expect:expect-type-get-type typeinfo)
-				 where
-				 section
-				 (if xstatus "OK" "FAIL")
-				 compsym 
-				 value
-				 name
-				 count
-				 ""
-				 ))
-		  (set! lineout (apply format #f fmt outvals));;  fmt 
-		  ))
-	    ;; now send lineout to the html file
-	    (let ((color (if (> count 0)
-			     (if is-value
-				 (if xstatus "green" "red")
-				 (expect:expect-type-get-color typeinfo))
-			     (if (member etype '(required required-warn))
-				 (if xstatus (expect:expect-type-get-color typeinfo) "red")
-				 "white"))))
-	      ;; (html-print (conc "<font color=\"" 
-	      ;;   		color
-	      ;;   		"\"><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a>"
-	      ;;   		(if (> count 0) (conc "<a href=\"#" keyname "_1\">Expect:</a>" ) "Expect:")
-	      ;;   		lineout "</font>")))
-	      (html-print "<tr><td "
-			  (if cssfile
-			      (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
-			      (conc "bgcolor=\"" color "\""))
-			  "><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a><a href=\"#" keyname "_1\">"
-			  (text->html (car outvals)) "</a></td>"
-			  "<td " (if cssfile 
-				     (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
-				     (conc "bgcolor=\"" color "\""))
-			  ">"
-			  (text->html (cadr outvals)) "</td><td>" ;; (caddr outvals) "</td>"
-			  (string-intersperse
-			   (map text->html (cddr outvals))
-			   (conc "</td><td>"))) ;; <a href=\"#" keyname "_1\">")))
-	      (html-print "</td></tr>"))
-	    ;; (html-print "</table>")
-	    (if (> (string-length lineout) 0)(print "Expect:" lineout))
-	    (if (not xstatus) ;; 
-		(begin
-		  (set! status #f)
-		  (cond
-		   ((eq? etype 'skip)
-		    (set! totskipcount  (+ totskipcount  1)))
-		   ((member etype '(error required value))   
-		    (set! toterrcount   (+ toterrcount   1)))
-		   ((member etype '(warning required-warn))
-		    (set! totwarncount  (+ totwarncount  1)))
-		   ((eq? etype 'abort)
-		    (set! totabortcount (+ totabortcount 1)))
-		   ((eq? etype 'check)
-		    (set! totcheckcount (+ totcheckcount 1)))
-		   ((eq? etype 'waive)
-		    (set! totwaivecount (+ totwaivecount 1)))
-		   )))))
+            ;;              xstatus is the expected vs. actual count of the item in question
+            (let*-values (((xstatus compsym)(get-xstatus-compsym expect))
+                          ((outvals lineout)(value-print expect rulenum typeinfo is-value xstatus name compsym section count)))
+              ;; now send lineout to the html file
+              (html-print-one-line #f count xstatus typeinfo etype cssfile eclass keyname outvals is-value)
+
+              (if (> (string-length lineout) 0)(print "Expect:" lineout))
+              (if (not xstatus) ;; 
+                  (begin
+                    (if (not found-error)(expects:set-failed-flag! expect #t))
+                    (set! found-error #t)
+                    (set! status #f)
+                    (increment-tally etallys etype))))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
-    (html-print "</table>")
-    (let* ((exit-code (cond ;; ordering here is critical as it sets the precedence of which status "wins"
-		       ((> totskipcount  0) 6)
-		       ((> totabortcount 0) 5)
-		       ((> totcheckcount 0) 3)
-		       ((> toterrcount   0) 1)
-		       ((> totwarncount  0) 2)
-		       ((> totwaivecount 0) 4)
-		       (*got-an-error*      (begin
-					      (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
-					      1))
-		       (status             0)
-		       (else               0)))
-	   (exit-status (case exit-code
-			  ((1) "FAIL")
-			  ((2) "WARN")
-			  ((3) "CHECK")
-			  ((4) "WAIVE")
-			  ((5) "ABORT")
-			  ((6) "SKIP")
-			  ((0) "PASS")
-			  (else "FAIL")))
-	   (exit-sym    (case exit-code
-			  ((1) 'error)
-			  ((2) 'warning)
-			  ((5) 'abort)
-			  ((4) 'waive)
-			  ((6) 'skip)
-			  ((3) 'check)
-			  (else 'error))))
-      (html-print "<h1 class=\"exitcode\">EXIT CODE: " exit-code " ("
+    (html-print #f "</table>")
+    (let* ((exit-code   (counts->exit-code etallys status *got-an-error*))
+	   (exit-status (exit-code->exit-status exit-code))
+	   (exit-sym    (exit-code->exit-sym    exit-code)))
+      (html-print #f "<h1 class=\"exitcode\">EXIT CODE: " exit-code " ("
 		  exit-status)
-      (html-print ")</h1></body></html>")
+      (html-print #f ")</h1></body></html>")
       ;; add the [final] block to the summary dat
       (if *summport*
 	  (with-output-to-port *summport*
@@ -974,8 +994,11 @@
 		  (lambda (xpect)
 		    (let* ((etype (expects:get-type xpect))
 			   (emsg  (expects:get-name xpect)))
-		      (if (equal? etype exit-sym)
-			  (print "message " emsg))))
+                      ;; (print "etype: " etype " emsg: " emsg " exit-sym: " exit-sym)
+		      (if (expects:get-failed-flag xpect) ;; (equal? etype exit-sym)
+			  (print "message " emsg)
+                          ;; (print "nonmsg " emsg)
+                          )))
 		  (hash-table-ref *expects* section)))
 	       (hash-table-keys *expects*)))))
       exit-code)))
