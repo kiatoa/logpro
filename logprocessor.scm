@@ -530,8 +530,8 @@
 	 (print "\nERROR: Syntax error in your command file!\n")
 	 (print " =>  " ((condition-property-accessor 'exn 'message) exn))
          (print-call-chain)
-         (html-print "\nERROR: Syntax error in your command file!\n")
-         (html-print " =>  " ((condition-property-accessor 'exn 'message) exn))
+         (html-print #f "\nERROR: Syntax error in your command file!\n")
+         (html-print #f " =>  " ((condition-property-accessor 'exn 'message) exn))
          (print-call-chain *htmlport*)
 	 (close-output-port *htmlport*)
 	 (exit 1))
@@ -578,7 +578,7 @@
 	 (hash-table-delete! active-sections section-name)))))
    *sections*))
 
-(define (html-print . stuff)
+(define (html-print destport . stuff)
   (if *htmlport*
       (with-output-to-port
 	  *htmlport*
@@ -591,13 +591,13 @@
 	(html-mode        'pre)
 	(html-hightlight-flag #f))
     ;; (curr-seconds     (current-seconds)))
-    (html-print "<html>")
+    (html-print #f "<html>")
     (if cssfile
-	(html-print "<link rel=\"stylesheet\" type=\"text/css\" href=\"logpro_style.css\">"))
-    (html-print "<header>LOGPRO RESULTS</header><body>")
-    (html-print "Summary is <a href=\"#summary\">here</a>")
-    (html-print "<br>(processed by logpro version " logpro-version ", tool details at: <a href=\"http://www.kiatoa.com/fossils/logpro\">logpro</a>)")
-    (html-print "<hr><pre>")
+	(html-print #f "<link rel=\"stylesheet\" type=\"text/css\" href=\"logpro_style.css\">"))
+    (html-print #f "<header>LOGPRO RESULTS</header><body>")
+    (html-print #f "Summary is <a href=\"#summary\">here</a>")
+    (html-print #f "<br>(processed by logpro version " logpro-version ", tool details at: <a href=\"http://www.kiatoa.com/fossils/logpro\">logpro</a>)")
+    (html-print #f "<hr><pre>")
     (let loop ((line (read-line))
 	       (line-num  0))
       (if (not (eof-object? line))
@@ -753,7 +753,7 @@
 		      (unkn   (vector-ref html-highlight-flag 4))
 		      (etype  (vector-ref html-highlight-flag 5))
 		      (eclass (vector-ref html-highlight-flag 6))) ;; the expect
-                  (html-print "<a name=\"" label "\"></a>"
+                  (html-print #f "<a name=\"" label "\"></a>"
                               "<a href=\"" link "\" " (if cssfile 
                                                           (conc "class=\"" etype (if eclass (conc " " eclass) "") "\">") ;; (conc "class=\"" etype "\">")
                                                           (conc "style=\"background-color: white; color: " color ";\">"))
@@ -763,9 +763,9 @@
                 (begin
 		  (if (not (eq? html-mode 'pre))
 		      (begin
-			;; (html-print "") ; <pre>")
+			;; (html-print #f "") ; <pre>")
 			(set! html-mode 'pre)))
-		  (html-print line)))
+		  (html-print #f line)))
 	    (if html-highlight-flag (set! html-highlight-flag #f))
 	    (loop (read-line)(+ line-num 1)))))))
 
@@ -791,29 +791,37 @@
      (else (values #f "=")))))
 
 ;; print one line of html
-(define (html-print-one-line count xstatus typeinfo etype cssfile eclass keyname outvals is-value)
+(define (html-print-one-line destport count xstatus typeinfo etype cssfile eclass keyname outvals is-value)
   (let ((color (if (> count 0)
                    (if is-value
                        (if xstatus "green" "red")
                        (expect:expect-type-get-color typeinfo))
                    (if (member etype '(required required-warn))
                        (if xstatus (expect:expect-type-get-color typeinfo) "red")
-                       "white"))))
-    (html-print "<tr><td "
+                       "white")))
+        (first-item  (car outvals))
+        (second-item (cadr outvals))
+        (third-item  (list-ref outvals 3))
+        (fourth-item (list-ref outvals 4))
+        (remaining   (drop outvals 4)))
+    (html-print destport "<tr><td "
                 (if cssfile
                     (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
                     (conc "bgcolor=\"" color "\""))
                 "><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a><a href=\"#" keyname "_1\">"
-                (text->html (car outvals)) "</a></td>"
+                (text->html first-item) "</a></td>"
                 "<td " (if cssfile 
                            (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
                            (conc "bgcolor=\"" color "\""))
                 ">"
-                (text->html (cadr outvals)) "</td><td>" ;; (caddr outvals) "</td>"
+                (text->html second-item) "</td><td>"
+                (text->html third-item) "</td><td>"
+                "<td " (conc "bgcolor=\"" (if xstatus "white" "red") "\"")
+                ">" fourth-item "</td>"
                 (string-intersperse
-                 (map text->html (cddr outvals))
+                 (map text->html remaining)
                  (conc "</td><td>"))) ;; <a href=\"#" keyname "_1\">")))
-    (html-print "</td></tr>")))
+    (html-print destport "</td></tr>")))
 
 ;; factored out of print-results
 ;;
@@ -905,7 +913,8 @@
     (values outvals lineout)))
 
 (define (print-results cssfile) ;; cssfile is used as a flag
-  (let ((status       #t)
+  (let ((status        #t)
+        (found-error   #f)
         (etallys       (make-tally))
 	(tblfmt        (conc "<tr>"
                              (string-intersperse (map (lambda (x) "<td>~a</td>") '(1 2 3 4 5 6 7 8 9 10)) "")
@@ -915,8 +924,8 @@
 	(fmt-trg-html "<a name=\"~a_table\" href=\"#~a\">Trigger: ~13a ~15@a, count=~a</a>"))
     ;; first print any triggers that didn't get triggered - these are automatic failures
     (print      "==========================LOGPRO SUMMARY==========================")
-    (html-print "<a name=\"summary\"></a>")
-    (html-print "==========================LOGPRO SUMMARY==========================")
+    (html-print #f "<a name=\"summary\"></a>")
+    (html-print #f "==========================LOGPRO SUMMARY==========================")
     (for-each
      (lambda (trigger)
        (let ((count (trigger:get-total-hits trigger)))
@@ -930,15 +939,15 @@
 					"FAIL"
 					"OPTIONAL"))))
 	   (print      (format #f fmt-trg (trigger:get-name trigger) trigger-status count))
-	   (html-print (format #f fmt-trg-html (trigger:get-name trigger) (trigger:get-name trigger) (trigger:get-name trigger) trigger-status count)))))
+	   (html-print #f (format #f fmt-trg-html (trigger:get-name trigger) (trigger:get-name trigger) (trigger:get-name trigger) trigger-status count)))))
      *triggers*)
     ;; now print the expects
-    (html-print "</pre><p><table>") ;;  style=\"width:100%\">") ;; border=\"1\" 
-    (html-print "<tr><th>RuleNum</th><th>RuleType</th><th></th><th>Section</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>")
+    (html-print #f "</pre><p><table>") ;;  style=\"width:100%\">") ;; border=\"1\" 
+    (html-print #f "<tr><th>RuleNum</th><th>RuleType</th><th></th><th>Section</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>")
     (for-each 
      (lambda (section)
        (print "\nExpects for " section " section: ")
-       ;; (html-print "<tr><td colspan=\"11\">Expects for " section " section: </td></tr>")
+       ;; (html-print #f "<tr><td colspan=\"11\">Expects for " section " section: </td></tr>")
        (for-each 
 	(lambda (expect)
 	  (let* ((count    (expects:get-count expect))
@@ -953,24 +962,25 @@
             ;;              xstatus is the expected vs. actual count of the item in question
             (let*-values (((xstatus compsym)(get-xstatus-compsym expect))
                           ((outvals lineout)(value-print expect rulenum typeinfo is-value xstatus name compsym section count)))
-              (if (not xstatus)(expects:set-failed-flag! expect #t))
               ;; now send lineout to the html file
-              (html-print-one-line count xstatus typeinfo etype cssfile eclass keyname outvals is-value)
+              (html-print-one-line #f count xstatus typeinfo etype cssfile eclass keyname outvals is-value)
 
               (if (> (string-length lineout) 0)(print "Expect:" lineout))
               (if (not xstatus) ;; 
                   (begin
+                    (if (not found-error)(expects:set-failed-flag! expect #t))
+                    (set! found-error #t)
                     (set! status #f)
                     (increment-tally etallys etype))))))
 	(hash-table-ref *expects* section)))
      (hash-table-keys *expects*))
-    (html-print "</table>")
+    (html-print #f "</table>")
     (let* ((exit-code   (counts->exit-code etallys status *got-an-error*))
 	   (exit-status (exit-code->exit-status exit-code))
 	   (exit-sym    (exit-code->exit-sym    exit-code)))
-      (html-print "<h1 class=\"exitcode\">EXIT CODE: " exit-code " ("
+      (html-print #f "<h1 class=\"exitcode\">EXIT CODE: " exit-code " ("
 		  exit-status)
-      (html-print ")</h1></body></html>")
+      (html-print #f ")</h1></body></html>")
       ;; add the [final] block to the summary dat
       (if *summport*
 	  (with-output-to-port *summport*
