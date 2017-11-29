@@ -1118,7 +1118,7 @@
 			   (emsg  (expects:get-name xpect)))
                       ;; (print "etype: " etype " emsg: " emsg " exit-sym: " exit-sym)
 		      (if (expects:get-failed-flag xpect) ;; (equal? etype exit-sym)
-			  (print "message " emsg)
+			  (print "message " (conc etype ": " emsg))
                           ;; (print "nonmsg " emsg)
                           )))
 		  (hash-table-ref *expects* section)))
