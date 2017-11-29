@@ -8,10 +8,97 @@
 ;;  PURPOSE.
 
 (use format srfi-69 srfi-1 posix typed-records) ;; sqlite3)
-(use regex regex-literals)
+(use regex) ;;  regex-literals)
 ;;(include "regex-literals-modified.scm")
 ;;(import regex-literals-modified)
 (define getenv get-environment-variable)
+
+;;======================================================================
+;; regex-literals hacked for logpro. please see the original code and
+;; license in the regex-literals egg
+;;
+;; Original license:
+;;
+;;;; A reader extension for precompiled regular expression literals.
+;;
+;; Copyright (c) 2006-2007 Arto Bendiken <http://bendiken.net/>
+;;
+;; Permission is hereby granted, free of charge, to any person obtaining a copy
+;; of this software and associated documentation files (the "Software"), to
+;; deal in the Software without restriction, including without limitation the
+;; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+;; sell copies of the Software, and to permit persons to whom the Software is
+;; furnished to do so, subject to the following conditions:
+;;
+;; The above copyright notice and this permission notice shall be included in
+;; all copies or substantial portions of the Software.
+;;
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+;; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+;; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+;; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+;; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+;; IN THE SOFTWARE.
+;;
+;;======================================================================
+
+;;;; Internal constants
+
+(define-constant regex-literal-delimiters
+  '((#\{ . #\}) (#\( . #\)) (#\[ . #\]) (#\< . #\>)))
+
+;;;; Internal procedures
+
+(define (read-regex-literal/delim delim port)
+  (define (read-option)
+    (let ((char (peek-char port)))
+      (cond ((eq? char #\i) (read-char port) 'caseless)
+            ((eq? char #\x) (read-char port) 'extended)
+            ((eq? char #\u) (read-char port) 'utf8)
+            (else #f))))
+  (let loop ((buffer '()))
+    (let ((char (read-char port)))
+      (cond ((char=? char delim)
+             (let* ((options  (list (read-option) (read-option) (read-option)))
+		    (rx-str   (list->string (reverse buffer)))
+		    (full-str (conc "/" rx-str "/"
+				    (if (memq 'caseless options) "i" "")
+				    (if (memq 'extended options) "x" "")
+				    (if (memq 'utf8     options) "u" "")))
+		    ;; (rx       (regexp rx-str
+		    (caseless (not (not (memq 'caseless options))))
+		    (extended (not (not (memq 'extended options))))
+		    (utf8     (not (not (memq 'utf8 options)))))
+               `(vector ,full-str ,rx-str ,caseless ,extended ,utf8)))
+            ((char=? char #\\) ; escaped character
+             (loop (cons (read-char port) (cons char buffer))))
+            (else
+             (loop (cons char buffer)))))))
+
+;;;; Exported procedures
+
+(define (read-regex-literal #!optional (port (current-input-port)))
+  (read-regex-literal/delim #\/ port))
+
+(define (read-regex-literal/general #!optional (port (current-input-port)))
+  (let* ((c (read-char port))
+         (c (cond ((assq c regex-literal-delimiters) => cdr)
+                  (else c))))
+    (read-regex-literal/delim c port)))
+
+;;;; Initialization
+
+;; (define-inline (init-regex-literals!)
+(set-sharp-read-syntax! #\/ read-regex-literal)
+(set-sharp-read-syntax! #\r read-regex-literal/general)
+;; )
+
+;; (init-regex-literals!) )
+
+;;======================================================================
+;; END OF REGEX LITERALS
+;;======================================================================
 
 (define (readlink-f fname)
   (let ((readlink-exes (filter file-exists? '("/bin/readlink" "/usr/bin/readlink"))))
@@ -67,9 +154,8 @@
    ((> (tally-errs   tallys) 0) 1)
    ((> (tally-warns  tallys) 0) 2)
    ((> (tally-waives tallys) 0) 4)
-   (code-error*      (begin
+   (code-error      (begin
                        (print "ERROR: Logpro error, probably in your command file. Look carefully at prior messages to help root cause.")
-                       unless you want to try?
                        1))
    (status             0)
    (else               0)))
@@ -105,7 +191,7 @@
       (let loop ((hed (car regexs))
 		 (tal (cdr regexs)))
 	(let ((match (string-search (if (vector? hed)
-                                        (vector-ref hed 1)
+                                        (regexp (vector-ref hed 1)(vector-ref hed 2)(vector-ref hed 3)(vector-ref hed 4))
                                         hed)
                                     line))) ;; regexps are #("regex" . <regexp>)
 	  (if match
@@ -127,6 +213,17 @@
    ((eq? op >=) '>=)
    ((eq? op <=) '<=)
    (else 'unk)))
+
+(define (check-regexes patts)
+  (for-each (lambda (rxdat)
+              (let ((rx (if (vector? rxdat)(vector-ref rxdat 1) rxdat)))
+		(handle-exceptions
+		    exn
+                    (print:error "ERROR: your regex, " rx ", is not valid.")
+		  (regexp rx))))
+	    (if (list? patts)
+		patts
+		(list patts))))
 
 ;;======================================================================
 ;; Settings
@@ -326,7 +423,7 @@
      1))
 (define-inline (expects:delete-if-one-time vec)
   (if (expects:get-hook-type vec)
-      (hash-table-delete *logpro:hooks* (expects:get-hook-ptr vec))))
+      (hash-table-delete! *logpro:hooks* (expects:get-hook-ptr vec))))
 (define-inline (expects:get-matchnum vec)(vector-ref vec 15))
 (define-inline (expects:get-rulenum  vec)(vector-ref vec 16))
 (define-inline (expects:get-html-class vec)(vector-ref vec 17))
@@ -351,7 +448,7 @@
 ;; #f => rule is not expired, it still applies
 (define (expect:process-expires expires)
   (let ((ex-val (if expires
-		    (if (string-match #/^\d+\/\d+\/\d+$/ expires)
+		    (if (string-match (regexp "^\\d+\\/\\d+\\/\\d+$") expires)
 			(local-time->seconds (string->time expires "%m/%d/%Y"))
 			(begin
 			  (print "WARNING: Couldn't parse date: " expires ", date should be MM/DD/YY")
@@ -375,12 +472,8 @@
       (print:error "ERROR: expires must be a date string MM/DD/YY, got " expires))
   (if (not (list? patts))
       (set! patts (list patts)))
-  (for-each (lambda (rxdat)
-              (let ((rx (if (vector? rxdat)(vector-ref rxdat 1) rxdat)))
-                (if (not (regexp? rx))
-                    (print:error "ERROR: your regex is not valid: " rx))))
-	    patts)
-
+  (check-regexes patts)
+  
   ;; #f => rule is not expired, go ahead and apply it
   ;; #t => rule is expired, do NOT apply it
   (if (not (expect:process-expires expires))
@@ -389,7 +482,7 @@
 	(for-each
 	 (lambda (sect)
 	   (hash-table-set! *expects*;;                                                                                                          11  12  13           14   15 16          
-			    sect ;;         0     1       2       3     4  5   6         7               8      9 10                            tol  measured value=pass/fail  *curr-expect-num*   html-class failed-flag
+			    sect ;;         0       1       2       3     4   5   6         7               8      9 10                            tol  measured value=pass/fail  *curr-expect-num*   html-class failed-flag
 			    (cons (vector where-op sect comparison value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) #f '() (vector 0 0) hook #f *curr-expect-num* class #f)
 				  (hash-table-ref/default *expects* section '()))))
 	 (if (list? section) section (list section))))
@@ -432,6 +525,8 @@
 (define (expect:skip where-op section comparison value name patts #!key (expires #f)(type 'skip)(hook #f)(class #f))
   (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
+(use trace)(trace expect:error)
+
 
 ;;======================================================================
 ;; TODO: Compress this in with the expect routine above
@@ -449,8 +544,7 @@
   (if (and expires (not (string? expires)))
       (print:error "ERROR: expires must be a date string MM/DD/YY, got " expires)
       (set! expires #f))
-  (if (not (regexp? patt))
-      (print:error "ERROR: your regex is not valid: " rx))
+  (check-regexes patt)
 
   ;; Change methodology here. Expires becomes a flag with the following meaning
   ;;    #f             : no expires specified
@@ -528,7 +622,7 @@
 			  #f)))
       (set! *htmlport* html-port) ;; sigh, do me right some day...
       (set! *summport* summ-port)
-      (eval '(require-extension regex-literals))
+      ;; (eval '(require-extension regex-literals))
       (eval '(require-extension regex))
       (handle-exceptions
        exn
@@ -563,7 +657,7 @@
 		    (create-symbolic-link cssfile full-css-file)
 		    (with-output-to-file full-css-file
 		      (lambda ()
-			(print *logpro_style.css*)))))
+			(print *logpro_style.css*))))) ;; NOTE: *logpro_style.css* is defined in logpro_style.css.scm
 	    (analyze-logfile (current-output-port) (file-exists? full-css-file))) ;; cssfile is used as a flag
 	  (analyze-logfile (current-output-port) #f))
       (let ((exit-code (print-results cssfile)))
@@ -592,16 +686,17 @@
 	  (apply print stuff)))))
 
 (define (analyze-logfile oup cssfile)
-  (let ((active-sections  (make-hash-table))
-	(found-expects    '())
-	(html-mode        'pre)
-	(html-hightlight-flag #f))
+  (let ((active-sections     (make-hash-table))
+	(found-expects       '())
+	(html-mode           'pre)
+	(html-highlight-flag #f))
     ;; (curr-seconds     (current-seconds)))
     (html-print #f "<html>")
     (if cssfile
 	(html-print #f "<link rel=\"stylesheet\" type=\"text/css\" href=\"logpro_style.css\">"))
     (html-print #f "<header>LOGPRO RESULTS</header><body>")
     (html-print #f "Summary is <a href=\"#summary\">here</a>")
+    ;; NOTE: logpro-version comes from logpro.scm file.
     (html-print #f "<br>(processed by logpro version " logpro-version ", tool details at: <a href=\"http://www.kiatoa.com/fossils/logpro\">logpro</a>)")
     (html-print #f "<hr><pre>")
     (let loop ((line (read-line))
@@ -661,7 +756,7 @@
 			(let* ((patts   (expects:get-compiled-patts expect))
 			       (matches (misc:line-match-regexs line patts)))
 			  (if matches
-			      (set! found-expects (cons (list expect section match) found-expects)))))
+			      (set! found-expects (cons (list expect section matches) found-expects)))))
 		      expects))))
 	     (filter (lambda (x)(not (member x (hash-table-keys active-sections))))
 		     (map section:get-name *sections*)))
@@ -813,8 +908,8 @@
         (count-val    (list-ref outvals 6))
         (desc         (list-ref outvals 7))
         (count        (list-ref outvals 8))
-        (regex-str    (list-ref outvals 9)))
-;;        (remaining    (drop outvals 4)))
+        (regex-str    (list-ref outvals 11)))
+    ;;        (remaining    (drop outvals 4)))
     (html-print destport "<tr><td "
                 ;; rule-num
                 (if cssfile
@@ -856,7 +951,7 @@
                                                  (vector-ref x 0)
                                                  "n/a"))
                                            (expects:get-compiled-patts expect)) ", "))
-        (fmt      " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
+        (fmt      " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a, rx=~a")
 	;;            type where section OK/FAIL compsym value name count
 	(valfmt   " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail, rx=~a")
         (value    (expects:get-value expect))
@@ -866,17 +961,17 @@
                (tolerance (expects:get-tol expect))
                (measured  (if (null? (expects:get-measured expect)) "-" (car (expects:get-measured expect)))))
           (set! outvals (list  
-                         (conc "rule-" rulenum)
+                         (conc "rule-" rulenum)                                     ;; 0
                          (expect:expect-type-get-type typeinfo) 
-                         where-op 
+                         where-op                                                   ;; 2
                          section 
-                         (if xstatus "OK" "FAIL") 
+                         (if xstatus "OK" "FAIL")                                   ;; 4
                          (if (number? tolerance) value (misc:op->symbol tolerance))
-                         (if (number? tolerance) "+/-" "")
+                         (if (number? tolerance) "+/-" "")                          ;; 6
                          (if (number? tolerance) (misc:op->symbol tolerance) value)
-                         measured
+                         measured                                                   ;; 8
                          (expects:get-val-pass-count expect) 
-                         (expects:get-val-fail-count expect)
+                         (expects:get-val-fail-count expect)                        ;; 10
                          rx-str
                          ))
           (set! lineout (apply format #f valfmt outvals));; valfmt
@@ -925,16 +1020,18 @@
         ;; If not a value create the output line using the format "fmt"
         (begin
           (set! outvals (list
-                         (conc "rule-" rulenum)
+                         (conc "rule-" rulenum)                    ;; 0
                          (expect:expect-type-get-type typeinfo)
-                         where-op
+                         where-op                                  ;; 2
                          section
-                         (if xstatus "OK" "FAIL")
+                         (if xstatus "OK" "FAIL")                  ;; 4
                          compsym 
-                         value
+                         value                                     ;; 6
                          name
-                         count
+                         count                                     ;; 8
                          ""
+			 ""                                        ;; 10
+			 rx-str
                          ))
           (set! lineout (apply format #f fmt outvals))))
     (values outvals lineout)))
@@ -968,14 +1065,13 @@
 	   (print      (format #f fmt-trg (trigger:get-name trigger) trigger-status count))
 	   (html-print #f (format #f fmt-trg-html (trigger:get-name trigger) (trigger:get-name trigger) (trigger:get-name trigger) trigger-status count)))))
      *triggers*)
-    (html-print #f "GOT HERE EH?")(print "GOT HERE EH?")
     ;; now print the expects
     (html-print #f "</pre><p><table>") ;;  style=\"width:100%\">") ;; border=\"1\" 
-    (html-print #f "<tr><th>RuleNum</th><th>RuleType</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>")
+    (html-print #f "<tr><th>RuleNum</th><th>RuleType</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th><th>Rx</th></tr>")
     (for-each 
      (lambda (section)
        (print "\nExpects for " section " section: ")
-       (html-print #f "<tr><td colspan=\"11\">Expects for " section " section: </td></tr>")
+       (html-print #f "<tr><td colspan=\"11\" bgcolor=\"cyan\">Expects for <b>" section "</b> section: </td></tr>")
        (for-each 
 	(lambda (expect)
 	  (let* ((count    (expects:get-count expect))

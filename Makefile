@@ -1,7 +1,8 @@
 PREFIX ?= /usr/local
 
-logpro : logprocessor.scm logpro.scm logpro_style.css.scm regex-literals-modified.scm
-	csc -X regex -X regex-literals logpro.scm -o logpro
+logpro : logprocessor.scm logpro.scm logpro_style.css.scm
+	csc -X regex -X logprocessor.scm logpro.scm -o logpro
+#	csc -X regex -X regex-literals logpro.scm -o logpro
 
 logpro/logpro : logprocessor.scm logpro.scm logpro_style.css.scm
 	chicken-install -p logpro -deploy format srfi-69 srfi-1 posix regex regex-literals
