@@ -525,9 +525,6 @@
 (define (expect:skip where-op section comparison value name patts #!key (expires #f)(type 'skip)(hook #f)(class #f))
   (expect where-op section comparison value name patts expires: expires type: type hook: hook class: class))
 
-(use trace)(trace expect:error)
-
-
 ;;======================================================================
 ;; TODO: Compress this in with the expect routine above
 ;;======================================================================
