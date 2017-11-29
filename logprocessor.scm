@@ -8,8 +8,89 @@
 ;;  PURPOSE.
 
 (use format srfi-69 srfi-1 posix typed-records) ;; sqlite3)
-(use regex regex-literals)
+(use regex) ;;  regex-literals)
 (define getenv get-environment-variable)
+
+;;======================================================================
+;; regex-literals hacked for logpro. please see the original code and
+;; license in the regex-literals egg
+;;
+;; Original license:
+;;
+;;;; A reader extension for precompiled regular expression literals.
+;;
+;; Copyright (c) 2006-2007 Arto Bendiken <http://bendiken.net/>
+;;
+;; Permission is hereby granted, free of charge, to any person obtaining a copy
+;; of this software and associated documentation files (the "Software"), to
+;; deal in the Software without restriction, including without limitation the
+;; rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+;; sell copies of the Software, and to permit persons to whom the Software is
+;; furnished to do so, subject to the following conditions:
+;;
+;; The above copyright notice and this permission notice shall be included in
+;; all copies or substantial portions of the Software.
+;;
+;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+;; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+;; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+;; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+;; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+;; FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+;; IN THE SOFTWARE.
+;;
+;;======================================================================
+
+;;;; Internal constants
+
+(define-constant regex-literal-delimiters
+  '((#\{ . #\}) (#\( . #\)) (#\[ . #\]) (#\< . #\>)))
+
+;;;; Internal procedures
+
+(define (read-regex-literal/delim delim port)
+  (define (read-option)
+    (let ((char (peek-char port)))
+      (cond ((eq? char #\i) (read-char port) 'caseless)
+            ((eq? char #\x) (read-char port) 'extended)
+            ((eq? char #\u) (read-char port) 'utf8)
+            (else #f))))
+  (let loop ((buffer '()))
+    (let ((char (read-char port)))
+      (cond ((char=? char delim)
+             (let ((options (list (read-option) (read-option) (read-option))))
+               `(regexp ,(list->string (reverse buffer))
+                        ,(not (not (memq 'caseless options)))
+                        ,(not (not (memq 'extended options)))
+                        ,(not (not (memq 'utf8 options))))))
+            ((char=? char #\\) ; escaped character
+             (loop (cons (read-char port) (cons char buffer))))
+            (else
+             (loop (cons char buffer)))))))
+
+;;;; Exported procedures
+
+(define (read-regex-literal #!optional (port (current-input-port)))
+  (read-regex-literal/delim #\/ port))
+
+(define (read-regex-literal/general #!optional (port (current-input-port)))
+  (let* ((c (read-char port))
+         (c (cond ((assq c regex-literal-delimiters) => cdr)
+                  (else c))))
+    (read-regex-literal/delim c port)))
+
+;;;; Initialization
+
+;; (define-inline (init-regex-literals!)
+(set-sharp-read-syntax! #\/ read-regex-literal)
+(set-sharp-read-syntax! #\r read-regex-literal/general)
+;; )
+
+;; (init-regex-literals!) )
+
+;;======================================================================
+;; END OF REGEX LITERALS
+;;======================================================================
 
 (define (readlink-f fname)
   (let ((readlink-exes (filter file-exists? '("/bin/readlink" "/usr/bin/readlink"))))
