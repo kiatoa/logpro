@@ -55,7 +55,7 @@ still more miscellaneous output.
 <a name="key_19_1"></a><a href="#key_19_2" class="warning">WARNING: This had better be flagged in orange!</a>
 
 // This one is expected to be 1.9 +/- 0.1
-<a name="key_6_1"></a><a href="#key_6_2" class="value">Measured voltage output: 1.8v</a>
+Measured voltage output: 1.8v
 
 // This one is expected to be 0.5 +/- 0.1
 <a name="key_7_1"></a><a href="#key_7_2" class="value">Measured output current: 0.39mA</a>
@@ -107,57 +107,64 @@ The End
 <a name="InitEnd_table" href="#InitEnd">Trigger: InitEnd                    OK, count=1</a>
 <a name="Init_table" href="#Init">Trigger: Init                       OK, count=1</a>
 <a name="LogFileBodyStart_table" href="#LogFileBodyStart">Trigger: LogFileBodyStart              OK, count=1</a>
+GOT HERE EH?
 </pre><p><table>
-<tr><th>RuleNum</th><th>RuleType</th><th></th><th>Section</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>
-<tr><td class="waive"><a name="key_0_3"></a><a href="#key_0_1">rule-0</a></td><td class="waive">Waive</td><td>Blah5</td><td><td bgcolor="white">OK</td>OK</td><td>=</td><td>2</td><td>Have exactly two BLAH5 errors to waive inside the two Blah5 sections</td><td>2</td><td>
+<tr><th>RuleNum</th><th>RuleType</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>
+<tr><td colspan="11">Expects for LogFileBody section: </td></tr>
+<tr><td class="error"><a name="key_1_2"></a><a href="#key_1_1">rule-1</a></td><td class="error">Error</td><td bgcolor="red">FAIL</td><td>&lt;</td><td>1</td><td>Only have one BLAH5 error outside of the Blah5 section</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="error"><a name="key_13_2"></a><a href="#key_13_1">rule-13</a></td><td class="error">Error</td><td>Blah4</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>=</td><td>0</td><td>Any ERROR in section blah4</td><td>1</td><td>
+<tr><td class="ignore"><a name="key_3_2"></a><a href="#key_3_1">rule-3</a></td><td class="ignore">Ignore</td><td bgcolor="white">OK</td><td>=</td><td>1</td><td>single quotes</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="ignore"><a name="key_12_2"></a><a href="#key_12_1">rule-12</a></td><td class="ignore">Ignore</td><td>Blah4</td><td><td bgcolor="white">OK</td>OK</td><td>&gt;=</td><td>4</td><td>ERROR: ignore applied until 2020, thereafter flagged as error</td><td>1</td><td>
+<tr><td class="required"><a name="key_5_1"></a><a href="#key_5_1">rule-5</a></td><td class="required">Required</td><td bgcolor="red">FAIL</td><td>&gt;</td><td>0</td><td>Something required but not found</td><td>0</td><td></td><td>
 </td></tr>
-<tr><td class="waive junk"><a name="key_2_2"></a><a href="#key_2_1">rule-2</a></td><td class="waive junk">Waive</td><td>Blah3</td><td><td bgcolor="white">OK</td>OK</td><td>=</td><td>1</td><td>A real error that has been waived</td><td>1</td><td>
+<tr><td class="value"><a name="key_6_1"></a><a href="#key_6_1">rule-6</a></td><td class="value">Value</td><td bgcolor="red">FAIL</td><td>1.9</td><td>+/-</td><td>0.1</td><td>-</td><td>0</td><td>
 </td></tr>
-<tr><td class="skip"><a name="key_25_2"></a><a href="#key_25_1">rule-25</a></td><td class="skip">Skip</td><td>LogFileBody</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>=</td><td>0</td><td>If flagged we are asking for this to exit with code 6</td><td>1</td><td>
+<tr><td class="value"><a name="key_7_2"></a><a href="#key_7_1">rule-7</a></td><td class="value">Value</td><td bgcolor="red">FAIL</td><td>0.5</td><td>+/-</td><td>0.1</td><td>0.39</td><td>0</td><td>
 </td></tr>
-<tr><td class="abort"><a name="key_24_2"></a><a href="#key_24_1">rule-24</a></td><td class="abort">Abort</td><td>LogFileBody</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>=</td><td>0</td><td>If flagged our process failed to run correctly</td><td>1</td><td>
+<tr><td class="value"><a name="key_8_2"></a><a href="#key_8_1">rule-8</a></td><td class="value">Value</td><td bgcolor="white">OK</td><td>110000000000.0</td><td>+/-</td><td>2000000000.0</td><td>112000000000.0</td><td>1</td><td>
 </td></tr>
-<tr><td class="check"><a name="key_23_2"></a><a href="#key_23_1">rule-23</a></td><td class="check">Check</td><td>LogFileBody</td><td><td bgcolor="white">OK</td>OK</td><td>=</td><td>1</td><td>If flagged, raise CHECKED flag and exit with error code 3</td><td>1</td><td>
+<tr><td class="value"><a name="key_9_2"></a><a href="#key_9_1">rule-9</a></td><td class="value">Value</td><td bgcolor="red">FAIL</td><td>110000000000.0</td><td>+/-</td><td>1000000000.0</td><td>11197000000.0</td><td>0</td><td>
 </td></tr>
-<tr><td class="required-warn"><a name="key_22_1"></a><a href="#key_22_1">rule-22</a></td><td class="required-warn">Required-warn</td><td>LogFileBody</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>=</td><td>1</td><td>I'm gonna warn you once...</td><td>0</td><td>
+<tr><td class="value"><a name="key_10_1"></a><a href="#key_10_1">rule-10</a></td><td class="value">Value</td><td bgcolor="red">FAIL</td><td>110000000000.0</td><td>+/-</td><td>1000000000.0</td><td>-</td><td>0</td><td>
 </td></tr>
-<tr><td class="required"><a name="key_21_2"></a><a href="#key_21_1">rule-21</a></td><td class="required">Required</td><td>LogFileBody</td><td><td bgcolor="white">OK</td>OK</td><td>&lt;=</td><td>1</td><td>Quad values</td><td>1</td><td>
+<tr><td class="ignore"><a name="key_14_2"></a><a href="#key_14_1">rule-14</a></td><td class="ignore">Ignore</td><td bgcolor="white">OK</td><td>&gt;</td><td>0</td><td>Testing substitution</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="error"><a name="key_20_2"></a><a href="#key_20_1">rule-20</a></td><td class="error">Error</td><td>LogFileBody</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>=</td><td>0</td><td>ERROR BLAH</td><td>1</td><td>
+<tr><td class="value"><a name="key_15_3"></a><a href="#key_15_1">rule-15</a></td><td class="value">Value</td><td bgcolor="red">FAIL</td><td>1.9</td><td>+/-</td><td>0.1</td><td>1.99</td><td>1</td><td>
 </td></tr>
-<tr><td class="warning"><a name="key_19_2"></a><a href="#key_19_1">rule-19</a></td><td class="warning">Warning</td><td>LogFileBody</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>=</td><td>0</td><td>Any warning</td><td>1</td><td>
+<tr><td class="value"><a name="key_16_3"></a><a href="#key_16_1">rule-16</a></td><td class="value">Value</td><td bgcolor="red">FAIL</td><td>&gt;</td><td></td><td>1.9</td><td>1.92</td><td>1</td><td>
 </td></tr>
-<tr><td class="ignore"><a name="key_18_3"></a><a href="#key_18_1">rule-18</a></td><td class="ignore">Ignore</td><td>LogFileBody</td><td><td bgcolor="white">OK</td>OK</td><td>&lt;</td><td>99</td><td>Ignore the word error in comments</td><td>2</td><td>
+<tr><td class="ignore"><a name="key_18_3"></a><a href="#key_18_1">rule-18</a></td><td class="ignore">Ignore</td><td bgcolor="white">OK</td><td>&lt;</td><td>99</td><td>Ignore the word error in comments</td><td>2</td><td></td><td>
 </td></tr>
-<tr><td class="value"><a name="key_16_3"></a><a href="#key_16_1">rule-16</a></td><td class="value">Value</td><td>LogFileBody</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>&gt;</td><td></td><td>1.9</td><td>1.92</td><td>1</td><td>1
+<tr><td class="warning"><a name="key_19_2"></a><a href="#key_19_1">rule-19</a></td><td class="warning">Warning</td><td bgcolor="red">FAIL</td><td>=</td><td>0</td><td>Any warning</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="value"><a name="key_15_3"></a><a href="#key_15_1">rule-15</a></td><td class="value">Value</td><td>LogFileBody</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>1.9</td><td>+/-</td><td>0.1</td><td>1.99</td><td>1</td><td>1
+<tr><td class="error"><a name="key_20_2"></a><a href="#key_20_1">rule-20</a></td><td class="error">Error</td><td bgcolor="red">FAIL</td><td>=</td><td>0</td><td>ERROR BLAH</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="ignore"><a name="key_14_2"></a><a href="#key_14_1">rule-14</a></td><td class="ignore">Ignore</td><td>LogFileBody</td><td><td bgcolor="white">OK</td>OK</td><td>&gt;</td><td>0</td><td>Testing substitution</td><td>1</td><td>
+<tr><td class="required"><a name="key_21_2"></a><a href="#key_21_1">rule-21</a></td><td class="required">Required</td><td bgcolor="white">OK</td><td>&lt;=</td><td>1</td><td>Quad values</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="value"><a name="key_10_1"></a><a href="#key_10_1">rule-10</a></td><td class="value">Value</td><td>LogFileBody</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>110000000000.0</td><td>+/-</td><td>1000000000.0</td><td>-</td><td>0</td><td>0
+<tr><td class="required-warn"><a name="key_22_1"></a><a href="#key_22_1">rule-22</a></td><td class="required-warn">Required-warn</td><td bgcolor="red">FAIL</td><td>=</td><td>1</td><td>I'm gonna warn you once...</td><td>0</td><td></td><td>
 </td></tr>
-<tr><td class="value"><a name="key_9_2"></a><a href="#key_9_1">rule-9</a></td><td class="value">Value</td><td>LogFileBody</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>110000000000.0</td><td>+/-</td><td>1000000000.0</td><td>11197000000.0</td><td>0</td><td>1
+<tr><td class="check"><a name="key_23_2"></a><a href="#key_23_1">rule-23</a></td><td class="check">Check</td><td bgcolor="white">OK</td><td>=</td><td>1</td><td>If flagged, raise CHECKED flag and exit with error code 3</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="value"><a name="key_8_2"></a><a href="#key_8_1">rule-8</a></td><td class="value">Value</td><td>LogFileBody</td><td><td bgcolor="white">OK</td>OK</td><td>110000000000.0</td><td>+/-</td><td>2000000000.0</td><td>112000000000.0</td><td>1</td><td>0
+<tr><td class="abort"><a name="key_24_2"></a><a href="#key_24_1">rule-24</a></td><td class="abort">Abort</td><td bgcolor="red">FAIL</td><td>=</td><td>0</td><td>If flagged our process failed to run correctly</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="value"><a name="key_7_2"></a><a href="#key_7_1">rule-7</a></td><td class="value">Value</td><td>LogFileBody</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>0.5</td><td>+/-</td><td>0.1</td><td>0.39</td><td>0</td><td>1
+<tr><td class="skip"><a name="key_25_2"></a><a href="#key_25_1">rule-25</a></td><td class="skip">Skip</td><td bgcolor="red">FAIL</td><td>=</td><td>0</td><td>If flagged we are asking for this to exit with code 6</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="value"><a name="key_6_2"></a><a href="#key_6_1">rule-6</a></td><td class="value">Value</td><td>LogFileBody</td><td><td bgcolor="white">OK</td>OK</td><td>1.9</td><td>+/-</td><td>0.1</td><td>1.8</td><td>1</td><td>0
+<tr><td colspan="11">Expects for Init section: </td></tr>
+<tr><td class="required"><a name="key_4_2"></a><a href="#key_4_1">rule-4</a></td><td class="required">Required</td><td bgcolor="white">OK</td><td>=</td><td>1</td><td>Header</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="required"><a name="key_5_1"></a><a href="#key_5_1">rule-5</a></td><td class="required">Required</td><td>LogFileBody</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>&gt;</td><td>0</td><td>Something required but not found</td><td>0</td><td>
+<tr><td colspan="11">Expects for Blah5 section: </td></tr>
+<tr><td class="waive"><a name="key_0_3"></a><a href="#key_0_1">rule-0</a></td><td class="waive">Waive</td><td bgcolor="white">OK</td><td>=</td><td>2</td><td>Have exactly two BLAH5 errors to waive inside the two Blah5 sections</td><td>2</td><td></td><td>
 </td></tr>
-<tr><td class="ignore"><a name="key_3_2"></a><a href="#key_3_1">rule-3</a></td><td class="ignore">Ignore</td><td>LogFileBody</td><td><td bgcolor="white">OK</td>OK</td><td>=</td><td>1</td><td>single quotes</td><td>1</td><td>
+<tr><td colspan="11">Expects for Blah4 section: </td></tr>
+<tr><td class="ignore"><a name="key_12_2"></a><a href="#key_12_1">rule-12</a></td><td class="ignore">Ignore</td><td bgcolor="white">OK</td><td>&gt;=</td><td>4</td><td>ERROR: ignore applied until 2020, thereafter flagged as error</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="error"><a name="key_1_2"></a><a href="#key_1_1">rule-1</a></td><td class="error">Error</td><td>LogFileBody</td><td><td bgcolor="red">FAIL</td>FAIL</td><td>&lt;</td><td>1</td><td>Only have one BLAH5 error outside of the Blah5 section</td><td>1</td><td>
+<tr><td class="error"><a name="key_13_2"></a><a href="#key_13_1">rule-13</a></td><td class="error">Error</td><td bgcolor="red">FAIL</td><td>=</td><td>0</td><td>Any ERROR in section blah4</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="ignore"><a name="key_17_2"></a><a href="#key_17_1">rule-17</a></td><td class="ignore">Ignore</td><td>Blah2</td><td><td bgcolor="white">OK</td>OK</td><td>&lt;</td><td>99</td><td>FALSE ERROR</td><td>1</td><td>
+<tr><td colspan="11">Expects for Blah3 section: </td></tr>
+<tr><td class="waive junk"><a name="key_2_2"></a><a href="#key_2_1">rule-2</a></td><td class="waive junk">Waive</td><td bgcolor="white">OK</td><td>=</td><td>1</td><td>A real error that has been waived</td><td>1</td><td></td><td>
 </td></tr>
-<tr><td class="required"><a name="key_4_2"></a><a href="#key_4_1">rule-4</a></td><td class="required">Required</td><td>Init</td><td><td bgcolor="white">OK</td>OK</td><td>=</td><td>1</td><td>Header</td><td>1</td><td>
+<tr><td colspan="11">Expects for Blah2 section: </td></tr>
+<tr><td class="ignore"><a name="key_17_2"></a><a href="#key_17_1">rule-17</a></td><td class="ignore">Ignore</td><td bgcolor="white">OK</td><td>&lt;</td><td>99</td><td>FALSE ERROR</td><td>1</td><td></td><td>
 </td></tr>
 </table>
 <h1 class="exitcode">EXIT CODE: 6 (SKIP

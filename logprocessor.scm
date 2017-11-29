@@ -9,6 +9,8 @@
 
 (use format srfi-69 srfi-1 posix typed-records) ;; sqlite3)
 (use regex regex-literals)
+;;(include "regex-literals-modified.scm")
+;;(import regex-literals-modified)
 (define getenv get-environment-variable)
 
 (define (readlink-f fname)
@@ -102,7 +104,10 @@
       #f
       (let loop ((hed (car regexs))
 		 (tal (cdr regexs)))
-	(let ((match (string-search hed line)))
+	(let ((match (string-search (if (vector? hed)
+                                        (vector-ref hed 1)
+                                        hed)
+                                    line))) ;; regexps are #("regex" . <regexp>)
 	  (if match
 	      match ;; (car match)
 	      (if (null? tal)
@@ -370,9 +375,10 @@
       (print:error "ERROR: expires must be a date string MM/DD/YY, got " expires))
   (if (not (list? patts))
       (set! patts (list patts)))
-  (for-each (lambda (rx)
-	      (if (not (regexp? rx))
-		  (print:error "ERROR: your regex is not valid: " rx)))
+  (for-each (lambda (rxdat)
+              (let ((rx (if (vector? rxdat)(vector-ref rxdat 1) rxdat)))
+                (if (not (regexp? rx))
+                    (print:error "ERROR: your regex is not valid: " rx))))
 	    patts)
 
   ;; #f => rule is not expired, go ahead and apply it
@@ -579,9 +585,9 @@
    *sections*))
 
 (define (html-print destport . stuff)
-  (if *htmlport*
+  (if (or *htmlport* destport)
       (with-output-to-port
-	  *htmlport*
+	  (or destport *htmlport*)
 	(lambda ()
 	  (apply print stuff)))))
 
@@ -792,35 +798,50 @@
 
 ;; print one line of html
 (define (html-print-one-line destport count xstatus typeinfo etype cssfile eclass keyname outvals is-value)
-  (let ((color (if (> count 0)
-                   (if is-value
-                       (if xstatus "green" "red")
-                       (expect:expect-type-get-color typeinfo))
-                   (if (member etype '(required required-warn))
-                       (if xstatus (expect:expect-type-get-color typeinfo) "red")
-                       "white")))
-        (first-item  (car outvals))
-        (second-item (cadr outvals))
-        (third-item  (list-ref outvals 3))
-        (fourth-item (list-ref outvals 4))
-        (remaining   (drop outvals 4)))
+  (let ((color         (if (> count 0)
+                           (if is-value
+                               (if xstatus "green" "red")
+                               (expect:expect-type-get-color typeinfo))
+                           (if (member etype '(required required-warn))
+                               (if xstatus (expect:expect-type-get-color typeinfo) "red")
+                               "white")))
+        (rule-num     (car outvals))
+        (rule-type    (cadr outvals))
+        (section-name (list-ref outvals 3))
+        (status       (list-ref outvals 4))
+        (comp         (list-ref outvals 5))
+        (count-val    (list-ref outvals 6))
+        (desc         (list-ref outvals 7))
+        (count        (list-ref outvals 8))
+        (regex-str    (list-ref outvals 9)))
+;;        (remaining    (drop outvals 4)))
     (html-print destport "<tr><td "
+                ;; rule-num
                 (if cssfile
                     (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
                     (conc "bgcolor=\"" color "\""))
                 "><a name=\"" keyname "_" (+ 1 (hash-table-ref/default *expect-link-nums* keyname 0)) "\"></a><a href=\"#" keyname "_1\">"
-                (text->html first-item) "</a></td>"
+                (text->html rule-num) "</a></td>"
+                ;; rule-type
                 "<td " (if cssfile 
                            (conc "class=\"" etype (if eclass (conc " " eclass) "") "\"")
                            (conc "bgcolor=\"" color "\""))
                 ">"
-                (text->html second-item) "</td><td>"
-                (text->html third-item) "</td><td>"
+                (text->html rule-type) "</td>"
+                ;; (text->html section-name) "</td>"
+                ;; status
                 "<td " (conc "bgcolor=\"" (if xstatus "white" "red") "\"")
-                ">" fourth-item "</td>"
-                (string-intersperse
-                 (map text->html remaining)
-                 (conc "</td><td>"))) ;; <a href=\"#" keyname "_1\">")))
+                ">" (text->html status) "</td><td>"
+                ;; comp
+                (text->html comp)        "</td><td>"
+                (text->html count-val)   "</td><td>"
+                (text->html desc)        "</td><td>"
+                (text->html count)       "</td><td>"
+                (text->html regex-str)   "</td><td>"
+;;                 (string-intersperse
+;;                  (map text->html remaining)
+;;                  (conc "</td><td>"))
+                )
     (html-print destport "</td></tr>")))
 
 ;; factored out of print-results
@@ -830,9 +851,14 @@
   (let ((outvals  #f)
         (lineout  #f)
         (where-op (expects:get-where expect)) ;; not used yet, "in" is only option
+        (rx-str   (string-intersperse (map (lambda (x)
+                                             (if (vector? x)
+                                                 (vector-ref x 0)
+                                                 "n/a"))
+                                           (expects:get-compiled-patts expect)) ", "))
         (fmt      " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a of ~a, got ~a")
 	;;            type where section OK/FAIL compsym value name count
-	(valfmt   " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail")
+	(valfmt   " ~6a ~8a ~2@a ~12a ~4@a, expected ~a ~a ~a got ~a, ~a pass, ~a fail, rx=~a")
         (value    (expects:get-value expect))
         )
     (if is-value
@@ -851,6 +877,7 @@
                          measured
                          (expects:get-val-pass-count expect) 
                          (expects:get-val-fail-count expect)
+                         rx-str
                          ))
           (set! lineout (apply format #f valfmt outvals));; valfmt
           ;; have a hook to process for "value" items, do not call if nothing found
@@ -941,13 +968,14 @@
 	   (print      (format #f fmt-trg (trigger:get-name trigger) trigger-status count))
 	   (html-print #f (format #f fmt-trg-html (trigger:get-name trigger) (trigger:get-name trigger) (trigger:get-name trigger) trigger-status count)))))
      *triggers*)
+    (html-print #f "GOT HERE EH?")(print "GOT HERE EH?")
     ;; now print the expects
     (html-print #f "</pre><p><table>") ;;  style=\"width:100%\">") ;; border=\"1\" 
-    (html-print #f "<tr><th>RuleNum</th><th>RuleType</th><th></th><th>Section</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>")
+    (html-print #f "<tr><th>RuleNum</th><th>RuleType</th><th>Status</th><th>Comp</th><th>Count/Val</th><th>Desc</th><th>Count</th></tr>")
     (for-each 
      (lambda (section)
        (print "\nExpects for " section " section: ")
-       ;; (html-print #f "<tr><td colspan=\"11\">Expects for " section " section: </td></tr>")
+       (html-print #f "<tr><td colspan=\"11\">Expects for " section " section: </td></tr>")
        (for-each 
 	(lambda (expect)
 	  (let* ((count    (expects:get-count expect))
@@ -972,8 +1000,9 @@
                     (set! found-error #t)
                     (set! status #f)
                     (increment-tally etallys etype))))))
-	(hash-table-ref *expects* section)))
-     (hash-table-keys *expects*))
+	(sort (hash-table-ref *expects* section) (lambda (a b)
+                                                   (< (expects:get-rulenum a)(expects:get-rulenum b))))))
+     (sort (hash-table-keys *expects*) (lambda (a b)(string>=? a b))))
     (html-print #f "</table>")
     (let* ((exit-code   (counts->exit-code etallys status *got-an-error*))
 	   (exit-status (exit-code->exit-status exit-code))

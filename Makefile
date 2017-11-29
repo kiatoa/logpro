@@ -1,6 +1,6 @@
 PREFIX ?= /usr/local
 
-logpro : logprocessor.scm logpro.scm logpro_style.css.scm
+logpro : logprocessor.scm logpro.scm logpro_style.css.scm regex-literals-modified.scm
 	csc -X regex -X regex-literals logpro.scm -o logpro
 
 logpro/logpro : logprocessor.scm logpro.scm logpro_style.css.scm
@@ -29,3 +29,4 @@ install : logpro
 	install logpro $(PREFIX)/bin
 	mkdir -p $(PREFIX)/share/css
 	install logpro_style.css $(PREFIX)/share/css
+
