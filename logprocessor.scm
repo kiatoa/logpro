@@ -1071,7 +1071,7 @@
     (for-each 
      (lambda (section)
        (print "\nExpects for " section " section: ")
-       (html-print #f "<tr><td colspan=\"11\" bgcolor=\"cyan\">Expects for <b>" section "</b> section: </td></tr>")
+       (html-print #f "<tr><td colspan=\"11\" bgcolor=\"lightgrey\">Expects for <b>" section "</b> section: </td></tr>")
        (for-each 
 	(lambda (expect)
 	  (let* ((count    (expects:get-count expect))
