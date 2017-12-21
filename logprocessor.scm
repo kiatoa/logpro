@@ -66,11 +66,12 @@
 				    (if (memq 'caseless options) "i" "")
 				    (if (memq 'extended options) "x" "")
 				    (if (memq 'utf8     options) "u" "")))
-		    ;; (rx       (regexp rx-str
 		    (caseless (not (not (memq 'caseless options))))
 		    (extended (not (not (memq 'extended options))))
 		    (utf8     (not (not (memq 'utf8 options)))))
-               `(vector ,full-str ,rx-str ,caseless ,extended ,utf8)))
+;                    (rx       (regexp rx-str caseless extended utf8)))
+               ;; `(vector ,full-str ,rx-str ,caseless ,extended ,utf8)))
+               `(vector ,full-str (regexp ,rx-str ,caseless ,extended ,utf8) ,caseless ,extended ,utf8)))
             ((char=? char #\\) ; escaped character
              (loop (cons (read-char port) (cons char buffer))))
             (else
@@ -190,10 +191,7 @@
       #f
       (let loop ((hed (car regexs))
 		 (tal (cdr regexs)))
-	(let ((match (string-search (if (vector? hed)
-                                        (regexp (vector-ref hed 1)(vector-ref hed 2)(vector-ref hed 3)(vector-ref hed 4))
-                                        hed)
-                                    line))) ;; regexps are #("regex" . <regexp>)
+	(let* ((match (string-search (vector-ref hed 1) line)))
 	  (if match
 	      match ;; (car match)
 	      (if (null? tal)
@@ -214,16 +212,28 @@
    ((eq? op <=) '<=)
    (else 'unk)))
 
-(define (check-regexes patts)
-  (for-each (lambda (rxdat)
-              (let ((rx (if (vector? rxdat)(vector-ref rxdat 1) rxdat)))
-		(handle-exceptions
-		    exn
-                    (print:error "ERROR: your regex, " rx ", is not valid.")
-		  (regexp rx))))
-	    (if (list? patts)
-		patts
-		(list patts))))
+;; check regexs, compile them if not already compiled and ensure they are all of the
+;; form (vector "plaintext rx" compiled-rx options ...)
+;; 
+(define (check-compile-regexes patts) ;; patts is either a regex, regexvec or a list of regex or regexvec
+  (map
+   (lambda (rxdat)
+     (let* ((havevec (vector? rxdat))
+            (vec     (if havevec rxdat (vector "no regex found" rxdat #f #f #f)))
+            (rx      (if havevec (vector-ref rxdat 1) rxdat)))
+       (handle-exceptions
+        exn
+        (begin
+          (print:error "ERROR: your regex, " rx ", is not valid.")
+          rx)
+        (cond
+         ((and (not havevec)(regexp? rx))  vec)
+         ((string? rx)      (vector-set! vec 1 (regexp rx (vector-ref vec 2)(vector-ref vec 3)(vector-ref vec 4)))) ;; options are probably always #f but for completeness reference them anyway
+         )
+        vec)))
+   (if (list? patts)
+       patts
+       (list patts))))
 
 ;;======================================================================
 ;; Settings
@@ -322,7 +332,6 @@
 
 (define (trigger:non-required name . patts)
    (set! *triggers* (cons (vector name patts 1 0 #f) *triggers*)))
- 
 
 ;;======================================================================
 ;; Sections
@@ -470,9 +479,9 @@
   (if (not (string? name))         (print:error "ERROR: name must be a string"))
   (if (and expires (not (string? expires)))
       (print:error "ERROR: expires must be a date string MM/DD/YY, got " expires))
-  (if (not (list? patts))
-      (set! patts (list patts)))
-  (check-regexes patts)
+  (set! patts (check-compile-regexes (if (list? patts)
+                                         patts
+                                         (list patts))))
   
   ;; #f => rule is not expired, go ahead and apply it
   ;; #t => rule is expired, do NOT apply it
@@ -541,21 +550,21 @@
   (if (and expires (not (string? expires)))
       (print:error "ERROR: expires must be a date string MM/DD/YY, got " expires)
       (set! expires #f))
-  (check-regexes patt)
+  (let ((patts (check-compile-regexes patt)))
 
-  ;; Change methodology here. Expires becomes a flag with the following meaning
-  ;;    #f             : no expires specified
-  ;;   negative number : seconds since this rule expired
-  ;;   postive number  : seconds until this rule expires
-  (if (not (expect:process-expires expires)) ;; #f means yes, apply the rule, #t means no, do not apply the rule, i.e. if expired do not apply the rule
-      (for-each
-       (lambda (sect)
-	 (hash-table-set! *expects* ;; comparison is not used                 matchnum used to pick the match from the regex
-			  sect ;;         0     1       2       3  4   5       6                   7               8      9   10                               11 12  value=pass/fail
-			  (cons (vector where-op sect    "<=>" value name 0 (list patt) *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0) hook matchnum *curr-expect-num* class)
-				(hash-table-ref/default *expects* section '()))))
-       (if (list? section) section (list section))))
-  (set! *curr-expect-num* (+ *curr-expect-num* 1)))
+    ;; Change methodology here. Expires becomes a flag with the following meaning
+    ;;    #f             : no expires specified
+    ;;   negative number : seconds since this rule expired
+    ;;   postive number  : seconds until this rule expires
+    (if (not (expect:process-expires expires)) ;; #f means yes, apply the rule, #t means no, do not apply the rule, i.e. if expired do not apply the rule
+        (for-each
+         (lambda (sect)
+           (hash-table-set! *expects* ;; comparison is not used                 matchnum used to pick the match from the regex
+                            sect ;;         0     1       2       3  4   5       6                   7               8      9   10                               11 12  value=pass/fail
+                            (cons (vector where-op sect    "<=>" value name 0 patts *curr-expect-num* expires type (conc "key_" *curr-expect-num*) tol '() (vector 0 0) hook matchnum *curr-expect-num* class)
+                                  (hash-table-ref/default *expects* section '()))))
+         (if (list? section) section (list section))))
+    (set! *curr-expect-num* (+ *curr-expect-num* 1))))
 
 ;; extract out the value if possible.
 (define (expect:value-compare expect match)
@@ -704,7 +713,7 @@
 	    ;; (print "find any trigger hits")
 	    (for-each 
 	     (lambda (trigger)
-	       (let ((patts (trigger:get-patts trigger))
+	       (let ((patts (check-compile-regexes (trigger:get-patts trigger)))
 		     (remhits (trigger:get-remaining-hits trigger)))
 		 (if (and (> remhits 0)
 			  (misc:line-match-regexs line patts))
